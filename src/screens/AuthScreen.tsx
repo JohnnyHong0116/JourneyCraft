@@ -103,6 +103,11 @@ const AuthScreen: React.FC<Props> = ({ initialTab = 'login' }) => {
   };
 
   const emailInvalid = email.trim().length > 0 && !isValidEmail(email);
+  const bottomPad = keyboardShown ? 32 : (active === 'login' ? 4 : 12);
+
+  // Swipe gesture to switch between login/signup without changing existing UI
+  const swipeThreshold = 40;
+  // (swipe navigation removed per revert)
 
   return (
     <LinearGradient
@@ -121,9 +126,12 @@ const AuthScreen: React.FC<Props> = ({ initialTab = 'login' }) => {
             enabled>
             <ScrollView 
               ref={scrollViewRef}
-              contentContainerStyle={{ flexGrow: 1, paddingHorizontal: Spacing.lg, paddingBottom: keyboardShown ? 32 : 12 }} 
+              contentContainerStyle={{ flexGrow: 1, paddingHorizontal: Spacing.lg, paddingBottom: bottomPad }} 
               keyboardShouldPersistTaps="handled"
-              keyboardDismissMode="on-drag">
+              keyboardDismissMode="on-drag"
+              scrollEnabled={active === 'signup' || keyboardShown}
+              bounces={active === 'signup' || keyboardShown}
+              overScrollMode="never">
             <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
               <View>
             {/* Header */}

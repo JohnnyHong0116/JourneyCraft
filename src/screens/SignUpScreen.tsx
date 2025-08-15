@@ -323,6 +323,8 @@ const styles = StyleSheet.create({
   pickerContainer: { width: '100%', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16, paddingVertical: 8 },
   modalDone: { padding: 16, alignItems: 'center' },
   modalDoneText: { fontSize: Typography.fontSize.md, color: Colors.black },
+  modalOption: { paddingVertical: 18, paddingHorizontal: 20, width: '100%' },
+  modalOptionText: { fontSize: Typography.fontSize.md, color: Colors.black, textAlign: 'center' },
 });
 
 export default SignUpScreen;

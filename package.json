@@ -1,7 +1,7 @@
 {
   "name": "journeycraft-app",
   "version": "1.0.0",
-  "main": "node_modules/expo/AppEntry.js",
+  "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
@@ -9,6 +9,7 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "expo-router": "~5.1.4",
     "@expo/metro-config": "~0.20.0",
     "@expo/vector-icons": "^14.0.0",
     "@react-native-community/datetimepicker": "^8.4.1",

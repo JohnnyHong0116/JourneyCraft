@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, LayoutChangeEvent, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Colors, Spacing, Typography, Shadows } from '../constants/designSystem';
+import { Colors, Spacing, Typography, Shadows } from '../theme/designSystem';
 
 export type AuthTab = 'login' | 'signup';
 

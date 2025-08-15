@@ -1,6 +1,6 @@
 import React from 'react';
 import { View } from 'react-native';
-import { FontAwesome5, AntDesign, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { AntDesign, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 interface SocialIconProps {
   size?: number;

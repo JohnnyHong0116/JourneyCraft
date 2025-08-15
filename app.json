@@ -2,6 +2,7 @@
   "expo": {
     "name": "JourneyCraft",
     "slug": "journeycraft-app",
+    "scheme": "journeycraft",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
@@ -18,6 +19,9 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-router"
+    ]
   }
 }

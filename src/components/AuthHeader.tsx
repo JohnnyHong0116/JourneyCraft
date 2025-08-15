@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Colors, Spacing, Typography } from '../constants/designSystem';
+import { Colors, Spacing, Typography } from '../theme/designSystem';
 
 interface AuthHeaderProps {
 	title?: string;

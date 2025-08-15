@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, StatusBar, KeyboardAvoidingView, Platform, Modal, Animated, Easing, Keyboard, TouchableWithoutFeedback } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Colors, Spacing, BorderRadius, Typography, Shadows } from '../constants/designSystem';
+import { Colors, Spacing, BorderRadius, Typography, Shadows } from '../theme/designSystem';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { WeChatIcon, AppleIcon, GoogleIcon } from '../components/SocialIcons';
 import SegmentedAuthControl, { AuthTab } from '../components/SegmentedAuthControl';
@@ -11,8 +11,10 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 
 const CONTENT_WIDTH = 360;
 
-const AuthScreen: React.FC = () => {
-  const [active, setActive] = useState<AuthTab>('login');
+type Props = { initialTab?: AuthTab };
+
+const AuthScreen: React.FC<Props> = ({ initialTab = 'login' }) => {
+  const [active, setActive] = useState<AuthTab>(initialTab);
   const slideX = useRef(new Animated.Value(0)).current;
 
   // Login state
@@ -83,6 +85,24 @@ const AuthScreen: React.FC = () => {
       Keyboard.dismiss();
     }
   };
+
+  const isValidEmail = (val: string) => {
+    // Simplified RFC5322-compatible check; matches common cases from Figma behavior
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    return re.test(val.trim());
+  };
+
+  const handleLoginSubmit = () => {
+    // ...submit auth when backend is ready
+  };
+
+  const handleSignupSubmit = () => {
+    // Email is validated inline; prevent submit if invalid
+    if (email.trim().length === 0 || !isValidEmail(email)) return;
+    // ...submit signup when backend is ready
+  };
+
+  const emailInvalid = email.trim().length > 0 && !isValidEmail(email);
 
   return (
     <LinearGradient
@@ -169,7 +189,7 @@ const AuthScreen: React.FC = () => {
                   </View>
 
                   {/* CTA */}
-                  <TouchableOpacity style={styles.loginButton}>
+                  <TouchableOpacity style={styles.loginButton} onPress={handleLoginSubmit}>
                     <Text style={styles.loginButtonText}>Log in</Text>
                   </TouchableOpacity>
 
@@ -247,6 +267,12 @@ const AuthScreen: React.FC = () => {
                       <TextInput style={styles.textInput} value={email} onChangeText={setEmail} placeholder="Enter email" keyboardType="email-address" autoCapitalize="none" placeholderTextColor={Colors.textSecondary} onFocus={handleInputFocus} />
                       <MaterialCommunityIcons name="pencil" size={22} color={Colors.black} />
                     </View>
+                    {emailInvalid && (
+                      <View style={styles.errorCallout}>
+                        <MaterialCommunityIcons name="alert" size={20} color={Colors.error} />
+                        <Text style={styles.errorCalloutText}>Invalid Email Address!!!</Text>
+                      </View>
+                    )}
                   </View>
 
                   {/* Password */}
@@ -284,7 +310,7 @@ const AuthScreen: React.FC = () => {
                   </View>
 
                   {/* CTA */}
-                  <TouchableOpacity style={styles.loginButton}>
+                  <TouchableOpacity style={styles.loginButton} onPress={handleSignupSubmit}>
                     <Text style={styles.loginButtonText}>Sign Up</Text>
                   </TouchableOpacity>
 
@@ -390,6 +416,8 @@ const styles = StyleSheet.create({
   phoneRow: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
   countryCode: { width: 60, fontSize: Typography.fontSize.md, color: Colors.black, paddingVertical: 0, marginRight: 4 },
   phoneNumber: { flex: 1, fontSize: Typography.fontSize.md, color: Colors.black, paddingVertical: 0 },
+  errorCallout: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 8, paddingVertical: 12, paddingHorizontal: 16, borderRadius: BorderRadius.xl, borderWidth: 2, borderColor: Colors.error, backgroundColor: Colors.white },
+  errorCalloutText: { color: Colors.black, fontSize: Typography.fontSize.lg, fontWeight: 'bold' },
 });
 
 export default AuthScreen;

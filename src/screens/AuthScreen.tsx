@@ -4,9 +4,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Spacing, BorderRadius, Typography, Shadows } from '../theme/designSystem';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { WeChatIcon, AppleIcon, GoogleIcon } from '../components/SocialIcons';
-import SegmentedAuthControl, { AuthTab } from '../components/SegmentedAuthControl';
-import AuthHeader from '../components/AuthHeader';
+import { WeChatIcon, AppleIcon, GoogleIcon } from '@ui/SocialIcons';
+import SegmentedAuthControl, { AuthTab } from '@ui/SegmentedAuthControl';
+import AuthHeader from '@ui/AuthHeader';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 const CONTENT_WIDTH = 360;

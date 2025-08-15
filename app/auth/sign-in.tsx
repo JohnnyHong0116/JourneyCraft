@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import AuthScreen from '../../src/screens/AuthScreen';
+import AuthScreen from '@features/auth/screens/AuthScreen';
 
 export default function SignIn() {
   return (

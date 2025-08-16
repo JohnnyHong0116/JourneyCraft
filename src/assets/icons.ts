@@ -1,53 +1,125 @@
-// Icons from Figma design
+// 图标资源导出文件
+// 按照 Figma 设计规范，每个图标都有 Light 和 Dark 两种模式
+// 注意：实际图标文件需要从 Figma 下载并放置到 src/assets/icons/ 目录下
+
 export const Icons = {
-  // User icon for username/email field
-  user: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M20.5899 22C20.5899 18.13 16.7399 15 11.9999 15C7.25991 15 3.40991 18.13 3.40991 22" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-  </svg>`,
+  // TabBar 图标
+  // homeLight: require('./icons/home-light.png'),
+  // homeDark: require('./icons/home-dark.png'),
+  // statsLight: require('./icons/stats-light.png'),
+  // statsDark: require('./icons/stats-dark.png'),
+
+  // 功能图标
+  // searchLight: require('./icons/search-light.png'),
+  // searchDark: require('./icons/search-dark.png'),
+  // settingsLight: require('./icons/settings-light.png'),
+  // settingsDark: require('./icons/settings-dark.png'),
+
+  // 卡片左侧竖排图标
+  // saveLight: require('./icons/save-light.png'),
+  // saveDark: require('./icons/save-dark.png'),
+  // lockLight: require('./icons/lock-light.png'),
+  // lockDark: require('./icons/lock-dark.png'),
+  // peopleGroupLight: require('./icons/people-group-light.png'),
+  // peopleGroupDark: require('./icons/people-group-dark.png'),
+
+  // 卡片左下横排图标
+  // imageLight: require('./icons/image-light.png'),
+  // imageDark: require('./icons/image-dark.png'),
+  // micLight: require('./icons/mic-light.png'),
+  // micDark: require('./icons/mic-dark.png'),
+  // videoLight: require('./icons/video-light.png'),
+  // videoDark: require('./icons/video-dark.png'),
+
+  // 其他零散图标
+  // addLight: require('./icons/add-light.png'),
+  // addDark: require('./icons/add-dark.png'),
+  // moreLight: require('./icons/more-light.png'),
+  // moreDark: require('./icons/more-dark.png'),
+  // calendarLight: require('./icons/calendar-light.png'),
+  // calendarDark: require('./icons/calendar-dark.png'),
+  // mapPinLight: require('./icons/map-pin-light.png'),
+  // mapPinDark: require('./icons/map-pin-dark.png'),
   
-  // Lock icon for password field
-  lock: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M19 11H5C3.89543 11 3 11.8954 3 13V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V13C21 11.8954 20.1046 11 19 11Z" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M7 11V7C7 5.67392 7.52678 4.40215 8.46447 3.46447C9.40215 2.52678 10.6739 2 12 2C13.3261 2 14.5979 2.52678 15.5355 3.46447C16.4732 4.40215 17 5.67392 17 7V11" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-  </svg>`,
-  
-  // Eye icon for password visibility toggle
-  eye: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M1 12S5 4 12 4S23 12 23 12S19 20 12 20S1 12 1 12Z" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-  </svg>`,
-  
-  // Location icon
-  location: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M21 10C21 17 12 23 12 23S3 17 3 10C3 7.61305 3.94821 5.32387 5.63604 3.63604C7.32387 1.94821 9.61305 1 12 1C14.3869 1 16.6761 1.94821 18.364 3.63604C20.0518 5.32387 21 7.61305 21 10Z" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M12 13C13.6569 13 15 11.6569 15 10C15 8.34315 13.6569 7 12 7C10.3431 7 9 8.34315 9 10C9 11.6569 10.3431 13 12 13Z" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-  </svg>`,
-  
-  // Chevron down icon
-  chevronDown: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M6 9L12 15L18 9" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-  </svg>`,
-  
-  // Phone icon
-  phone: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M22 16.92V19.92C22.0011 20.1985 21.9441 20.4742 21.8325 20.7294C21.7209 20.9846 21.5573 21.2136 21.3521 21.4019C21.1469 21.5902 20.9046 21.7335 20.6407 21.8227C20.3769 21.9119 20.0975 21.9452 19.82 21.92C16.7428 21.5856 13.787 20.5341 11.19 18.85C8.77382 17.3146 6.72533 15.2661 5.18999 12.85C3.49997 10.2412 2.44824 7.27099 2.11999 4.18C2.09477 3.90347 2.12787 3.62476 2.21649 3.36162C2.30512 3.09849 2.44756 2.85669 2.63476 2.65189C2.82196 2.44708 3.04971 2.28367 3.30351 2.17192C3.55731 2.06017 3.83159 2.00269 4.10999 2.003H7.10999C7.59522 1.99522 8.06574 2.16708 8.43376 2.48353C8.80178 2.79999 9.042 3.23945 9.10999 3.72C9.23662 4.68007 9.47144 5.62273 9.80999 6.53C9.94454 6.88792 9.97348 7.27675 9.89382 7.65307C9.81416 8.02939 9.62877 8.37471 9.35999 8.65L8.08999 9.92C9.51355 12.4135 11.5865 14.4865 14.08 15.91L15.35 14.64C15.6253 14.3712 15.9706 14.1858 16.3469 14.1062C16.7233 14.0265 17.1121 14.0555 17.47 14.19C18.3773 14.5286 19.3199 14.7634 20.28 14.89C20.7658 14.9585 21.2094 15.2032 21.5265 15.5775C21.8437 15.9518 22.0122 16.4296 22 16.92Z" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-  </svg>`,
-  
-  // Social media icons
-  wechat: `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M8.75 14C8.75 11.2386 11.2386 8.75 14 8.75C16.7614 8.75 19.25 11.2386 19.25 14C19.25 16.7614 16.7614 19.25 14 19.25C11.2386 19.25 8.75 16.7614 8.75 14Z" fill="#07C160"/>
-    <path d="M21 14C21 18.4183 17.4183 22 13 22C11.5 22 10.1 21.6 8.9 20.9L5 22L6.1 18.5C5.4 17.3 5 15.9 5 14.4C5 10.9817 8.5817 7.4 13 7.4C17.4183 7.4 21 10.9817 21 14Z" fill="#07C160"/>
-  </svg>`,
-  
-  apple: `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M18.71 19.5C17.88 20.74 17 21.95 15.66 21.97C14.32 22 13.89 21.18 12.37 21.18C10.84 21.18 10.37 21.95 9.09997 22C7.78997 22.05 6.79997 20.68 5.95997 19.47C4.24997 16.82 2.93997 11.45 6.68997 8.28C7.88997 7.28 9.55997 6.74 11.08 6.73C12.56 6.75 13.94 7.53 14.94 7.53C15.88 7.53 17.09 6.76 18.6 6.82C19.56 6.86 20.46 7.27 21.16 7.91C18.85 10.05 19.36 14.32 22.04 16C21.24 17.14 20.31 18.26 18.71 19.5ZM13 6.52C13.87 5.42 14.26 4.09 14.04 2.75C12.83 2.87 11.25 3.71 10.37 4.84C9.55997 5.87 9.12997 7.21 9.32997 8.47C10.69 8.56 12.11 7.64 13 6.52Z" fill="#000000"/>
-  </svg>`,
-  
-  google: `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M27.545 12.29C27.545 11.49 27.465 10.73 27.315 10H14V15.51H21.845C21.635 16.99 20.885 18.26 19.745 19.08V22.51H24.255C26.845 20.09 27.545 16.51 27.545 12.29Z" fill="#4285F4"/>
-    <path d="M14 28C17.755 28 20.955 26.89 23.255 24.51L18.745 21.08C17.745 21.82 16.455 22.29 14 22.29C10.655 22.29 7.755 20.15 6.745 17.29H2.045V20.82C4.345 25.2 8.955 28 14 28Z" fill="#34A853"/>
-    <path d="M6.745 17.29C6.445 16.57 6.295 15.77 6.295 14.94C6.295 14.11 6.445 13.31 6.745 12.59V9.06H2.045C1.225 10.83 0.795 12.73 0.795 14.69C0.795 16.65 1.225 18.55 2.045 20.32L6.745 17.29Z" fill="#FBBC05"/>
-    <path d="M14 7.51C15.755 7.51 17.255 8.2 18.455 9.58L22.255 5.78C20.455 4.05 17.755 2.69 14 2.69C8.955 2.69 4.345 5.49 2.045 9.88L6.745 12.91C7.755 10.05 10.655 7.91 14 7.91V7.51Z" fill="#EA4335"/>
-  </svg>`
-};
+  // Bottom Navigation Bar 图标
+  // locationLight: require('./icons/location-light.png'),
+  // locationDark: require('./icons/location-dark.png'),
+  // profileLight: require('./icons/profile-light.png'),
+  // profileDark: require('./icons/profile-dark.png'),
+} as const;
+
+// 图标类型定义
+export type IconName = keyof typeof Icons;
+
+// 根据主题获取图标的辅助函数
+export function getIcon(name: IconName, theme: 'light' | 'dark' = 'light') {
+  // 暂时返回 null，等待图标文件添加
+  return null;
+}
+
+// 常用图标组合
+export const IconSets = {
+  // TabBar 图标集
+  tabBar: {
+    home: {
+      light: null, // Icons.homeLight,
+      dark: null, // Icons.homeDark,
+    },
+    location: {
+      light: null, // Icons.locationLight,
+      dark: null, // Icons.locationDark,
+    },
+    stats: {
+      light: null, // Icons.statsLight,
+      dark: null, // Icons.statsDark,
+    },
+    profile: {
+      light: null, // Icons.profileLight,
+      dark: null, // Icons.profileDark,
+    },
+  },
+
+  // 卡片图标集
+  card: {
+    save: {
+      light: null, // Icons.saveLight,
+      dark: null, // Icons.saveDark,
+    },
+    lock: {
+      light: null, // Icons.lockLight,
+      dark: null, // Icons.lockDark,
+    },
+    peopleGroup: {
+      light: null, // Icons.peopleGroupLight,
+      dark: null, // Icons.peopleGroupDark,
+    },
+    image: {
+      light: null, // Icons.imageLight,
+      dark: null, // Icons.imageDark,
+    },
+    mic: {
+      light: null, // Icons.micLight,
+      dark: null, // Icons.micDark,
+    },
+    video: {
+      light: null, // Icons.videoLight,
+      dark: null, // Icons.videoDark,
+    },
+  },
+
+  // 功能图标集
+  functional: {
+    search: {
+      light: null, // Icons.searchLight,
+      dark: null, // Icons.searchDark,
+    },
+    settings: {
+      light: null, // Icons.settingsLight,
+      dark: null, // Icons.settingsDark,
+    },
+    add: {
+      light: null, // Icons.addLight,
+      dark: null, // Icons.addDark,
+    },
+  },
+} as const;

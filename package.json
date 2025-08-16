@@ -9,7 +9,6 @@
     "web": "expo start --web"
   },
   "dependencies": {
-    "expo-router": "~5.1.4",
     "@expo/metro-config": "~0.20.0",
     "@expo/vector-icons": "^14.0.0",
     "@react-native-community/datetimepicker": "^8.4.1",
@@ -17,6 +16,7 @@
     "@react-navigation/native-stack": "^7.3.25",
     "expo": "~53.0.0",
     "expo-linear-gradient": "~14.1.5",
+    "expo-router": "~5.1.4",
     "expo-status-bar": "~2.2.3",
     "metro": "^0.82.0",
     "react": "19.0.0",
@@ -27,6 +27,8 @@
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
+    "@tsconfig/react-native": "^3.0.6",
+    "@types/jest": "^30.0.0",
     "@types/react": "~19.0.10",
     "babel-plugin-module-resolver": "^5.0.0",
     "typescript": "~5.8.3"

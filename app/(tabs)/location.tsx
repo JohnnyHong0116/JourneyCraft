@@ -3,13 +3,13 @@ import { View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors, Typography, Spacing } from '@/theme/designSystem';
 
-export default function ProfileTab() {
+export default function LocationTab() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>Profile</Text>
+        <Text style={styles.title}>Location</Text>
         <Text style={styles.description}>
-          This is the Profile tab. User profile and settings will be managed here.
+          This is the Location tab. Map and location features will be implemented here.
         </Text>
       </View>
     </SafeAreaView>
@@ -40,5 +40,3 @@ const styles = StyleSheet.create({
     lineHeight: Typography.lineHeight.relaxed,
   },
 });
-
-

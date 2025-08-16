@@ -14,4 +14,10 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
 });
 
+// // app/index.tsx
+// import { Redirect } from 'expo-router';
 
+// export default function Index() {
+//   // 临时直接进入 Home 页面
+//   return <Redirect href="/(tabs)/home" />;
+// }

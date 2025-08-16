@@ -48,9 +48,22 @@ const SegmentedAuthControl: React.FC<SegmentedAuthControlProps> = ({ active, onC
 		onChange(next);
 	};
 
+	// Make the pill narrower and adjust position for better spacing
+	const pillWidth = width / 2 - 24; // Extremely narrower for better spacing
+	
+	// Calculate position adjustments for centering
+	const leftPadding = 12; // Extra padding from left edge
+	const rightShift = 0; // No extra shift for right pill - move it left
+	
 	const pillStyle = {
-		transform: [{ translateX: pillX }],
-		width: width / 2 - 2,
+		transform: [{ 
+			translateX: active === 'signup' ? 
+				// For Sign Up, use exact half width position with no extra shift
+				Animated.add(pillX, new Animated.Value(-8)) : 
+				// For Login, keep the left padding
+				Animated.add(pillX, new Animated.Value(leftPadding))
+		}],
+		width: pillWidth,
 		height: height - 4,
 	};
 

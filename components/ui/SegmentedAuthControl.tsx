@@ -48,9 +48,18 @@ const SegmentedAuthControl: React.FC<SegmentedAuthControlProps> = ({ active, onC
 		onChange(next);
 	};
 
+	// Calculate pill width and position for better centering in both tabs
+	const pillWidth = width / 2 - 6; // Narrower for better spacing
+	
+	// For Sign Up tab, we need to adjust the position slightly to center the pill
+	const signupAdjustment = 3; // pixels to shift right for better centering
+	
 	const pillStyle = {
-		transform: [{ translateX: pillX }],
-		width: width / 2 - 2,
+		transform: [{ translateX: active === 'signup' ? 
+			Animated.add(pillX, new Animated.Value(signupAdjustment)) : 
+			pillX 
+		}],
+		width: pillWidth,
 		height: height - 4,
 	};
 

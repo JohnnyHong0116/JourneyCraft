@@ -25,6 +25,7 @@ import { WeChatIcon, AppleIcon, GoogleIcon } from '../components/SocialIcons';
 import { useNavigation, useIsFocused, useRoute } from '@react-navigation/native';
 import SegmentedAuthControl from '../components/SegmentedAuthControl';
 import AuthHeader from '../components/AuthHeader';
+import { useKeyboardShift } from '../hooks/useKeyboardShift';
 
 const CONTENT_WIDTH = 360;
 const SEGMENTED_WIDTH = 360;
@@ -32,6 +33,10 @@ const SEGMENTED_HEIGHT = 36;
 
 const LoginScreen: React.FC = () => {
   const navigation = useNavigation();
+  const usernameRef = useRef<TextInput>(null);
+  const passwordRef = useRef<TextInput>(null);
+  const locationRef = useRef<TextInput>(null);
+  const { shiftY, onFocus } = useKeyboardShift(20);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [username, setUsername] = useState('');
@@ -74,17 +79,13 @@ const LoginScreen: React.FC = () => {
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="dark-content" backgroundColor="transparent" />
 
-        <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.select({ ios: 'padding', android: undefined })}
-          keyboardVerticalOffset={Platform.select({ ios: 10, android: (StatusBar.currentHeight ?? 0) + 10 })}
-        >
+        <KeyboardAvoidingView style={{ flex: 1 }} enabled={false}>
           <ScrollView
             contentContainerStyle={[styles.scrollContent, { paddingBottom: Spacing.xxxl }]}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="on-drag"
-            automaticallyAdjustKeyboardInsets
+            scrollEnabled={false}
           >
             {/* Header Section */}
             <View style={{ width: CONTENT_WIDTH, alignSelf: 'center' }}>
@@ -102,18 +103,20 @@ const LoginScreen: React.FC = () => {
             </View>
 
             {/* Form Section */}
-            <View style={[styles.form, { marginTop: Spacing.lg, width: CONTENT_WIDTH, alignSelf: 'center' }]}>
+            <Animated.View style={[styles.form, { marginTop: Spacing.lg, width: CONTENT_WIDTH, alignSelf: 'center', transform: [{ translateY: shiftY }] }]}>
               {/* Username/Email Field */}
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Username / Email</Text>
                 <View style={styles.inputContainer}>
                   <MaterialCommunityIcons name="account" size={24} color={Colors.black} />
                   <TextInput
+                    ref={usernameRef}
                     style={styles.textInput}
                     value={username}
                     onChangeText={setUsername}
                     placeholder="Enter username or email"
                     placeholderTextColor={Colors.textSecondary}
+                    onFocus={() => onFocus(usernameRef)}
                   />
                 </View>
               </View>
@@ -124,12 +127,14 @@ const LoginScreen: React.FC = () => {
                 <View style={styles.inputContainer}>
                   <MaterialCommunityIcons name="lock" size={24} color={Colors.black} />
                   <TextInput
+                    ref={passwordRef}
                     style={styles.textInput}
                     value={password}
                     onChangeText={setPassword}
                     secureTextEntry={!showPassword}
                     placeholder="Enter password"
                     placeholderTextColor={Colors.textSecondary}
+                    onFocus={() => onFocus(passwordRef)}
                   />
                   <TouchableOpacity
                     onPress={() => setShowPassword(!showPassword)}
@@ -152,11 +157,13 @@ const LoginScreen: React.FC = () => {
                 <View style={styles.inputContainer}>
                   <MaterialCommunityIcons name="map-marker" size={24} color={Colors.black} />
                   <TextInput
+                    ref={locationRef}
                     style={styles.textInput}
                     value={location}
                     onChangeText={setLocation}
                     placeholder="Select location"
                     placeholderTextColor={Colors.textSecondary}
+                    onFocus={() => onFocus(locationRef)}
                   />
                   <ChevronDownIcon width={24} height={24} color={Colors.black} />
                 </View>
@@ -206,10 +213,10 @@ const LoginScreen: React.FC = () => {
                   <GoogleIcon size={28} />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.socialButton}>
-                  <PhoneIcon size={28} />
+                  <PhoneIcon width={28} height={28} />
                 </TouchableOpacity>
               </View>
-            </View>
+            </Animated.View>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>

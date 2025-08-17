@@ -1,232 +1,235 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
-  TouchableOpacity,
   StyleSheet,
-  Dimensions,
   Platform,
+  Pressable,
+  useWindowDimensions,
+  useColorScheme,
 } from 'react-native';
+import { Svg, Path, Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
+import MaskedView from '@react-native-masked-view/masked-view';
+import { BlurView } from 'expo-blur';
 import { useRouter, usePathname } from 'expo-router';
-import { useColorScheme } from 'react-native';
-import { 
-  HomeIcon, 
-  LocationIcon, 
-  StatsIcon, 
-  ProfileIcon,
-  AddIcon 
-} from '@/components/Icon';
-import Svg, { Path } from 'react-native-svg';
-import { colors } from '@/tokens';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  HomeIcon,
+  LocationIcon,
+  StatsIcon,
+  ProfileIcon,
+  AddIcon,
+} from '@/components/Icon';
+import { colors, ColorScheme } from '@/tokens';
 
-const { width: screenWidth } = Dimensions.get('window');
-const BAR_HORIZONTAL_MARGIN = 16;
-const BAR_WIDTH = screenWidth - BAR_HORIZONTAL_MARGIN * 2;
-const BAR_HEIGHT = 70; // further reduce white area height while keeping icons anchored at bottom
-const CORNER_RADIUS = 0;
-const NOTCH_RADIUS = 36; // wider circle visually
-const NOTCH_WIDTH_FACTOR = 2.3; // widen notch footprint (was 1.6)
-const NOTCH_DEPTH_FACTOR = 1.15; // adjusted depth
-const NAV_Y_OFFSET = 18; // push the upper boundary (notch) further downward
-const SIDE_PADDING = 16; // horizontal paddings inside items row (reduced)
-const TOUCH_MIN_WIDTH = 56; // comfortable horizontal touch width (slightly reduced)
-const ITEM_HORIZONTAL_PAD = 6; // inner padding per item (reduced)
-const HIT_SLOP = { top: 8, bottom: 8, left: 8, right: 8 } as const;
-const ICON_Y_OFFSET = 8; // move icons slightly downward
-const TOP_STROKE = 2;
-const TOP_STROKE_NOTCH = 1.2; // slightly thinner so视觉厚度一致
-const TOP_STROKE_EXTEND = 6; // extend straight shadow into notch a bit
+// ======= 可按 Figma 微调 =======
+const BAR_HEIGHT = 92;        // 底栏高度（含凹槽区域）
+const FAB_SIZE = 64;          // 中间 + 按钮直径
+const FAB_EMBED_COEFF = 0.82;
 
-const getBarPath = (w: number, h: number) => {
-  const r = CORNER_RADIUS;
-  const c = NOTCH_RADIUS;
-  const cx = w / 2;
-  const notchStart = cx - c * NOTCH_WIDTH_FACTOR;
-  const notchEnd = cx + c * NOTCH_WIDTH_FACTOR;
-  const notchDepth = c * NOTCH_DEPTH_FACTOR; // adjusted depth
+// 凹槽 Path（保持 viewBox 0 0 390 132）
+const NOTCH_PATH =
+  'M390 132H0V45H133.765C134.163 45.138 134.581 45.2347 135.01 45.2852C165.027 48.8169 166.031 83.9997 195 84C223.969 83.9997 224.973 48.8169 254.99 45.2852C255.418 45.2347 255.836 45.1379 256.234 45H390V132Z';
 
-  return [
-    `M 0 ${r}`,
-    `Q 0 0 ${r} 0`,
-    `H ${notchStart}`,
-    `C ${cx - c} 0 ${cx - c * 0.9} ${notchDepth} ${cx} ${notchDepth}`,
-    `C ${cx + c * 0.9} ${notchDepth} ${cx + c} 0 ${notchEnd} 0`,
-    `H ${w - r}`,
-    `Q ${w} 0 ${w} ${r}`,
-    `V ${h - r}`,
-    `Q ${w} ${h} ${w - r} ${h}`,
-    `H ${r}`,
-    `Q 0 ${h} 0 ${h - r}`,
-    'Z',
-  ].join(' ');
-};
-
-// Top-edge segments for uniform perceived thickness
-const getTopSegments = (w: number) => {
-  const r = CORNER_RADIUS;
-  const c = NOTCH_RADIUS;
-  const cx = w / 2;
-  const notchStart = cx - c * NOTCH_WIDTH_FACTOR;
-  const notchEnd = cx + c * NOTCH_WIDTH_FACTOR;
-  const notchDepth = c * NOTCH_DEPTH_FACTOR;
-  const leftEnd = notchStart + TOP_STROKE_EXTEND;
-  const rightStart = notchEnd - TOP_STROKE_EXTEND;
-  const left = [`M 0 ${r}`, `Q 0 0 ${r} 0`, `H ${leftEnd}`].join(' ');
-  const notch = [
-    `M ${leftEnd} 0`,
-    `C ${cx - c} 0 ${cx - c * 0.9} ${notchDepth} ${cx} ${notchDepth}`,
-    `C ${cx + c * 0.9} ${notchDepth} ${cx + c} 0 ${rightStart} 0`,
-  ].join(' ');
-  const right = [`M ${rightStart} 0`, `H ${w - r}`, `Q ${w} 0 ${w} ${r}`].join(' ');
-  return { left, notch, right };
-};
-
-interface TabItem {
-  name: string;
-  route: string;
-  icon: React.ComponentType<any>;
-  label: string;
-}
-
-const tabs: TabItem[] = [
-  { name: 'home', route: '/(tabs)/home', icon: HomeIcon, label: 'Home' },
-  { name: 'location', route: '/(tabs)/location', icon: LocationIcon, label: 'Location' },
-  { name: 'stats', route: '/(tabs)/stats', icon: StatsIcon, label: 'Stats' },
-  { name: 'profile', route: '/(tabs)/profile', icon: ProfileIcon, label: 'Profile' },
-];
-
-export const BottomNavBar: React.FC = () => {
+export default function BottomNavBar() {
   const router = useRouter();
   const pathname = usePathname();
-  const colorScheme = useColorScheme() || 'light';
   const insets = useSafeAreaInsets();
-  const [barWidth, setBarWidth] = useState(BAR_WIDTH);
+  const { width } = useWindowDimensions();
+  const scheme = (useColorScheme() ?? 'light') as ColorScheme;
 
-  const getLastSegment = (p: string) => p.split('?')[0].split('#')[0].split('/').filter(Boolean).pop() || '';
-  const getTabKey = (route: string) => route.split('/').filter(Boolean).pop() || '';
-  const isActiveTab = (route: string) => {
-    const tabKey = getTabKey(route);
-    let seg = getLastSegment(pathname);
-    if (seg === '(tabs)') seg = 'home';
-    return seg === tabKey;
-  };
-  const handleTabPress = (route: string) => router.push(route as any);
-  const handleAddButtonPress = () => router.push('/card/new' as any);
+  // 直接从 tokens 读取单个颜色字符串（避免类型不匹配）
+  const palette = colors[scheme];
+  const navBg = palette.navbar;
+  const iconActive = palette.navbarSelected;
+  const iconInactive = palette.navbarUnselected;
+  const fabBg = palette.addButton;
 
-  const selectedColor = colors.light.navbarSelected;
-  const unselectedColor = colors.light.navbarUnselected;
-  const notchDepth = NOTCH_RADIUS * NOTCH_DEPTH_FACTOR;
-  const placeholderWidth = Math.round(NOTCH_RADIUS * NOTCH_WIDTH_FACTOR * 2); // match notch horizontal span
+  // 当前 tab（路由最后一段）
+  const current = React.useMemo(() => {
+    const seg = pathname.split('?')[0].split('#')[0].split('/').filter(Boolean).pop();
+    return seg === '(tabs)' || !seg ? 'home' : seg;
+  }, [pathname]);
 
-  const GAP = 6;
-  const fabTop = notchDepth - 2 * NOTCH_RADIUS - GAP; // recomputed with new depth
-  const fabLeft = Math.round(barWidth / 2 - NOTCH_RADIUS);
-  const { left: topLeft, notch: topNotch, right: topRight } = getTopSegments(barWidth);
+  const FAB_BOTTOM = Math.round(BAR_HEIGHT - FAB_SIZE * FAB_EMBED_COEFF);
+  const FAB_BOTTOM_ABS = FAB_BOTTOM + insets.bottom; // 合并手势区后，FAB 需要上移 insets.bottom
+
+  // 顶部羽化高度（像素）
+  const FEATHER_PX = 16;
+  const BLUR_TOTAL_H = BAR_HEIGHT + insets.bottom + 12;
+  const FEATHER_OFFSET_PERCENT = `${(FEATHER_PX / BLUR_TOTAL_H) * 100}%`;
 
   return (
-    <View style={[styles.container, { marginBottom: insets.bottom, backgroundColor: 'transparent' }]}>      
-      {/* Fully transparent backdrop above the white bar (from FAB to notch) */}
-      <View
-        pointerEvents="none"
-        style={[styles.upperBackdrop, { height: Math.ceil(NAV_Y_OFFSET + notchDepth + NOTCH_RADIUS), backgroundColor: 'transparent' }]}
-      />
-
-      <View style={[styles.barContainer, { marginTop: NAV_Y_OFFSET }]} onLayout={(e) => setBarWidth(e.nativeEvent.layout.width)}>
-        {/* Only top-edge shadow via SVG stroke; native shadow disabled */}
-        <View style={[styles.barShadowHolder, { width: barWidth, height: BAR_HEIGHT }]} />
-        <View style={[styles.bar, { width: barWidth, height: BAR_HEIGHT }]}>          
-          <Svg width={barWidth} height={BAR_HEIGHT}>
-            <Path d={getBarPath(barWidth, BAR_HEIGHT)} fill={colors.light.surfaceCard} />
-            <Path d={topLeft} fill="none" stroke={colors.light.shadowTint} strokeWidth={TOP_STROKE} strokeLinecap="round" strokeLinejoin="miter" strokeMiterlimit={2} />
-            <Path d={topNotch} fill="none" stroke={colors.light.shadowTint} strokeWidth={TOP_STROKE_NOTCH} strokeLinecap="round" strokeLinejoin="miter" strokeMiterlimit={2} />
-            <Path d={topRight} fill="none" stroke={colors.light.shadowTint} strokeWidth={TOP_STROKE} strokeLinecap="round" strokeLinejoin="miter" strokeMiterlimit={2} />
-          </Svg>
-        </View>
-
-        <View style={[styles.itemsRow, { width: barWidth, height: BAR_HEIGHT, paddingTop: ICON_Y_OFFSET } ]}>
-          <View style={styles.sideRowLeft}>
-            {[tabs[0], tabs[1]].map((tab) => {
-              const IconComponent = tab.icon;
-              const active = isActiveTab(tab.route);
-              return (
-                <TouchableOpacity
-                  key={tab.name}
-                  style={styles.tabButton}
-                  onPress={() => handleTabPress(tab.route)}
-                  activeOpacity={0.7}
-                  hitSlop={HIT_SLOP}
-                  accessibilityRole="button"
-                  accessibilityLabel={tab.label}
-                >
-                  <IconComponent size={24} color={active ? selectedColor : unselectedColor} theme={colorScheme} />
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
-          <View style={{ width: placeholderWidth }} />
-
-          <View style={styles.sideRowRight}>
-            {[tabs[2], tabs[3]].map((tab) => {
-              const IconComponent = tab.icon;
-              const active = isActiveTab(tab.route);
-              return (
-                <TouchableOpacity
-                  key={tab.name}
-                  style={styles.tabButton}
-                  onPress={() => handleTabPress(tab.route)}
-                  activeOpacity={0.7}
-                  hitSlop={HIT_SLOP}
-                  accessibilityRole="button"
-                  accessibilityLabel={tab.label}
-                >
-                  <IconComponent size={24} color={active ? selectedColor : unselectedColor} theme={colorScheme} />
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
-
-        <TouchableOpacity
-          style={[styles.fab, { left: fabLeft, top: fabTop }]}
-          onPress={handleAddButtonPress}
-          activeOpacity={0.9}
-          accessibilityRole="button"
-          accessibilityLabel="Add"
+    <View
+      pointerEvents="box-none"
+      style={[styles.host, { height: BAR_HEIGHT + insets.bottom + 12 }]}
+    >
+      {/* 0) 透明模糊：覆盖底部区域，但在 NavBar 与 FAB 之下（不着色） + 顶部羽化 */}
+      <View style={[styles.blurArea, { height: BLUR_TOTAL_H }]}>
+        <MaskedView
+          style={StyleSheet.absoluteFill}
+          maskElement={
+            <Svg width={width} height={BLUR_TOTAL_H} viewBox={`0 0 ${width} ${BLUR_TOTAL_H}`} preserveAspectRatio="none">
+              <Defs>
+                {/* 顶部向下的透明→不透明渐变，形成羽化 */}
+                <LinearGradient id="fadeMask" x1="0" y1="0" x2="0" y2="1">
+                  <Stop offset="0%" stopColor="#000" stopOpacity="0" />
+                  <Stop offset={FEATHER_OFFSET_PERCENT} stopColor="#000" stopOpacity="1" />
+                  <Stop offset="100%" stopColor="#000" stopOpacity="1" />
+                </LinearGradient>
+              </Defs>
+              {/* 用 alpha 渐变做 Mask：透明=隐藏，非透明=显示 */}
+              <Rect x="0" y="0" width="100%" height="100%" fill="url(#fadeMask)" />
+            </Svg>
+          }
         >
-          <AddIcon size={30} color={colors.light.surfaceCard} />
-        </TouchableOpacity>
+          <BlurView
+            tint={Platform.OS === 'ios' ? 'extraLight' : 'light'}
+            intensity={80}
+            style={StyleSheet.absoluteFill}
+          />
+          {/* 统一加 10% 白色蒙版，不受明暗模式影响 */}
+          <View
+            pointerEvents="none"
+            style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(255,255,255,0.1)' }]}
+          />
+        </MaskedView>
       </View>
 
-      {/* Fill the iPhone home indicator area with the same navbar color */}
-      <View style={[styles.homeIndicatorFill, { height: insets.bottom, bottom: -insets.bottom, backgroundColor: colors.light.surfaceCard }]} />
+      {/* 1) 底栏形状与阴影（包含手势区） */}
+      <View style={[styles.barWrap, { width, height: BAR_HEIGHT + insets.bottom + 16 }]}>
+        {/* 顶部“凹槽”形状区域（保持原尺寸，不拉伸） */}
+        <MaskedView
+          style={[{ position: 'absolute', left: 0, right: 0, top: 0, height: BAR_HEIGHT + 16, zIndex: 1 }]}
+          maskElement={
+            <Svg width={width} height={BAR_HEIGHT + 16} viewBox="0 0 390 132" preserveAspectRatio="none">
+              <Path d={NOTCH_PATH} fill="#000" />
+            </Svg>
+          }
+        >
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: navBg, opacity: 1 }]} />
+        </MaskedView>
+
+        {/* 手势区填充：与 navbar 同色，避免色差/黑条 */}
+        <View
+          style={{
+            position: 'absolute',
+            left: 0, right: 0, bottom: 0,
+            height: insets.bottom,
+            backgroundColor: navBg,
+            zIndex: 1,
+          }}
+        />
+
+        {/* 外轮廓占位（透明，承载阴影/边缘），放最底 */}
+        <Svg
+          pointerEvents="none"
+          width={width}
+          height={BAR_HEIGHT + 16}
+          viewBox="0 0 390 132"
+          preserveAspectRatio="none"
+          style={[{ position: 'absolute', left: 0, right: 0, top: 0, zIndex: 0 }]}
+        >
+          <Path d={NOTCH_PATH} fill="transparent" />
+        </Svg>
+
+        {/* 2) 图标点击区（在模糊之上、FAB 之下） */}
+        <View style={[styles.row, { zIndex: 2, bottom: insets.bottom + 10 }]}>
+          <View style={styles.side}>
+            <Pressable style={styles.tab} onPress={() => router.replace('/(tabs)/home')}>
+              <HomeIcon size={24} color={current === 'home' ? iconActive : iconInactive} />
+            </Pressable>
+            <Pressable style={styles.tab} onPress={() => router.replace('/(tabs)/location')}>
+              <LocationIcon size={24} color={current === 'location' ? iconActive : iconInactive} />
+            </Pressable>
+          </View>
+
+          {/* 中间留出 FAB 的宽度 */}
+          <View style={{ width: FAB_SIZE, height: FAB_SIZE }} />
+
+          <View style={styles.side}>
+            <Pressable style={styles.tab} onPress={() => router.replace('/(tabs)/stats')}>
+              <StatsIcon size={24} color={current === 'stats' ? iconActive : iconInactive} />
+            </Pressable>
+            <Pressable style={styles.tab} onPress={() => router.replace('/(tabs)/profile')}>
+              <ProfileIcon size={24} color={current === 'profile' ? iconActive : iconInactive} />
+            </Pressable>
+          </View>
+        </View>
+      </View>
+
+      {/* 3) 最上层 FAB（半嵌） */}
+      <Pressable
+        onPress={() => router.push('/card/new')}
+        style={[styles.fab, { bottom: FAB_BOTTOM_ABS, backgroundColor: fabBg }]}
+        android_ripple={{ color: '#E6F5E6', borderless: true }}
+      >
+        <AddIcon size={38} color="#FFFFFF" />
+      </Pressable>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  container: { position: 'relative', width: '100%', alignItems: 'center' },
-  upperBackdrop: { position: 'absolute', top: 0, left: 0, right: 0 },
-  barContainer: { width: '100%', paddingHorizontal: BAR_HORIZONTAL_MARGIN, alignItems: 'center' },
-  barShadowHolder: {
-    position: 'absolute', top: 0, borderRadius: CORNER_RADIUS, width: '100%',
-    shadowOpacity: 0, // disable native shadow completely to avoid bottom bleed
-    backgroundColor: 'transparent',
+  host: {
+    position: 'absolute',
+    left: 0, right: 0, bottom: 0,
   },
-  bar: { borderRadius: CORNER_RADIUS, backgroundColor: 'transparent' },
-  itemsRow: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: SIDE_PADDING,
+  blurArea: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 0, // Blur 在最底，但 host 盖在页面之上 -> 视觉上位于页面与 NavBar 之间
   },
-  sideRowLeft: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start' },
-  sideRowRight: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end' },
-  tabButton: {
-    alignItems: 'center', justifyContent: 'center', paddingVertical: 8, paddingHorizontal: ITEM_HORIZONTAL_PAD,
-    minHeight: 44, minWidth: TOUCH_MIN_WIDTH, marginHorizontal: 4,
+  barWrap: {
+    alignSelf: 'center',
+    overflow: 'visible', // 让阴影完整显示
+    zIndex: 1,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOpacity: 0.18,
+        shadowOffset: { width: 0, height: -6 },
+        shadowRadius: 16,
+        backgroundColor: 'transparent',
+      },
+      android: {
+        elevation: 12,
+        backgroundColor: 'transparent',
+      },
+    }),
+  },
+  row: {
+    position: 'absolute',
+    left: 0, right: 0,
+    height: 48,
+    paddingHorizontal: 24,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  side: { flexDirection: 'row', gap: 24 },
+  tab: {
+    width: 48,
+    height: 40,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   fab: {
-    position: 'absolute', width: NOTCH_RADIUS * 2, height: NOTCH_RADIUS * 2, borderRadius: NOTCH_RADIUS,
-    justifyContent: 'center', alignItems: 'center', backgroundColor: colors.light.addButton,
+    position: 'absolute',
+    alignSelf: 'center',
+    width: FAB_SIZE,
+    height: FAB_SIZE,
+    borderRadius: FAB_SIZE / 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 3, // FAB 最高层
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOpacity: 0.2,
+        shadowOffset: { width: 0, height: 8 },
+        shadowRadius: 16,
+      },
+      android: { elevation: 8 },
+    }),
   },
-  homeIndicatorFill: { position: 'absolute', left: 0, right: 0 },
 });

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
-import { BottomNavBar } from '../../components/ui/BottomNavBar';
+import BottomNavBar from '../../components/ui/BottomNavBar';
 import { Colors } from '@/theme/designSystem';
 
 export default function TabsLayout() {

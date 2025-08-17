@@ -37,14 +37,14 @@
 - 响应式设计，支持不同屏幕尺寸
 
 ### 5. Bottom Navigation Bar ✅
-- 完全还原 Figma 设计样式，包括精确的弧度和阴影
+- 完全按照 Figma 设计实现，使用 react-native-svg 渲染凹槽 Path
 - 4 个 Tab：Home、Location、Stats、Profile
-- 中间浮动的绿色 "+" 按钮，支持按下动画
-- 浅绿色背景 (#d8ead0)，精确的 20px 圆角
-- 精确的阴影效果，包括向上和向下的阴影
-- 自动主题适配（Light/Dark）
-- 集成 expo-router 导航系统
+- 中间半嵌入的绿色 FAB 按钮，精确嵌入凹槽位置
+- 使用 expo-blur 实现毛玻璃效果和半透明叠色
+- 精确的阴影效果，完全匹配 Figma 设计
+- 凹槽形状背景，保持与设计一致的 FAB 嵌入位置
 - 响应式设计，支持不同屏幕尺寸
+- 集成 expo-router 导航系统
 
 ### 6. 交互与导航 ✅
 - 点击卡片跳转到 `/trip/[id]`

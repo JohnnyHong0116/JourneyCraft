@@ -8,13 +8,15 @@ export interface IconProps {
   size?: number;
   style?: ImageStyle | ViewStyle;
   theme?: 'light' | 'dark';
+  color?: string;
 }
 
 export const Icon: React.FC<IconProps> = ({ 
   name, 
   size = 24, 
   style, 
-  theme 
+  theme,
+  color,
 }) => {
   const systemColorScheme = useColorScheme();
   const currentTheme = theme || systemColorScheme || 'light';
@@ -68,7 +70,7 @@ export const Icon: React.FC<IconProps> = ({
     <Ionicons 
       name={getIoniconName(name) as any} 
       size={size} 
-      color={currentTheme === 'light' ? '#000000' : '#FFFFFF'} 
+      color={color ?? (currentTheme === 'light' ? '#000000' : '#FFFFFF')} 
       style={style}
     />
   );

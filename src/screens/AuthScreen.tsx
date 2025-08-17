@@ -6,7 +6,7 @@ import { Colors, Spacing, BorderRadius, Typography, Shadows } from '../theme/des
 import { useKeyboardShift } from '../hooks/useKeyboardShift';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { WeChatIcon, AppleIcon, GoogleIcon } from '@ui/SocialIcons';
-import SegmentedAuthControl, { AuthTab } from '@ui/SegmentedAuthControl';
+import SegmentedAuthControl, { AuthTab } from '../components/SegmentedAuthControl';
 import AuthHeader from '@ui/AuthHeader';
 import DateTimePicker from '@react-native-community/datetimepicker';
 

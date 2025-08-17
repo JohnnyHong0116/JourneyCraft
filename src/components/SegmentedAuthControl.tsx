@@ -15,10 +15,15 @@ const INNER_RADIUS = 7;
 const SegmentedAuthControl: React.FC<SegmentedAuthControlProps> = ({ active, onChange }) => {
 	const [width, setWidth] = useState<number>(360);
 	const [height, setHeight] = useState<number>(36);
-	const pillX = useRef(new Animated.Value(active === 'signup' ? width / 2 : 0)).current;
+	const pillX = useRef(new Animated.Value(0)).current;
+
+	// Container has 2px padding on both sides → innerWidth = width - 4
+	const innerWidth = Math.max(0, width - 4);
+	const half = innerWidth / 2;
+	const pillWidth = half; // fill exactly half
 
 	useEffect(() => {
-		const toValue = active === 'signup' ? width / 2 : 0;
+		const toValue = active === 'signup' ? half : 0;
 		Animated.timing(pillX, {
 			toValue,
 			duration: 220,
@@ -26,7 +31,7 @@ const SegmentedAuthControl: React.FC<SegmentedAuthControlProps> = ({ active, onC
 			useNativeDriver: true,
 		}).start();
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [active, width]);
+	}, [active, innerWidth]);
 
 	const onLayout = useCallback((e: LayoutChangeEvent) => {
 		const { width: w, height: h } = e.nativeEvent.layout;
@@ -36,33 +41,18 @@ const SegmentedAuthControl: React.FC<SegmentedAuthControlProps> = ({ active, onC
 
 	const handlePress = (next: AuthTab) => {
 		if (next === active) return;
-		const toValue = next === 'signup' ? width / 2 : 0;
-		// Start pill animation
+		const toValue = next === 'signup' ? half : 0;
 		Animated.timing(pillX, {
 			toValue,
 			duration: 220,
 			easing: Easing.out(Easing.quad),
 			useNativeDriver: true,
 		}).start();
-		// Trigger content transition immediately for simultaneous animations
 		onChange(next);
 	};
 
-	// Make the pill narrower and adjust position for better spacing
-	const pillWidth = width / 2 - 24; // Extremely narrower for better spacing
-	
-	// Calculate position adjustments for centering
-	const leftPadding = 12; // Extra padding from left edge
-	const rightShift = 0; // No extra shift for right pill - move it left
-	
 	const pillStyle = {
-		transform: [{ 
-			translateX: active === 'signup' ? 
-				// For Sign Up, use exact half width position with no extra shift
-				Animated.add(pillX, new Animated.Value(-8)) : 
-				// For Login, keep the left padding
-				Animated.add(pillX, new Animated.Value(leftPadding))
-		}],
+		transform: [{ translateX: pillX }],
 		width: pillWidth,
 		height: height - 4,
 	};

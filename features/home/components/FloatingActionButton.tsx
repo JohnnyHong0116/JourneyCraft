@@ -3,22 +3,25 @@ import {
   TouchableOpacity,
   StyleSheet,
   View,
+  ViewStyle,
 } from 'react-native';
 import { AddIcon } from '@/components/Icon';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/theme/designSystem';
 
 interface FloatingActionButtonProps {
   onPress: () => void;
+  style?: ViewStyle;
 }
 
 export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
   onPress,
+  style,
 }) => {
   return (
     <TouchableOpacity
-      style={styles.container}
+      style={[styles.container, style]}
       onPress={onPress}
-      activeOpacity={0.8}
+      activeOpacity={0.85}
     >
       <View style={styles.button}>
         <AddIcon size={30} style={{ tintColor: Colors.white }} />
@@ -27,17 +30,19 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
   );
 };
 
+const SIZE = 72;
+
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: 100, // 避免被底部导航栏遮挡
-    right: Spacing.lg,
+    left: '50%',
+    marginLeft: -SIZE / 2,
     zIndex: 1000,
   },
   button: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: SIZE,
+    height: SIZE,
+    borderRadius: SIZE / 2,
     backgroundColor: Colors.addButton,
     justifyContent: 'center',
     alignItems: 'center',

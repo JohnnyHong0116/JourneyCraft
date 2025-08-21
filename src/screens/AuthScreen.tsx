@@ -3,16 +3,40 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Status
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Spacing, BorderRadius, Typography, Shadows } from '../theme/designSystem';
-import { useKeyboardShift } from '../hooks/useKeyboardShift';
+import { useKeyboardShiftOld, useKeyboardShift } from '../hooks/useKeyboardShift';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { WeChatIcon, AppleIcon, GoogleIcon } from '@ui/SocialIcons';
 import SegmentedAuthControl, { AuthTab } from '../components/SegmentedAuthControl';
 import AuthHeader from '@ui/AuthHeader';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { colors } from '../tokens';
+import AreaCodeInline from '../components/AreaCodeInline';
 
 const CONTENT_WIDTH = 360;
 
 type Props = { initialTab?: AuthTab };
+
+// ClearButton component for text input fields
+const ClearButton = ({
+  visible,
+  onPress,
+}: { visible: boolean; onPress: () => void }) => {
+  if (!visible) return null;
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      accessibilityLabel="Clear text"
+      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      style={styles.clearBtn}
+    >
+      <Ionicons
+        name="close"
+        size={14}
+        color={colors.light.utilities}
+      />
+    </TouchableOpacity>
+  );
+};
 
 const AuthScreen: React.FC<Props> = ({ initialTab = 'login' }) => {
   const [active, setActive] = useState<AuthTab>(initialTab);
@@ -24,34 +48,45 @@ const AuthScreen: React.FC<Props> = ({ initialTab = 'login' }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [location, setLocation] = useState('');
+  const [usernameFocused, setUsernameFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
   const usernameRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
   const locationRef = useRef<TextInput>(null);
-  const { shiftY: loginShiftY, onFocus: onLoginFocus } = useKeyboardShift(20);
+  // Login uses the old version for性能
+  const { shiftY: loginShiftY, onFocus: onLoginFocus } = useKeyboardShiftOld(20);
+  // Sign up uses the new improved version
+  const { shiftStyle: signupShiftStyle, onFocus: onSignupFocus, ensureVisible: ensureKeyboardVisible } = useKeyboardShift({
+    safeGap: 20,
+    maxUpwardShift: -280,
+    minMoveThreshold: 10,
+  });
 
   // Sign up state
   const [suUsername, setSuUsername] = useState('');
-  const [dobDate, setDobDate] = useState<Date>(new Date());
-  const [tempDobDate, setTempDobDate] = useState<Date>(new Date()); // Temporary date before confirming
+  const [dobDate, setDobDate] = useState<Date | null>(null); // 初始为 null
+  const [tempDobDate, setTempDobDate] = useState<Date | null>(null); // 临时日期
   const [dobModalVisible, setDobModalVisible] = useState(false);
-  const [gender, setGender] = useState('Male');
+  const [gender, setGender] = useState(''); // 初始为 ''
   const [genderModalVisible, setGenderModalVisible] = useState(false);
   const [countryCode, setCountryCode] = useState('');
   const [phone, setPhone] = useState('');
-  const [codeSuggestions, setCodeSuggestions] = useState<{ code: string; country: string }[]>([]);
-  const [showCodeDropdown, setShowCodeDropdown] = useState(false);
+  const [phoneFocused, setPhoneFocused] = useState(false);
   const [email, setEmail] = useState('');
   const [suPassword, setSuPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [suLocation, setSuLocation] = useState('');
   const [suShowPassword, setSuShowPassword] = useState(false);
   const [suShowConfirmPassword, setSuShowConfirmPassword] = useState(false);
+  const [suUsernameFocused, setSuUsernameFocused] = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [suPwFocused, setSuPwFocused] = useState(false);
+  const [suCpwFocused, setSuCpwFocused] = useState(false);
   const suUsernameRef = useRef<TextInput>(null);
   const suEmailRef = useRef<TextInput>(null);
   const suPasswordRef = useRef<TextInput>(null);
   const suConfirmRef = useRef<TextInput>(null);
   const suLocationRef = useRef<TextInput>(null);
-  const phoneCodeRef = useRef<TextInput>(null);
   const phoneNumberRef = useRef<TextInput>(null);
 
   // Dismiss keyboard when tapping outside of text inputs
@@ -87,7 +122,7 @@ const AuthScreen: React.FC<Props> = ({ initialTab = 'login' }) => {
 
   // We'll use the built-in keyboard avoiding behavior instead of custom listeners
 
-  const formatDate = (d?: Date) => {
+  const formatDate = (d?: Date | null) => {
     if (!d) return 'Select date of birth';
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
@@ -103,10 +138,9 @@ const AuthScreen: React.FC<Props> = ({ initialTab = 'login' }) => {
 
   const handleTabChange = (next: AuthTab) => {
     if (next === active) return;
-    // Dismiss keyboard when switching tabs
-    Keyboard.dismiss();
-    setShowCodeDropdown(false);
-    // Reset scroll position only when going to Login
+         // Dismiss keyboard when switching tabs
+     Keyboard.dismiss();
+     // Reset scroll position only when going to Login
     if (next === 'login' && scrollViewRef.current) {
       try { (scrollViewRef.current as any).scrollTo({ y: 0, animated: false }); } catch {}
     }
@@ -123,33 +157,10 @@ const AuthScreen: React.FC<Props> = ({ initialTab = 'login' }) => {
       Keyboard.dismiss();
     }
   };
-  const dismissAll = () => {
-    setShowCodeDropdown(false);
-    Keyboard.dismiss();
-  };
-  // Keep the focused field visible for both Login and Sign Up
-  const ensureVisible = (inputRef?: any) => {
-    if (!scrollViewRef.current || !inputRef) return;
-    
-    // For both Login and Sign Up, measure and ensure visibility
-    const windowH = Dimensions.get('window').height;
-    const keyboardTop = windowH - (keyboardShown ? keyboardHeight : 0);
-    const safeGap = 20;
-    
-    // Save the field's position so we can keep it visible after keyboard dismisses
-    if (inputRef?.measureInWindow) {
-      inputRef.measureInWindow((_x: number, y: number, _w: number, h: number) => {
-        const inputBottom = y + h;
-        const limit = keyboardTop - safeGap;
-        
-        // Always scroll to keep the field visible in the middle of available space
-        const targetY = Math.max(0, y - 100); // Position field with padding above
-        try {
-          (scrollViewRef.current as any).scrollTo({ y: targetY, animated: true });
-        } catch {}
-      });
-    }
-  };
+     const dismissAll = () => {
+     Keyboard.dismiss();
+   };
+  // ensureVisible is now handled by useKeyboardShift hook
 
   const isValidEmail = (val: string) => {
     // Simplified RFC5322-compatible check; matches common cases from Figma behavior
@@ -182,6 +193,9 @@ const AuthScreen: React.FC<Props> = ({ initialTab = 'login' }) => {
     // No scroll reset when switching to Sign Up - keep current position
   }, [active]);
 
+  const isDobSelected = !!dobDate;
+  const isGenderSelected = gender !== '';
+
   return (
     <LinearGradient
       colors={[Colors.backgroundTop, '#E3EDDC', Colors.backgroundGreen]}
@@ -203,7 +217,7 @@ const AuthScreen: React.FC<Props> = ({ initialTab = 'login' }) => {
               keyboardShouldPersistTaps="handled"
               keyboardDismissMode="on-drag"
               automaticallyAdjustKeyboardInsets={active === 'signup'}
-              onScroll={(e) => { setScrollY(e.nativeEvent.contentOffset.y); if (showCodeDropdown) setShowCodeDropdown(false); }}
+                             onScroll={(e) => { setScrollY(e.nativeEvent.contentOffset.y); }}
               scrollEventThrottle={16}
               scrollEnabled={active === 'signup'}
               bounces={active === 'signup'}
@@ -224,13 +238,31 @@ const AuthScreen: React.FC<Props> = ({ initialTab = 'login' }) => {
             <View style={{ width: CONTENT_WIDTH, alignSelf: 'center', marginTop: Spacing.lg, overflow: 'hidden' }}>
               <Animated.View style={{ width: CONTENT_WIDTH * 2, flexDirection: 'row', transform: [{ translateX: slideX }] }}>
                 {/* Login form */}
-                <Animated.View style={{ width: CONTENT_WIDTH, transform: [{ translateY: active === 'login' ? loginShiftY : 0 }] }}>
+                <Animated.View style={{ width: CONTENT_WIDTH, transform: [{ translateY: loginShiftY }] }}>
                   {/* Username/Email */}
                   <View style={styles.inputGroup}>
                     <Text style={styles.inputLabel}>Username / Email</Text>
                     <View style={styles.inputContainer}>
                       <MaterialCommunityIcons name="account" size={24} color={Colors.black} />
-                      <TextInput ref={usernameRef} style={styles.textInput} value={username} onChangeText={setUsername} placeholder="Enter username or email" placeholderTextColor={Colors.textSecondary} onFocus={() => { handleInputFocus(); onLoginFocus(usernameRef); }} keyboardType="email-address" textContentType="emailAddress" autoComplete="email" autoCorrect={false} allowFontScaling={false} />
+                      <TextInput 
+                        ref={usernameRef} 
+                        style={styles.textInput} 
+                        value={username} 
+                        onChangeText={setUsername} 
+                        placeholder="Enter username or email" 
+                        placeholderTextColor={Colors.textSecondary} 
+                        onFocus={() => { handleInputFocus(); onLoginFocus(usernameRef); setUsernameFocused(true); }} 
+                        onBlur={() => setUsernameFocused(false)}
+                        keyboardType="email-address" 
+                        textContentType="emailAddress" 
+                        autoComplete="email" 
+                        autoCorrect={false} 
+                        allowFontScaling={false} 
+                      />
+                      <ClearButton
+                        visible={usernameFocused && username.length > 0}
+                        onPress={() => setUsername('')}
+                      />
                     </View>
                   </View>
                   {/* Password */}
@@ -238,10 +270,29 @@ const AuthScreen: React.FC<Props> = ({ initialTab = 'login' }) => {
                     <Text style={styles.inputLabel}>Password</Text>
                     <View style={styles.inputContainer}>
                       <MaterialCommunityIcons name="lock" size={24} color={Colors.black} />
-                      <TextInput ref={passwordRef} style={styles.textInput} value={password} onChangeText={setPassword} secureTextEntry={!showPassword} placeholder="Enter password" placeholderTextColor={Colors.textSecondary} onFocus={() => { handleInputFocus(); onLoginFocus(passwordRef); }} textContentType="password" autoComplete="password" allowFontScaling={false} />
-                      <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon} accessibilityRole="button" accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}>
-                        <Ionicons name={showPassword ? 'eye' : 'eye-off'} size={24} color={Colors.black} />
-                      </TouchableOpacity>
+                      <TextInput 
+                        ref={passwordRef} 
+                        style={styles.textInput} 
+                        value={password} 
+                        onChangeText={setPassword} 
+                        secureTextEntry={!showPassword} 
+                        placeholder="Enter password" 
+                        placeholderTextColor={Colors.textSecondary} 
+                        onFocus={() => { handleInputFocus(); onLoginFocus(passwordRef); setPasswordFocused(true); }} 
+                        onBlur={() => setPasswordFocused(false)}
+                        textContentType="password" 
+                        autoComplete="password" 
+                        allowFontScaling={false} 
+                      />
+                      <ClearButton
+                        visible={passwordFocused && password.length > 0}
+                        onPress={() => setPassword('')}
+                      />
+                      {password.length > 0 && (
+                        <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon} accessibilityRole="button" accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}>
+                          <Ionicons name={showPassword ? 'eye' : 'eye-off'} size={24} color={Colors.black} />
+                        </TouchableOpacity>
+                      )}
                     </View>
                   </View>
                   {/* Location */}
@@ -294,14 +345,33 @@ const AuthScreen: React.FC<Props> = ({ initialTab = 'login' }) => {
                 </Animated.View>
 
                 {/* Sign Up form */}
-                <View style={{ width: CONTENT_WIDTH }}>
+                <Animated.View style={[{ width: CONTENT_WIDTH }, active === 'signup' ? signupShiftStyle : null]}>
                   {/* Username */}
                   <View style={styles.inputGroup}>
                     <Text style={styles.inputLabel}>Username</Text>
                     <View style={styles.inputContainer}>
                       <MaterialCommunityIcons name="account" size={24} color={Colors.black} />
-                      <TextInput ref={suUsernameRef} style={styles.textInput} value={suUsername} onChangeText={setSuUsername} placeholder="Enter username" placeholderTextColor={Colors.textSecondary} onFocus={() => { handleInputFocus(); ensureVisible(suUsernameRef.current); }} autoCorrect={false} allowFontScaling={false} />
-                      <MaterialCommunityIcons name="pencil" size={22} color={Colors.black} />
+                      <TextInput 
+                        ref={suUsernameRef} 
+                        style={styles.textInput} 
+                        value={suUsername} 
+                        onChangeText={setSuUsername} 
+                        placeholder="Enter username" 
+                        placeholderTextColor={Colors.textSecondary} 
+                        onFocus={() => {
+                          handleInputFocus();
+                          onSignupFocus!(suUsernameRef);
+                          ensureKeyboardVisible!(suUsernameRef);
+                          setSuUsernameFocused(true);
+                        }} 
+                        onBlur={() => setSuUsernameFocused(false)}
+                        autoCorrect={false} 
+                        allowFontScaling={false} 
+                      />
+                      <ClearButton
+                        visible={suUsernameFocused && suUsername.length > 0}
+                        onPress={() => setSuUsername('')}
+                      />
                     </View>
                   </View>
 
@@ -316,9 +386,8 @@ const AuthScreen: React.FC<Props> = ({ initialTab = 'login' }) => {
                     }}>
                       <MaterialCommunityIcons name="calendar" size={24} color={Colors.black} />
                       <View style={{ flex: 1, marginLeft: Spacing.sm }}>
-                        <Text style={styles.selectorText}>{formatDate(dobDate)}</Text>
+                        <Text style={[styles.selectorText, { color: isDobSelected ? colors.light.utilities : Colors.textSecondary }]}>{formatDate(dobDate)}</Text>
                       </View>
-                      <MaterialCommunityIcons name="pencil" size={22} color={Colors.black} />
                     </TouchableOpacity>
                   </View>
 
@@ -328,80 +397,94 @@ const AuthScreen: React.FC<Props> = ({ initialTab = 'login' }) => {
                     <TouchableOpacity style={styles.inputContainer} activeOpacity={0.7} onPress={() => setGenderModalVisible(true)}>
                       <MaterialCommunityIcons name="human-male-female" size={24} color={Colors.black} />
                       <View style={{ flex: 1, marginLeft: Spacing.sm }}>
-                        <Text style={styles.selectorText}>{gender}</Text>
+                        <Text style={[styles.selectorText, { color: isGenderSelected ? colors.light.utilities : Colors.textSecondary }]}>{isGenderSelected ? gender : 'Select gender'}</Text>
                       </View>
                       <MaterialCommunityIcons name="chevron-down" size={22} color={Colors.black} />
                     </TouchableOpacity>
                   </View>
 
-                  {/* Phone */}
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>Phone</Text>
-                    <View style={[styles.inputContainer, styles.inputContainerPhone]}>
-                      <MaterialCommunityIcons name="phone" size={24} color={Colors.black} />
-                      <View style={styles.phoneRow}>
-                        <View style={styles.codeBox}>
-                          <Text style={{ fontSize: Typography.fontSize.md, color: Colors.black, marginRight: 1 }}>+</Text>
-                          <TextInput
-                            style={styles.countryCode}
-                            value={countryCode}
-                            placeholderTextColor={Colors.textSecondary}
-                            // Render a leading plus visually without storing it
-                            defaultValue={undefined}
-                            onChangeText={(txt) => {
-                              const digits = txt.replace(/\D/g, '');
-                              setCountryCode(digits);
-                              // lazy import to avoid top-level weight
-                              import('../lib/phone/callingCodes').then(({ filterCallingCodes }) => {
-                                setCodeSuggestions(filterCallingCodes(digits));
-                                setShowCodeDropdown(true);
-                              }).catch(() => {});
-                            }}
-                            placeholder="86"
-                            keyboardType="number-pad"
-                            onFocus={() => { handleInputFocus(); ensureVisible(phoneCodeRef.current); setShowCodeDropdown(true); }}
-                            allowFontScaling={false}
-                          />
-                          {showCodeDropdown && codeSuggestions.length > 0 && (
-                            <View style={styles.dropdown}>
-                              {codeSuggestions.map((opt) => (
-                                <TouchableOpacity key={opt.code} style={styles.dropdownItem} onPress={() => {
-                                  setCountryCode(opt.code);
-                                  setShowCodeDropdown(false);
-                                }}>
-                                  <Text style={styles.dropdownText}>{`+${opt.code}  ${opt.country}`}</Text>
-                                </TouchableOpacity>
-                              ))}
-                            </View>
-                          )}
-                        </View>
-                        <View style={styles.separator} />
-                        <View style={styles.phoneNumberBox}>
-                          <TextInput
-                            style={styles.phoneNumber}
-                            value={phone}
-                            onChangeText={(t) => setPhone(t.replace(/\D/g, ''))}
-                            placeholder="Enter phone number"
-                            keyboardType="number-pad"
-                            placeholderTextColor={Colors.textSecondary}
-                            onFocus={() => { handleInputFocus(); ensureVisible(phoneNumberRef.current); }}
-                            textContentType="telephoneNumber"
-                            autoComplete="tel"
-                            allowFontScaling={false}
-                          />
-                        </View>
-                      </View>
-                      <MaterialCommunityIcons name="pencil" size={22} color={Colors.black} />
-                    </View>
-                  </View>
+                                     {/* Phone */}
+                   <View style={styles.inputGroup}>
+                     <Text style={styles.inputLabel}>Phone</Text>
+                     <View style={styles.inputContainer}>
+                       <MaterialCommunityIcons name="phone" size={24} color={Colors.black} />
+                       
+                       {/* Area code (no bounding box) + "|" + phone input; auto layout */}
+                       <AreaCodeInline value={countryCode} onSelect={setCountryCode} />
+
+                       <TextInput
+                         style={[styles.textInput, { flex: 1 }]}
+                         value={phone}
+                         onChangeText={(t) => setPhone(t.replace(/\D/g, ''))}
+                         placeholder="Phone number"
+                         placeholderTextColor={Colors.textSecondary}
+                         keyboardType={Platform.OS === 'ios' ? 'number-pad' : 'numeric'}
+                         onFocus={() => {
+                           handleInputFocus();
+                           onSignupFocus!(phoneNumberRef);
+                           ensureKeyboardVisible!(phoneNumberRef);
+                           setPhoneFocused(true);
+                         }}
+                         onBlur={() => setPhoneFocused(false)}
+                         textContentType="telephoneNumber"
+                         autoComplete="tel"
+                         allowFontScaling={false}
+                       />
+
+                       {/* Clear button for phone ONLY */}
+                       {phoneFocused && phone.length > 0 ? (
+                         <TouchableOpacity
+                           onPress={() => setPhone('')}
+                           accessibilityLabel="Clear phone"
+                           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                           style={{
+                             width: 22,
+                             height: 22,
+                             borderRadius: 11,
+                             alignItems: 'center',
+                             justifyContent: 'center',
+                             marginLeft: Spacing.xs,
+                             marginRight: Spacing.xs,
+                             backgroundColor: colors.light.buttonBg,
+                           }}
+                         >
+                           <Ionicons name="close" size={14} color={colors.light.utilities} />
+                         </TouchableOpacity>
+                       ) : null}
+
+                     </View>
+                   </View>
 
                   {/* Email */}
                   <View style={styles.inputGroup}>
                     <Text style={styles.inputLabel}>Email</Text>
                     <View style={styles.inputContainer}>
                       <MaterialCommunityIcons name="email" size={24} color={Colors.black} />
-                      <TextInput ref={suEmailRef} style={styles.textInput} value={email} onChangeText={setEmail} placeholder="Enter email" keyboardType="email-address" autoCapitalize="none" placeholderTextColor={Colors.textSecondary} onFocus={() => { handleInputFocus(); ensureVisible(suEmailRef.current); }} textContentType="emailAddress" autoComplete="email" autoCorrect={false} allowFontScaling={false} />
-                      <MaterialCommunityIcons name="pencil" size={22} color={Colors.black} />
+                      <TextInput 
+                        ref={suEmailRef} 
+                        style={styles.textInput} 
+                        value={email} 
+                        onChangeText={setEmail} 
+                        placeholder="Enter email" 
+                        keyboardType="email-address" 
+                        autoCapitalize="none" 
+                        placeholderTextColor={Colors.textSecondary} 
+                        onFocus={() => {
+                          handleInputFocus();
+                          onSignupFocus!(suEmailRef);
+                          ensureKeyboardVisible!(suEmailRef);
+                          setEmailFocused(true);
+                        }} 
+                        onBlur={() => setEmailFocused(false)}
+                        textContentType="emailAddress" 
+                        autoComplete="email" 
+                        autoCorrect={false} 
+                        allowFontScaling={false} 
+                      />
+                      <ClearButton
+                        visible={emailFocused && email.length > 0}
+                        onPress={() => setEmail('')}
+                      />
                     </View>
                     {emailInvalid && (
                       <View style={styles.errorCallout}>
@@ -416,10 +499,34 @@ const AuthScreen: React.FC<Props> = ({ initialTab = 'login' }) => {
                     <Text style={styles.inputLabel}>Password</Text>
                     <View style={styles.inputContainer}>
                       <MaterialCommunityIcons name="lock" size={24} color={Colors.black} />
-                      <TextInput ref={suPasswordRef} style={styles.textInput} value={suPassword} onChangeText={setSuPassword} secureTextEntry={!suShowPassword} placeholder="Enter password" placeholderTextColor={Colors.textSecondary} onFocus={() => { handleInputFocus(); ensureVisible(suPasswordRef.current); }} textContentType="newPassword" autoComplete="password-new" allowFontScaling={false} />
-                      <TouchableOpacity onPress={() => setSuShowPassword(!suShowPassword)}>
-                        <Ionicons name={suShowPassword ? 'eye' : 'eye-off'} size={24} color={Colors.black} />
-                      </TouchableOpacity>
+                      <TextInput 
+                        ref={suPasswordRef} 
+                        style={styles.textInput} 
+                        value={suPassword} 
+                        onChangeText={setSuPassword} 
+                        secureTextEntry={!suShowPassword} 
+                        placeholder="Enter password" 
+                        placeholderTextColor={Colors.textSecondary} 
+                        onFocus={() => {
+                          handleInputFocus();
+                          onSignupFocus!(suPasswordRef);
+                          ensureKeyboardVisible!(suPasswordRef);
+                          setSuPwFocused(true);
+                        }} 
+                        onBlur={() => setSuPwFocused(false)}
+                        textContentType="newPassword" 
+                        autoComplete="password-new" 
+                        allowFontScaling={false} 
+                      />
+                      <ClearButton
+                        visible={suPwFocused && suPassword.length > 0}
+                        onPress={() => setSuPassword('')}
+                      />
+                      {suPassword.length > 0 && (
+                        <TouchableOpacity onPress={() => setSuShowPassword(!suShowPassword)}>
+                          <Ionicons name={suShowPassword ? 'eye' : 'eye-off'} size={24} color={Colors.black} />
+                        </TouchableOpacity>
+                      )}
                     </View>
                   </View>
 
@@ -428,10 +535,32 @@ const AuthScreen: React.FC<Props> = ({ initialTab = 'login' }) => {
                     <Text style={styles.inputLabel}>Re-enter  Password</Text>
                     <View style={styles.inputContainer}>
                       <MaterialCommunityIcons name="lock-check" size={24} color={Colors.black} />
-                      <TextInput ref={suConfirmRef} style={styles.textInput} value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry={!suShowConfirmPassword} placeholder="Re-enter password" placeholderTextColor={Colors.textSecondary} onFocus={() => { handleInputFocus(); ensureVisible(suConfirmRef.current); }} allowFontScaling={false} />
-                      <TouchableOpacity onPress={() => setSuShowConfirmPassword(!suShowConfirmPassword)}>
-                        <Ionicons name={suShowConfirmPassword ? 'eye' : 'eye-off'} size={24} color={Colors.black} />
-                      </TouchableOpacity>
+                      <TextInput 
+                        ref={suConfirmRef} 
+                        style={styles.textInput} 
+                        value={confirmPassword} 
+                        onChangeText={setConfirmPassword} 
+                        secureTextEntry={!suShowConfirmPassword} 
+                        placeholder="Re-enter password" 
+                        placeholderTextColor={Colors.textSecondary} 
+                        onFocus={() => {
+                          handleInputFocus();
+                          onSignupFocus!(suConfirmRef);
+                          ensureKeyboardVisible!(suConfirmRef);
+                          setSuCpwFocused(true);
+                        }} 
+                        onBlur={() => setSuCpwFocused(false)}
+                        allowFontScaling={false} 
+                      />
+                      <ClearButton
+                        visible={suCpwFocused && confirmPassword.length > 0}
+                        onPress={() => setConfirmPassword('')}
+                      />
+                      {confirmPassword.length > 0 && (
+                        <TouchableOpacity onPress={() => setSuShowConfirmPassword(!suShowConfirmPassword)}>
+                          <Ionicons name={suShowConfirmPassword ? 'eye' : 'eye-off'} size={24} color={Colors.black} />
+                        </TouchableOpacity>
+                      )}
                     </View>
                   </View>
 
@@ -440,7 +569,11 @@ const AuthScreen: React.FC<Props> = ({ initialTab = 'login' }) => {
                     <Text style={styles.inputLabel}>Location</Text>
                     <View style={styles.inputContainer}>
                       <MaterialCommunityIcons name="map-marker" size={24} color={Colors.black} />
-                      <TextInput ref={suLocationRef} style={styles.textInput} value={suLocation} onChangeText={setSuLocation} placeholder="Select location" placeholderTextColor={Colors.textSecondary} onFocus={() => { handleInputFocus(); ensureVisible(suLocationRef.current); }} allowFontScaling={false} />
+                      <TextInput ref={suLocationRef} style={styles.textInput} value={suLocation} onChangeText={setSuLocation} placeholder="Select location" placeholderTextColor={Colors.textSecondary} onFocus={() => {
+                        handleInputFocus();
+                        onSignupFocus!(suLocationRef);
+                        ensureKeyboardVisible!(suLocationRef);
+                      }} allowFontScaling={false} />
                       <MaterialCommunityIcons name="chevron-down" size={22} color={Colors.black} />
                     </View>
                   </View>
@@ -464,7 +597,7 @@ const AuthScreen: React.FC<Props> = ({ initialTab = 'login' }) => {
                     <TouchableOpacity style={styles.socialButton}><GoogleIcon size={28} /></TouchableOpacity>
                     <TouchableOpacity style={styles.socialButton}><Ionicons name="call" size={28} color="#000" /></TouchableOpacity>
                   </View>
-                </View>
+                </Animated.View>
               </Animated.View>
             </View>
             </View>
@@ -481,7 +614,7 @@ const AuthScreen: React.FC<Props> = ({ initialTab = 'login' }) => {
                   <View style={styles.modalHandle} />
                   <View style={styles.pickerContainer}>
                     <DateTimePicker 
-                      value={tempDobDate} 
+                      value={tempDobDate || new Date()} 
                       mode="date" 
                       display={Platform.OS === 'ios' ? 'spinner' : 'default'} 
                       onChange={(e, d) => { 
@@ -504,7 +637,7 @@ const AuthScreen: React.FC<Props> = ({ initialTab = 'login' }) => {
                       <TouchableOpacity style={styles.modalDone} onPress={() => {
                         Keyboard.dismiss();
                         // Save the temporary date when Done is pressed
-                        setDobDate(tempDobDate);
+                        setDobDate(tempDobDate || null);
                         setDobModalVisible(false);
                       }}>
                         <Text style={styles.modalDoneText}>Done</Text>
@@ -545,7 +678,7 @@ const styles = StyleSheet.create({
   inputGroup: { marginBottom: Spacing.md },
   inputLabel: { fontSize: Typography.fontSize.md, fontWeight: 'bold', color: Colors.black, marginBottom: Spacing.sm },
   inputContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.white, borderRadius: BorderRadius.xl, paddingHorizontal: Spacing.lg, paddingVertical: Spacing.lg, borderWidth: 0 },
-  inputContainerPhone: { paddingHorizontal: Spacing.md, height: 53 },
+
   textInput: { flex: 1, marginLeft: Spacing.sm, fontSize: Typography.fontSize.md, fontWeight: '600', color: Colors.black },
   selectorText: { fontSize: Typography.fontSize.md, fontWeight: '600', color: Colors.black },
   eyeIcon: { marginLeft: Spacing.sm },
@@ -572,17 +705,19 @@ const styles = StyleSheet.create({
   modalDoneText: { fontSize: Typography.fontSize.md, color: Colors.black },
   modalOption: { paddingVertical: 18, paddingHorizontal: 20, width: '100%' },
   modalOptionText: { fontSize: Typography.fontSize.md, color: Colors.black, textAlign: 'center' },
-  phoneRow: { flex: 1, flexDirection: 'row', alignItems: 'center' },
-  codeBox: { width: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', paddingRight: 1 },
-  countryCode: { flex: 1, fontSize: Typography.fontSize.md, color: Colors.black, paddingVertical: 0, marginLeft: 2, textAlign: 'left' },
-  separator: { width: 1, height: 22, backgroundColor: Colors.calendarGrid, marginHorizontal: 2 },
-  phoneNumberBox: { flex: 1, flexDirection: 'row', alignItems: 'center' },
-  phoneNumber: { flex: 1, fontSize: Typography.fontSize.md, color: Colors.black, paddingVertical: 0 },
-  dropdown: { position: 'absolute', top: 42, left: -8, width: 220, backgroundColor: Colors.white, borderRadius: BorderRadius.lg, borderWidth: 0.5, borderColor: Colors.calendarGrid, zIndex: 10, maxHeight: 240 },
-  dropdownItem: { paddingVertical: 10, paddingHorizontal: 12 },
-  dropdownText: { fontSize: Typography.fontSize.sm, color: Colors.black },
+
   errorCallout: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 8, paddingVertical: 12, paddingHorizontal: 16, borderRadius: BorderRadius.xl, borderWidth: 2, borderColor: Colors.error, backgroundColor: Colors.white },
   errorCalloutText: { color: Colors.black, fontSize: Typography.fontSize.lg, fontWeight: 'bold' },
+  clearBtn: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: Spacing.xs,
+    marginRight: Spacing.xs,
+    backgroundColor: colors.light.buttonBg,
+  },
 });
 
 export default AuthScreen;

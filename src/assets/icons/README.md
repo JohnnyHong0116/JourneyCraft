@@ -2,59 +2,56 @@
 
 ## 📁 目录说明
 
-此目录用于存放应用所需的所有图标资源文件。**完全按照 Figma 设计规范，不做任何修改**。每个图标都有 Light 和 Dark 两种模式。
+此目录用于存放应用所需的所有图标资源文件。自本次更新起：改为“每个图标有 selected / unselected 两种状态”，明暗模式的颜色由组件使用方传入控制，不再用 light/dark 两套资源。
 
-## ⚠️ 当前状态
+## 现在的约定（重要）
 
-**注意：目前图标文件尚未添加，应用使用 Ionicons 系统图标作为占位符。**
+- 资源为纯 SVG 文件
+- 每个功能位包含：`selected.svg` 与 `unselected.svg`
+- 颜色通过传入 `color`（或使用 CSS-like `currentColor`）由组件层控制
 
 ## 🔄 图标文件命名规范
 
 **完全按照 Figma 设计，不做任何修改：**
 
-### TabBar 图标
-- `home-light.png` / `home-dark.png` - 首页按钮
-- `location-light.png` / `location-dark.png` - 位置按钮
-- `stats-light.png` / `stats-dark.png` - 统计按钮
-- `profile-light.png` / `profile-dark.png` - 个人资料按钮
+### TabBar 图标（目录结构）
+- `tab/home/selected.svg` / `tab/home/unselected.svg`
+- `tab/location/selected.svg` / `tab/location/unselected.svg`
+- `tab/stats/selected.svg` / `tab/stats/unselected.svg`
+- `tab/profile/selected.svg` / `tab/profile/unselected.svg`
 
-### 功能图标
-- `search-light.png` / `search-dark.png` - 搜索按钮
-- `more-light.png` / `more-dark.png` - 更多选项按钮
-- `calendar-light.png` / `calendar-dark.png` - 日历按钮
-- `add-light.png` / `add-dark.png` - 添加按钮
+### 功能图标（目录结构）
+- `functional/search/selected.svg` / `functional/search/unselected.svg`
+- `functional/more/selected.svg` / `functional/more/unselected.svg`
+- `functional/calendar/selected.svg` / `functional/calendar/unselected.svg`
+- `functional/add/selected.svg` / `functional/add/unselected.svg`
 
-### 卡片左侧竖排图标
-- `save-light.png` / `save-dark.png` - 收藏/保存图标
-- `lock-light.png` / `lock-dark.png` - 加密图标
-- `people-group-light.png` / `people-group-dark.png` - 同行人物图标
+### 卡片图标（目录结构）
+- `card/save/selected.svg` / `card/save/unselected.svg`
+- `card/lock/selected.svg` / `card/lock/unselected.svg`
+- `card/people/selected.svg` / `card/people/unselected.svg`
 
-### 卡片左下横排图标
-- `image-light.png` / `image-dark.png` - 图片图标
-- `mic-light.png` / `mic-dark.png` - 录音图标
-- `video-light.png` / `video-dark.png` - 视频图标
+### 媒体图标（目录结构）
+- `media/image/selected.svg` / `media/image/unselected.svg`
+- `media/mic/selected.svg` / `media/mic/unselected.svg`
+- `media/video/selected.svg` / `media/video/unselected.svg`
 
 ### 其他图标
-- `map-pin-light.png` / `map-pin-dark.png` - 地图定位图标
+- `map-pin-light.svg` / `map-pin-dark.svg` - 地图定位图标
 
-## 📋 图标规格要求
+## 📋 图标规范
 
-**完全按照 Figma 设计，不做任何修改：**
-
-- **格式**：PNG 格式，支持透明背景
-- **尺寸**：根据 Figma 设计确定，不做任何调整
-- **颜色**：完全按照 Figma 设计，不做任何修改
-- **风格**：完全按照 Figma 设计，不做任何修改
+- **格式**：纯 SVG（不要嵌入位图）
+- **viewBox**：统一如 `0 0 24 24`（或依 Figma），保持等比缩放
+- **颜色**：优先使用 `fill="currentColor"`，颜色由组件传入的 `color` 控制；selected/unselected 通过不同的路径形态/描边来区分
+- **命名**：统一使用 selected.svg / unselected.svg
 
 ## 🚀 添加图标步骤
 
-**完全按照 Figma 设计，不做任何修改：**
-
-1. 从 Figma 设计文件导出图标（**不做任何修改**）
-2. 按照命名规范重命名文件（**不做任何修改**）
-3. 放置到对应目录（**不做任何修改**）
-4. 在 `src/assets/icons.ts` 中取消注释对应行（**不做任何修改**）
-5. 更新 `src/components/Icon.tsx` 使用自定义图标（**不做任何修改**）
+1. 从 Figma 导出 SVG，填充色改为 `currentColor` 或黑色占位
+2. 放入对应目录并命名为 selected.svg / unselected.svg
+3. 在 `src/assets/icons.ts` 注册（见下）
+4. 在组件中通过 `selected` + `color` 使用
 
 ## 🔧 技术实现
 

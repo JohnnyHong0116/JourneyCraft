@@ -2,6 +2,7 @@ import React from 'react';
 import { Image, ImageStyle, ViewStyle } from 'react-native';
 import { useColorScheme } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { IconSvg } from '@/assets/icons';
 
 export interface IconProps {
   name: string;
@@ -66,6 +67,19 @@ export const Icon: React.FC<IconProps> = ({
     return iconMap[iconName] || 'help-circle';
   };
 
+  // 新系统：支持通过 name="category.key.state" 使用本地 SVG
+  if (name.includes('.')) {
+    try {
+      const [category, key, state] = name.split('.') as [keyof typeof IconSvg, string, 'selected'|'unselected'];
+      // @ts-ignore
+      const Comp = IconSvg?.[category]?.[key]?.[state];
+      if (Comp) {
+        return <Comp width={size} height={size} style={style} color={color} />;
+      }
+    } catch {}
+  }
+
+  // 兜底：Ionicons 占位
   return (
     <Ionicons 
       name={getIoniconName(name) as any} 

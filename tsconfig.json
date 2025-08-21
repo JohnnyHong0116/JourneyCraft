@@ -22,6 +22,9 @@
       ],
       "@features/*": [
         "features/*"
+      ],
+      "@/assets/*": [
+        "src/assets/*"
       ]
     }
   },

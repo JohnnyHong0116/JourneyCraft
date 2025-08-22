@@ -18,50 +18,21 @@ import { Header } from '../../features/home/components/Header';
 import { TripCard } from '../../features/home/components/TripCard';
 import { SectionHeader } from '../../features/home/components/SectionHeader';
 
-
 export default function HomeTab() {
   const [selectedTab, setSelectedTab] = useState<'visited' | 'planned'>('visited');
   const [trips, setTrips] = useState<Trip[]>(mockTrips);
   const [refreshing, setRefreshing] = useState(false);
-  const sectionListRef = useRef<SectionList>(null);
+  const sectionListRef = useRef<SectionList<Trip, TripSection>>(null);
 
   const sections = groupTripsBySection(trips);
 
   const handleTabChange = (tab: 'visited' | 'planned') => {
     setSelectedTab(tab);
-    // TODO: 切换到 Planned 标签页的逻辑
-    if (tab === 'planned') {
-      Alert.alert('Coming Soon', 'Planned trips feature will be available soon!');
-      setSelectedTab('visited'); // 暂时保持选中 visited
-    }
+    // 这里可以添加切换逻辑
   };
 
-
-
   const handleAddNewTrip = useCallback(() => {
-    const newTrip: Trip = {
-      id: `new-${Date.now()}`,
-      title: 'New Trip',
-      location: 'Location',
-      createdAt: new Date().toISOString(),
-      displayDate: new Date().toISOString(),
-      photos: [],
-      audioCount: 0,
-      videoCount: 0,
-      isSaved: false,
-      isLocked: false,
-    };
-
-    setTrips(prevTrips => [newTrip, ...prevTrips]);
-
-    // 滚动到新卡片位置
-    setTimeout(() => {
-      sectionListRef.current?.scrollToLocation({
-        sectionIndex: 0,
-        itemIndex: 0,
-        animated: true,
-      });
-    }, 100);
+    router.push('/card/new' as any);
   }, []);
 
   const handleRefresh = useCallback(async () => {
@@ -73,34 +44,26 @@ export default function HomeTab() {
   }, []);
 
   const handleSearch = () => {
-    Alert.alert('Search', 'Search functionality coming soon!');
+    // 搜索功能
   };
 
   const handleSort = () => {
-    Alert.alert('Sort', 'Sort functionality coming soon!');
+    // 排序功能
   };
 
   const handleViewChange = () => {
-    Alert.alert('View Change', 'View change functionality coming soon!');
+    // 视图切换功能
   };
 
   const renderSectionHeader = useCallback(({ section }: { section: TripSection }) => (
     <SectionHeader title={section.title} />
   ), []);
 
-  const renderTripItem: SectionListRenderItem<Trip> = useCallback(({ item, section }) => (
+  const renderTripItem: SectionListRenderItem<Trip, TripSection> = useCallback(({ item }) => (
     <TripCard
       trip={item}
-      showGroupLabel={true}
-      groupLabel={section.title}
     />
   ), []);
-
-  const renderSectionItem = useCallback(({ item, index }: SectionListRenderItemInfo<Trip>) => (
-    <View key={item.id}>
-      {renderTripItem({ item, index, section: { title: '', data: [] } })}
-    </View>
-  ), [renderTripItem]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -111,13 +74,13 @@ export default function HomeTab() {
         onSort={handleSort}
         onViewChange={handleViewChange}
       />
-      
-      <SectionList
+
+      <SectionList<Trip, TripSection>
         ref={sectionListRef}
         sections={sections}
         keyExtractor={(item) => item.id}
         renderSectionHeader={renderSectionHeader}
-        renderItem={renderSectionItem}
+        renderItem={renderTripItem}
         stickySectionHeadersEnabled={true}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
@@ -129,17 +92,12 @@ export default function HomeTab() {
           />
         }
       />
-
-
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.backgroundDefault,
-  },
+  container: { flex: 1, backgroundColor: Colors.backgroundDefault, },
   listContent: {
     paddingBottom: 80, // 为底部导航栏留出空间
     paddingTop: Spacing.sm,

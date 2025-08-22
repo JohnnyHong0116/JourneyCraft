@@ -36,7 +36,7 @@ const LoginScreen: React.FC = () => {
   const usernameRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
   const locationRef = useRef<TextInput>(null);
-  const { shiftY, onFocus } = useKeyboardShift(20);
+  const { shiftStyle, onFocus } = useKeyboardShift();
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [username, setUsername] = useState('');
@@ -103,7 +103,7 @@ const LoginScreen: React.FC = () => {
             </View>
 
             {/* Form Section */}
-            <Animated.View style={[styles.form, { marginTop: Spacing.lg, width: CONTENT_WIDTH, alignSelf: 'center', transform: [{ translateY: shiftY }] }]}>
+            <Animated.View style={[styles.form, { marginTop: Spacing.lg, width: CONTENT_WIDTH, alignSelf: 'center' }, shiftStyle]}>
               {/* Username/Email Field */}
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Username / Email</Text>

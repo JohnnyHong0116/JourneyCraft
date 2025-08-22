@@ -13,11 +13,7 @@ import { BlurView } from 'expo-blur';
 import { useRouter, usePathname } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  HomeIcon,
-  LocationIcon,
-  StatsIcon,
-  ProfileIcon,
-  AddIcon,
+  Icon
 } from '@/components/Icon';
 import { colors, ColorScheme } from '@/tokens';
 
@@ -97,7 +93,7 @@ export default function BottomNavBar() {
 
       {/* 1) 底栏形状与阴影（包含手势区） */}
       <View style={[styles.barWrap, { width, height: BAR_HEIGHT + insets.bottom + 16 }]}>
-        {/* 顶部“凹槽”形状区域（保持原尺寸，不拉伸） */}
+        {/* 顶部"凹槽"形状区域（保持原尺寸，不拉伸） */}
         <MaskedView
           style={[{ position: 'absolute', left: 0, right: 0, top: 0, height: BAR_HEIGHT + 16, zIndex: 1 }]}
           maskElement={
@@ -136,10 +132,18 @@ export default function BottomNavBar() {
         <View style={[styles.row, { zIndex: 2, bottom: insets.bottom + 10 }]}>
           <View style={styles.side}>
             <Pressable style={styles.tab} onPress={() => router.replace('/(tabs)/home')}>
-              <HomeIcon size={24} color={current === 'home' ? iconActive : iconInactive} />
+              <Icon 
+                name={'home-selected'}
+                size={24} 
+                color={current === 'home' ? iconActive : iconInactive} 
+              />
             </Pressable>
             <Pressable style={styles.tab} onPress={() => router.replace('/(tabs)/location')}>
-              <LocationIcon size={24} color={current === 'location' ? iconActive : iconInactive} />
+              <Icon 
+                name={'pin-selected'}
+                size={24} 
+                color={current === 'location' ? iconActive : iconInactive} 
+              />
             </Pressable>
           </View>
 
@@ -148,10 +152,18 @@ export default function BottomNavBar() {
 
           <View style={styles.side}>
             <Pressable style={styles.tab} onPress={() => router.replace('/(tabs)/stats')}>
-              <StatsIcon size={24} color={current === 'stats' ? iconActive : iconInactive} />
+              <Icon 
+                name={'stats-selected'}
+                size={24} 
+                color={current === 'stats' ? iconActive : iconInactive} 
+              />
             </Pressable>
             <Pressable style={styles.tab} onPress={() => router.replace('/(tabs)/profile')}>
-              <ProfileIcon size={24} color={current === 'profile' ? iconActive : iconInactive} />
+              <Icon 
+                name={'profile-selected'}
+                size={24} 
+                color={current === 'profile' ? iconActive : iconInactive} 
+              />
             </Pressable>
           </View>
         </View>
@@ -163,7 +175,7 @@ export default function BottomNavBar() {
         style={[styles.fab, { bottom: FAB_BOTTOM_ABS, backgroundColor: fabBg }]}
         android_ripple={{ color: '#E6F5E6', borderless: true }}
       >
-        <AddIcon size={38} color="#FFFFFF" />
+        <Icon name="add-selected" size={38} color="#FFFFFF" />
       </Pressable>
     </View>
   );

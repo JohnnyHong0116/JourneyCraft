@@ -1,152 +1,98 @@
 import React from 'react';
-import { Image, ImageStyle, ViewStyle } from 'react-native';
-import { useColorScheme } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { IconSvg } from '@/assets/icons';
 
 export interface IconProps {
   name: string;
   size?: number;
-  style?: ImageStyle | ViewStyle;
-  theme?: 'light' | 'dark';
   color?: string;
 }
 
 export const Icon: React.FC<IconProps> = ({ 
   name, 
   size = 24, 
-  style, 
-  theme,
   color,
 }) => {
-  const systemColorScheme = useColorScheme();
-  const currentTheme = theme || systemColorScheme || 'light';
-  
-  // 暂时使用 Ionicons 作为占位符，等待自定义图标文件添加
-  const getIoniconName = (iconName: string) => {
-    const iconMap: { [key: string]: string } = {
-      // TabBar 图标
-      'homeLight': 'home',
-      'homeDark': 'home',
-      'locationLight': 'location',
-      'locationDark': 'location',
-      'statsLight': 'stats-chart',
-      'statsDark': 'stats-chart',
-      'profileLight': 'person',
-      'profileDark': 'person',
-      
-      // 功能图标
-      'searchLight': 'search',
-      'searchDark': 'search',
-      'moreLight': 'ellipsis-horizontal',
-      'moreDark': 'ellipsis-horizontal',
-      'calendarLight': 'calendar',
-      'calendarDark': 'calendar',
-      'addLight': 'add',
-      'addDark': 'add',
-      
-      // 卡片图标
-      'saveLight': 'heart',
-      'saveDark': 'heart',
-      'lockLight': 'lock-closed',
-      'lockDark': 'lock-closed',
-      'peopleGroupLight': 'people',
-      'peopleGroupDark': 'people',
-      'imageLight': 'image',
-      'imageDark': 'image',
-      'micLight': 'mic',
-      'micDark': 'mic',
-      'videoLight': 'videocam',
-      'videoDark': 'videocam',
-      
-      // 其他图标
-      'mapPinLight': 'location',
-      'mapPinDark': 'location',
-    };
-    
-    return iconMap[iconName] || 'help-circle';
-  };
+  // 解析名称：支持 "key-selected" / "key-unselected"，否则默认 selected
+  let iconKey = name as keyof typeof IconSvg | string;
+  let state: 'selected' | 'unselected' = 'selected';
 
-  // 新系统：支持通过 name="category.key.state" 使用本地 SVG
-  if (name.includes('.')) {
-    try {
-      const [category, key, state] = name.split('.') as [keyof typeof IconSvg, string, 'selected'|'unselected'];
-      // @ts-ignore
-      const Comp = IconSvg?.[category]?.[key]?.[state];
-      if (Comp) {
-        return <Comp width={size} height={size} style={style} color={color} />;
-      }
-    } catch {}
+  if (name.includes('-')) {
+    const parts = name.split('-');
+    const maybeState = parts[parts.length - 1];
+    if (maybeState === 'selected' || maybeState === 'unselected') {
+      state = maybeState;
+      iconKey = parts.slice(0, -1).join('-');
+    }
   }
 
-  // 兜底：Ionicons 占位
-  return (
-    <Ionicons 
-      name={getIoniconName(name) as any} 
-      size={size} 
-      color={color ?? (currentTheme === 'light' ? '#000000' : '#FFFFFF')} 
-      style={style}
-    />
-  );
+  // 取出对应的 SVG 组件
+  // @ts-ignore 动态索引
+  const pack = IconSvg[iconKey];
+  const IconComponent = pack?.[state] ?? pack?.selected;
+
+  if (!IconComponent) return null;
+
+  // 关键：把 color 透传给 svg，使其被 currentColor 使用
+  return <IconComponent width={size} height={size} color={color} />;
 };
 
-// 预定义的图标组件
+// 预定义的图标组件 - 使用新的命名方式（始终 selected，由颜色控制状态）
 export const HomeIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="homeLight" {...props} />
+  <Icon name="home-selected" {...props} />
 );
 
 export const StatsIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="statsLight" {...props} />
+  <Icon name="stats-selected" {...props} />
 );
 
 export const SearchIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="searchLight" {...props} />
+  <Icon name="search-selected" {...props} />
 );
 
 export const MoreIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="moreLight" {...props} />
+  <Icon name="threedots" {...props} />
 );
 
 export const CalendarIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="calendarLight" {...props} />
+  <Icon name="date-selected" {...props} />
 );
 
 export const AddIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="addLight" {...props} />
+  <Icon name="add-selected" {...props} />
 );
 
 export const SaveIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="saveLight" {...props} />
+  <Icon name="cardsave" {...props} />
 );
 
 export const LockIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="lockLight" {...props} />
+  <Icon name="cardlock" {...props} />
 );
 
 export const PeopleGroupIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="peopleGroupLight" {...props} />
+  <Icon name="cardpeople" {...props} />
 );
 
 export const ImageIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="imageLight" {...props} />
+  <Icon name="cardimage" {...props} />
 );
 
 export const MicIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="micLight" {...props} />
+  <Icon name="cardmic" {...props} />
 );
 
 export const VideoIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="videoLight" {...props} />
+  <Icon name="cardvideo" {...props} />
 );
 
 export const MapPinIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="mapPinLight" {...props} />
+  <Icon name="pin-selected" {...props} />
 );
 
 export const LocationIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="locationLight" {...props} />
+  <Icon name="pin-selected" {...props} />
 );
 
 export const ProfileIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="profileLight" {...props} />
+  <Icon name="profile-selected" {...props} />
 );

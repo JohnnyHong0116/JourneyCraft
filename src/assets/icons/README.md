@@ -1,80 +1,137 @@
-# 图标资源目录
+# 图标资源目录（已扁平化）
 
-## 📁 目录说明
+## 📁 存储规则
+- 所有图标直接存放在 `src/assets/icons/` 目录（无分区子目录）。
+- 支持两类：
+  - 双态：`*-selected.svg` / `*-unselected.svg`
+  - 单态：仅一个 `.svg` 文件（两态时使用同一个资源）
+- 颜色请在组件中通过 `color` 传入；SVG 内部推荐使用 `currentColor`。
 
-此目录用于存放应用所需的所有图标资源文件。自本次更新起：改为“每个图标有 selected / unselected 两种状态”，明暗模式的颜色由组件使用方传入控制，不再用 light/dark 两套资源。
+## ✅ 实际文件与名称（已核对）
 
-## 现在的约定（重要）
+### Tab / 导航（双态）
+- `home-selected.svg` / `home-unselected.svg`
+- `map-selected.svg` / `map-unselected.svg`
+- `stats-selected.svg` / `stats-unselected.svg`
+- `profile-selected.svg` / `profile-unselected.svg`
 
-- 资源为纯 SVG 文件
-- 每个功能位包含：`selected.svg` 与 `unselected.svg`
-- 颜色通过传入 `color`（或使用 CSS-like `currentColor`）由组件层控制
+### 常用功能（双态）
+- `search-selected.svg` / `search-unselected.svg`
+- `setting-selected.svg` / `setting-unselected.svg`
+- `filter-selected.svg` / `filter-unselected.svg`
 
-## 🔄 图标文件命名规范
+### 常用功能（单态 → 两态同源）
+- `add.svg`
 
-**完全按照 Figma 设计，不做任何修改：**
+### 媒体与标记（双态）
+- `photo-selected.svg` / `photo-unselected.svg`
+- `pin-selected.svg` / `pin-unselected.svg`
 
-### TabBar 图标（目录结构）
-- `tab/home/selected.svg` / `tab/home/unselected.svg`
-- `tab/location/selected.svg` / `tab/location/unselected.svg`
-- `tab/stats/selected.svg` / `tab/stats/unselected.svg`
-- `tab/profile/selected.svg` / `tab/profile/unselected.svg`
+### 时间/状态（双态）
+- `date-selected.svg` / `date-unselected.svg`
+- `hourglass-selected.svg` / `hourglass-unselected.svg`
+- `bell-selected.svg` / `bell-unselected.svg`
 
-### 功能图标（目录结构）
-- `functional/search/selected.svg` / `functional/search/unselected.svg`
-- `functional/more/selected.svg` / `functional/more/unselected.svg`
-- `functional/calendar/selected.svg` / `functional/calendar/unselected.svg`
-- `functional/add/selected.svg` / `functional/add/unselected.svg`
+### 收藏（双态）
+- `bookmark-selected.svg` / `bookmark-unselected.svg`
+- `bookmarksmall-selected.svg` / `bookmarksmall-unselected.svg`
 
-### 卡片图标（目录结构）
-- `card/save/selected.svg` / `card/save/unselected.svg`
-- `card/lock/selected.svg` / `card/lock/unselected.svg`
-- `card/people/selected.svg` / `card/people/unselected.svg`
+### 卡片内容/操作（单态 → 两态同源）
+- `cardimage.svg`
+- `cardlock.svg`
+- `cardmic.svg`
+- `cardpeople.svg`
+- `cardsave.svg`
+- `cardvideo.svg`
+- `cardview.svg`
+- `edit.svg`
+- `sorting.svg`
+- `piechart.svg`
+- `threedots.svg`
+- `threedots-smaller.svg`
+- `redooutline.svg`
+- `undooutline.svg`
 
-### 媒体图标（目录结构）
-- `media/image/selected.svg` / `media/image/unselected.svg`
-- `media/mic/selected.svg` / `media/mic/unselected.svg`
-- `media/video/selected.svg` / `media/video/unselected.svg`
+### 圆形功能类（单态）
+- `circlecalendarview.svg`
+- `circlecardview.svg`
+- `circleclose.svg`
+- `circledelete.svg`
+- `circlefilter.svg`
+- `circlemenu.svg`
+- `circlephoto.svg`
+- `circlepin.svg`
+- `circleredo.svg`
+- `circlesave.svg`
+- `circlesearch.svg`
+- `circleshare.svg`
+- `circlesharenew.svg`
+- `circlesort.svg`
+- `circlethreedots.svg`
+- `circleundo.svg`
+- `circleunpin.svg`
+- `circleunsave.svg`
 
-### 其他图标
-- `map-pin-light.svg` / `map-pin-dark.svg` - 地图定位图标
+### 人物数量（单态）
+- `people0.svg`
+- `people1.svg`
+- `people2.svg`
+- `peoplemulti.svg`
 
-## 📋 图标规范
+## 🔧 代码接入
 
-- **格式**：纯 SVG（不要嵌入位图）
-- **viewBox**：统一如 `0 0 24 24`（或依 Figma），保持等比缩放
-- **颜色**：优先使用 `fill="currentColor"`，颜色由组件传入的 `color` 控制；selected/unselected 通过不同的路径形态/描边来区分
-- **命名**：统一使用 selected.svg / unselected.svg
-
-## 🚀 添加图标步骤
-
-1. 从 Figma 导出 SVG，填充色改为 `currentColor` 或黑色占位
-2. 放入对应目录并命名为 selected.svg / unselected.svg
-3. 在 `src/assets/icons.ts` 注册（见下）
-4. 在组件中通过 `selected` + `color` 使用
-
-## 🔧 技术实现
-
-图标通过 `src/assets/icons.ts` 统一导出，组件通过 `src/components/Icon.tsx` 使用。
-
-**当前使用 Ionicons 作为占位符，确保应用可以正常运行。**
-
-## 📱 使用示例
+图标统一通过 `Icon` 组件使用，文件映射在 `src/assets/icons.ts` 的 `IconSvg` 中已注册：
 
 ```tsx
-import { HomeIcon, SearchIcon } from '@/components/Icon';
+import { Icon } from '@/components/Icon';
 
-// 使用图标（完全按照 Figma 设计）
-<HomeIcon size={24} />
-<SearchIcon size={20} />
+// 双态
+<Icon name="home-selected" size={24} color="#22C55E" />
+<Icon name="home-unselected" size={24} color="#6B7280" />
+
+// 单态（已在映射中扩展为双态同源）
+<Icon name="add-selected" size={38} color="#FFFFFF" />
+
+// 根据状态动态切换
+const isActive = true;
+<Icon name={isActive ? 'map-selected' : 'map-unselected'} size={24} color={isActive ? '#22C55E' : '#6B7280'} />
 ```
 
-## ⚠️ 重要提醒
+注意：单态图标在 `icons.ts` 中已通过 `single('file.svg')` 处理为 selected/unselected 同源，因此在使用层可以同样写成 `*-selected` / `*-unselected`。
 
-**所有图标必须完全按照 Figma 设计实现，包括：**
-- 颜色值（不做任何修改）
-- 尺寸规格（不做任何修改）
-- 图标样式（不做任何修改）
-- 文件命名（不做任何修改）
+## 📌 BottomNavBar 指南
 
-**任何修改都会影响设计的完整性和一致性。**
+- 使用的图标：
+  - Home：`home-selected`
+  - Location：`pin-selected`
+  - Stats：`stats-selected`
+  - Profile：`profile-selected`
+  - Add（FAB）：`add-selected`
+
+- 颜色（含明暗模式，取自 `src/tokens.ts`）：
+  - 选中：`colors.light.navbarSelected` / `colors.dark.navbarSelected`
+  - 未选中：`colors.light.navbarUnselected` / `colors.dark.navbarUnselected`
+  - Add（FAB 背景）：`colors.light.addButton` / `colors.dark.addButton`
+
+## 🧰 Troubleshooting（add 图标看起来过小/太细）
+- 现象：绿色圆内的白色加号显得很小或线条过细。
+- 原因（最常见）：
+  - `add.svg` 的绘制区域（图形实际占比）在 `viewBox` 中比例过小，导致整体缩放时视觉过小。
+  - 图标画板存在额外留白（padding），缩放后有效图形占比进一步减小。
+  - 线条使用 `stroke-width` 太小；或没有使用 `stroke-linecap="round"` 与 `stroke-linejoin="round"`，视觉更细。
+- 建议规范：
+  - `viewBox` 建议为 `0 0 24 24`，加号图形建议占据 70%~80% 的宽高，居中。
+  - 线条：`stroke="currentColor"`，`stroke-width="2"~"2.5"`，`stroke-linecap="round"`，`stroke-linejoin="round"`。
+  - 不要在 `add.svg` 内再绘制背景圆形；圆形由 FAB 背景提供，图标仅输出加号线段。
+
+## 🧭 命名约定
+- 基础名全小写，词间用连字符（`-`）连接。
+- 双态使用 `-selected` / `-unselected` 后缀。
+- 单态保持原名（在映射中自动扩展为双态）。
+
+## 🧪 检查清单
+- [x] 目录为扁平结构
+- [x] 文档与实际文件名一一对应
+- [x] 组件用法示例可直接复制使用
+- [x] 单态与双态均已覆盖
+- [x] Add 图标绘制规范与常见问题说明

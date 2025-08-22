@@ -1,11 +1,11 @@
-import { tokens } from '@/tokens';
+import { colors } from '@/tokens';
 
 export const theme = {
   get background() {
-    return tokens.colors.light.background;
+    return colors.light.background;
   },
   get text() {
-    return tokens.colors.light.text;
+    return colors.light.utilities;
   },
 };
 

@@ -1,209 +1,258 @@
-# JourneyCraft 移动应用实现文档
+# 实现文档
 
-## 🎯 项目概述
+## 📋 项目概述
 
-这是一个基于 Expo + expo-router 的旅行记录移动应用，完全按照 Figma 设计规范实现。应用包含完整的 UI 组件系统、图标系统、导航系统和响应式设计。
+这是一个基于 Expo Router 的 React Native 旅行应用，实现了完整的图标系统、底部导航栏、卡片组件和主页面功能。
 
-## ✅ 已完成的核心功能
+## 🎯 核心功能
 
-### 1. Home – Visited 主页面 ✅
-- 完全还原 Figma 设计的 List View 布局
-- 分组显示：Today、Yesterday、月份分组
-- 智能卡片排序和分组逻辑
-- 下拉刷新功能
-- 响应式设计，支持不同屏幕尺寸
+### 1. 图标系统 (SVG + Selected/Unselected 两态)
 
-### 2. 数据模型与业务逻辑 ✅
-- 完整的 `Trip` 类型定义
-- 日期分组和排序逻辑
-- 8-10 条覆盖各种场景的 mock 数据
-- 新卡片创建和入场动画
+**新的图标系统特点：**
+- **SVG 格式**：所有图标使用 SVG 格式，支持矢量缩放
+- **两态设计**：每个图标都有 `selected` 和 `unselected` 两种状态
+- **扁平结构**：所有图标直接放在 `src/assets/icons/` 目录下，不再分区
+- **颜色控制**：颜色通过组件传入的 `color` 属性控制，支持明暗模式
 
-### 3. 图标系统 ✅
-- 完全按照 Figma 设计规范实现
-- 支持 Light/Dark 两种主题模式
-- 自动根据系统主题选择对应图标
-- 提供预定义图标组件和通用图标组件
-- 所有图标都放在 `src/assets/icons/` 目录下
+**文件结构：**
+```
+src/assets/icons/
+├── home-selected.svg
+├── home-unselected.svg
+├── location-selected.svg
+├── location-unselected.svg
+├── stats-selected.svg
+├── stats-unselected.svg
+├── profile-selected.svg
+├── profile-unselected.svg
+├── search-selected.svg
+├── search-unselected.svg
+├── more-selected.svg
+├── more-unselected.svg
+├── calendar-selected.svg
+├── calendar-unselected.svg
+├── add-selected.svg
+├── add-unselected.svg
+├── save-selected.svg
+├── save-unselected.svg
+├── lock-selected.svg
+├── lock-unselected.svg
+├── people-selected.svg
+├── people-unselected.svg
+├── image-selected.svg
+├── image-unselected.svg
+├── mic-selected.svg
+├── mic-unselected.svg
+├── video-selected.svg
+└── video-unselected.svg
+```
 
-### 4. Card 组件系统 ✅
-- 完全还原 Figma 设计样式
-- 支持分组标签显示（Today/Yesterday/月份）
-- 智能图标显示逻辑（新卡片默认隐藏所有图标）
-- 完整的 Mood 系统（5 种情绪颜色）
-- 左侧竖排图标：Save、Lock、People
-- 左下横排图标：Image、Mic、Video
-- 右侧封面图区域（60x60，圆角 10px）
-- 响应式设计，支持不同屏幕尺寸
+**使用方式：**
+```tsx
+import { Icon } from '@/components/Icon';
 
-### 5. Bottom Navigation Bar ✅
-- 完全按照 Figma 设计实现，使用 react-native-svg 渲染凹槽 Path
-- 4 个 Tab：Home、Location、Stats、Profile
-- 中间半嵌入的绿色 FAB 按钮，精确嵌入凹槽位置
-- 使用 expo-blur 实现毛玻璃效果和半透明叠色
-- 精确的阴影效果，完全匹配 Figma 设计
-- 凹槽形状背景，保持与设计一致的 FAB 嵌入位置
-- 响应式设计，支持不同屏幕尺寸
-- 集成 expo-router 导航系统
+// 使用 selected/unselected 状态
+<Icon name="home-selected" size={24} color="#22C55E" />
+<Icon name="home-unselected" size={24} color="#6B7280" />
 
-### 6. 交互与导航 ✅
-- 点击卡片跳转到 `/trip/[id]`
-- 绿色 "+" 浮动按钮创建新卡片
-- 收藏图标点击切换状态
-- 下拉刷新功能
+// 根据条件动态选择状态
+<Icon 
+  name={isActive ? 'home-selected' : 'home-unselected'} 
+  size={24} 
+  color={isActive ? activeColor : inactiveColor} 
+/>
+```
 
-### 7. 响应式适配 ✅
-- 使用 Flex 布局和百分比宽度
-- SafeAreaView 支持
-- 避免被底部 TabBar 和 FAB 遮挡
+### 2. 底部导航栏 (BottomNavBar)
 
-## 🎨 UI 设计还原度
+**技术实现：**
+- **SVG 凹槽**：使用 `react-native-svg` 渲染复杂的凹槽形状
+- **毛玻璃效果**：使用 `expo-blur` 实现毛玻璃背景
+- **羽化渐变**：顶部羽化效果，平滑过渡
+- **精确嵌入**：FAB 按钮精确嵌入凹槽位置
+- **响应式设计**：支持不同屏幕尺寸和 iPhone 手势区域
 
-### Header 组件
-- **JourneyCraft 标题**：32px 粗体黑色文字
-- **三个图标按钮**：搜索、排序、视图切换
-- **分段控制器**：Visited/Planned 切换，选中状态白色背景
+**关键特性：**
+- 凹槽形状完全按照 Figma 设计
+- 毛玻璃效果 + 半透明叠加
+- 阴影效果（iOS/Android 适配）
+- 4 个 Tab 图标 + 中间 FAB 按钮
+- 自动根据当前路由高亮对应 Tab
 
-### TripCard 组件
-- **卡片尺寸**：360x115，圆角 15px
-- **封面图**：60x60，圆角 10px，黑色占位符
-- **字体规范**：标题 32px 粗体，日期/位置 14px 粗体
-- **图标位置**：左侧竖排 28px 宽度，底部横排 18px 间距
-- **Mood 圆点**：25x25，红色，带白色边框和阴影
+### 3. 卡片组件 (TripCard)
 
-### Bottom Navigation Bar
-- **背景色**：浅绿色 (#d8ead0)
-- **Tab 图标**：24px，未选中灰色，选中绿色
-- **浮动按钮**：60x60 圆形，亮绿色，白色 "+" 图标
+**功能特性：**
+- **分组显示**：支持按日期分组（Today, Yesterday, Month）
+- **状态图标**：左侧竖排图标（save, lock, people）
+- **媒体指示**：底部横排图标（image, mic, video）
+- **心情圆点**：左下角心情状态指示
+- **封面图片**：右侧封面图片或占位符
+- **交互反馈**：点击导航到详情页面
+
+**数据驱动：**
+- 根据数据存在性显示/隐藏图标
+- 新卡片默认隐藏所有图标
+- 支持图片、音频、视频计数显示
+
+### 4. 主页面 (Home)
+
+**核心功能：**
+- **分组列表**：使用 `SectionList` 实现分组显示
+- **下拉刷新**：支持刷新数据
+- **搜索排序**：预留搜索和排序功能接口
+- **标签切换**：Visited/Planned 标签切换
+- **响应式布局**：适配不同屏幕尺寸
+
+## 🛠 技术栈
+
+### 核心依赖
+- **Expo Router**: 路由管理
+- **React Native**: 跨平台开发
+- **TypeScript**: 类型安全
+- **react-native-svg**: SVG 渲染
+- **expo-blur**: 毛玻璃效果
+- **react-native-svg-transformer**: SVG 导入支持
+
+### 配置更新
+- **Metro 配置**: 支持 SVG 作为源码导入
+- **TypeScript 配置**: 添加 SVG 类型声明
+- **路径别名**: 配置 `@/` 等路径别名
 
 ## 📁 文件结构
 
 ```
-app/
-├── (tabs)/
-│   ├── _layout.tsx               # Tabs 布局（集成 BottomNavBar）
-│   ├── home.tsx                  # 主页面（List View）
-│   ├── location.tsx              # Location Tab
-│   ├── stats.tsx                 # Stats Tab
-│   └── profile.tsx               # Profile Tab
-└── card/
-    └── new.tsx                   # 新卡片创建页面
-
-components/
-└── ui/
-    └── BottomNavBar.tsx          # 底部导航栏组件
+src/
+├── assets/
+│   ├── icons/           # SVG 图标文件
+│   ├── icons.ts         # 图标导出映射
+│   └── icons/README.md  # 图标使用说明
+├── components/
+│   └── Icon.tsx         # 图标组件
+├── types/
+│   ├── trip.ts          # 旅行数据类型
+│   └── svg.d.ts         # SVG 类型声明
+├── utils/
+│   └── date.ts          # 日期处理工具
+└── data/
+    └── mockTrips.ts     # 模拟数据
 
 features/
 ├── home/
 │   └── components/
-│       ├── Header.tsx            # 页面头部组件
-│       ├── TripCard.tsx          # 卡片组件（重新导出）
-│       ├── SectionHeader.tsx     # 分组标题组件
-│       ├── FloatingActionButton.tsx # 浮动按钮组件
-│       └── index.ts              # 组件导出
+│       ├── Header.tsx
+│       ├── TripCard.tsx
+│       └── SectionHeader.tsx
 └── cards/
     └── components/
-        ├── TripCard.tsx          # 核心卡片组件
-        └── index.ts              # 组件导出
+        └── TripCard.tsx
 
-src/
-├── assets/
-│   ├── icons/                    # 图标资源目录
-│   │   └── README.md             # 图标使用说明
-│   └── icons.ts                  # 图标资源导出
-├── components/
-│   ├── Icon.tsx                  # 主题感知图标组件
-│   ├── IconExample.tsx           # 图标使用示例
-│   └── TripCardExample.tsx       # 卡片使用示例
-├── constants/
-│   └── designSystem.ts           # 设计系统常量
-├── data/
-│   └── mockTrips.ts              # Mock 数据
-├── theme/
-│   ├── designSystem.ts           # 设计系统主题
-│   └── index.ts                  # 主题导出
-├── types/
-│   └── trip.ts                   # 类型定义
-├── utils/
-│   └── date.ts                   # 日期工具函数
-└── tokens.ts                     # 设计令牌
+components/ui/
+└── BottomNavBar.tsx     # 底部导航栏
+
+app/
+├── (tabs)/
+│   ├── _layout.tsx      # Tab 布局
+│   ├── home.tsx         # 主页面
+│   ├── location.tsx     # 位置页面
+│   ├── stats.tsx        # 统计页面
+│   └── profile.tsx      # 个人页面
+└── card/
+    └── new.tsx          # 新建卡片页面
 ```
 
 ## 🚀 使用方法
 
-### 启动项目
+### 1. 启动项目
 ```bash
 npm install
 npx expo start
 ```
 
-### 主要功能
-1. **查看旅行记录**：主页面显示按时间分组的旅行卡片
-2. **创建新记录**：点击绿色 "+" 按钮创建新旅行卡片
-3. **查看详情**：点击任意卡片跳转到详情页面
-4. **切换标签**：在 Visited 和 Planned 之间切换
-5. **导航切换**：使用底部导航栏切换不同功能页面
+### 2. 添加新图标
+1. 将 SVG 文件放入 `src/assets/icons/` 目录
+2. 命名为 `{iconName}-selected.svg` 和 `{iconName}-unselected.svg`
+3. 在 `src/assets/icons.ts` 中注册图标
+4. 在组件中使用 `Icon` 组件
 
-### 组件使用
+### 3. 使用图标组件
 ```tsx
-// 使用 TripCard
-<TripCard 
-  trip={tripData} 
-  showGroupLabel={true}
-  groupLabel="Today"
-/>
+import { Icon } from '@/components/Icon';
 
-// 使用 Bottom Navigation Bar
-<BottomNavBar />
+// 基本使用
+<Icon name="home-selected" size={24} color="#22C55E" />
 
-// 使用 Header
-<Header
-  selectedTab="visited"
-  onTabChange={handleTabChange}
-  onSearch={handleSearch}
-  onSort={handleSort}
-  onViewChange={handleViewChange}
+// 条件渲染
+<Icon 
+  name={isActive ? 'tab-selected' : 'tab-unselected'} 
+  size={24} 
+  color={isActive ? activeColor : inactiveColor} 
 />
 ```
 
-## 🎯 技术特点
+## 🎨 设计系统
 
-- **完全自定义 UI**：不使用任何第三方 UI 库
-- **设计还原度高**：100% 按照 Figma 设计实现
-- **主题支持**：自动 Light/Dark 主题切换
-- **响应式设计**：支持不同屏幕尺寸
-- **性能优化**：使用 React.memo 和 useCallback
-- **类型安全**：完整的 TypeScript 类型定义
+### 颜色系统
+- 使用 `src/tokens.ts` 中定义的颜色
+- 支持明暗模式切换
+- 统一的颜色命名规范
 
-## 🔧 开发环境
+### 间距系统
+- 使用 `src/theme/designSystem.ts` 中定义的间距
+- 统一的间距比例
 
-- **框架**：Expo + expo-router
-- **语言**：TypeScript
-- **样式**：React Native StyleSheet
-- **图标**：自定义图标系统
-- **导航**：expo-router
-- **状态管理**：React Hooks
+### 字体系统
+- 统一的字体大小和行高
+- 支持不同字重
 
-## 📱 支持的平台
+## 🔧 开发注意事项
 
-- iOS
-- Android
-- Web (通过 Expo)
+### 1. SVG 图标规范
+- 使用 `currentColor` 作为填充色
+- 保持统一的 `viewBox` 尺寸
+- 确保 selected/unselected 状态有明显区别
 
-## 🎨 设计规范
+### 2. 性能优化
+- 图标组件支持缓存
+- 使用 `useCallback` 优化渲染
+- 避免不必要的重渲染
 
-所有设计元素都严格按照 Figma 设计文件实现：
-- 颜色：使用 tokens.ts 中定义的颜色值
-- 字体：系统字体，按照设计规范设置大小和权重
-- 间距：使用 designSystem 中定义的间距值
-- 圆角：按照设计规范设置圆角值
-- 阴影：使用预定义的阴影样式
+### 3. 类型安全
+- 所有组件都有完整的 TypeScript 类型
+- 使用严格的类型检查
+- 避免 `any` 类型的使用
 
-## 🚀 下一步计划
+## 📱 平台兼容性
 
-1. 实现 Planned 标签页功能
-2. 添加搜索和排序功能
-3. 实现旅行详情页面
-4. 添加图片上传和媒体管理
-5. 实现数据持久化
-6. 添加用户认证系统
+### iOS
+- 支持毛玻璃效果
+- 适配 iPhone 手势区域
+- 支持动态字体大小
+
+### Android
+- 使用 elevation 替代阴影
+- 适配不同屏幕密度
+- 支持 RTL 布局
+
+## 🔄 更新日志
+
+### 最新更新 (图标系统重构)
+- ✅ 重构图标系统为 SVG + selected/unselected 两态
+- ✅ 扁平化图标目录结构
+- ✅ 更新所有组件使用新的图标系统
+- ✅ 修复所有 TypeScript 错误
+- ✅ 添加 SVG 类型声明
+- ✅ 配置 Metro 支持 SVG 导入
+
+### 之前更新
+- ✅ 实现底部导航栏凹槽设计
+- ✅ 实现卡片组件和分组显示
+- ✅ 实现主页面功能
+- ✅ 配置路由和导航
+
+## 🎯 下一步计划
+
+1. **图标完善**：添加所有 Figma 设计的图标文件
+2. **功能扩展**：实现搜索、排序、筛选功能
+3. **性能优化**：添加虚拟化列表支持
+4. **测试覆盖**：添加单元测试和集成测试
+5. **文档完善**：添加更多使用示例和最佳实践

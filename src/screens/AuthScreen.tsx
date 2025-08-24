@@ -11,6 +11,7 @@ import AuthHeader from '@ui/AuthHeader';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { colors } from '../tokens';
 import AreaCodeInline from '../components/AreaCodeInline';
+import LocationAutocomplete from '../components/LocationAutocomplete';
 
 const CONTENT_WIDTH = 360;
 
@@ -47,12 +48,10 @@ const AuthScreen: React.FC<Props> = ({ initialTab = 'login' }) => {
   const [rememberMe, setRememberMe] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [location, setLocation] = useState('');
   const [usernameFocused, setUsernameFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
   const usernameRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
-  const locationRef = useRef<TextInput>(null);
   // Login uses the old version for性能
   const { shiftY: loginShiftY, onFocus: onLoginFocus } = useKeyboardShiftOld(20);
   // Sign up uses the new improved version
@@ -293,15 +292,6 @@ const AuthScreen: React.FC<Props> = ({ initialTab = 'login' }) => {
                           <Ionicons name={showPassword ? 'eye' : 'eye-off'} size={24} color={Colors.black} />
                         </TouchableOpacity>
                       )}
-                    </View>
-                  </View>
-                  {/* Location */}
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>Location</Text>
-                    <View style={styles.inputContainer}>
-                      <MaterialCommunityIcons name="map-marker" size={24} color={Colors.black} />
-                      <TextInput ref={locationRef} style={styles.textInput} value={location} onChangeText={setLocation} placeholder="Select location" placeholderTextColor={Colors.textSecondary} onFocus={() => { handleInputFocus(); onLoginFocus(locationRef); }} allowFontScaling={false} />
-                      <MaterialCommunityIcons name="chevron-down" size={22} color={Colors.black} />
                     </View>
                   </View>
 
@@ -567,13 +557,33 @@ const AuthScreen: React.FC<Props> = ({ initialTab = 'login' }) => {
                   {/* Location */}
                   <View style={styles.inputGroup}>
                     <Text style={styles.inputLabel}>Location</Text>
-                    <View style={styles.inputContainer}>
+                    <View
+                      style={[
+                        styles.inputContainer,
+                        // ensure dropdown isn't clipped by the row container
+                        { overflow: 'visible', zIndex: 20 }
+                      ]}
+                    >
                       <MaterialCommunityIcons name="map-marker" size={24} color={Colors.black} />
-                      <TextInput ref={suLocationRef} style={styles.textInput} value={suLocation} onChangeText={setSuLocation} placeholder="Select location" placeholderTextColor={Colors.textSecondary} onFocus={() => {
-                        handleInputFocus();
-                        onSignupFocus!(suLocationRef);
-                        ensureKeyboardVisible!(suLocationRef);
-                      }} allowFontScaling={false} />
+
+                      <LocationAutocomplete
+                        value={suLocation}
+                        onCommit={(displayName, hit) => {
+                          setSuLocation(displayName);
+                          if (hit) {
+                            // Optional: save coordinates and country for later use
+                            // setGeo({ lat: hit.lat, lon: hit.lon, country: hit.country });
+                          }
+                        }}
+                        // identification:
+                        userAgent="MobileAppDesign/0.1 (contact: dev@yourdomain.com)" // used on Android
+                        email="dev@yourdomain.com"                                    // used on iOS
+                        acceptLanguage="en"
+                        minChars={1}         // ← easier to verify now; you can raise to 3 later
+                        dropdownOffsetY={48}
+                        debug={true}
+                      />
+
                       <MaterialCommunityIcons name="chevron-down" size={22} color={Colors.black} />
                     </View>
                   </View>

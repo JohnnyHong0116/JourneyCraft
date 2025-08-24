@@ -78,15 +78,22 @@ const AuthScreen: React.FC<Props> = ({ initialTab = 'login' }) => {
   const [suShowPassword, setSuShowPassword] = useState(false);
   const [suShowConfirmPassword, setSuShowConfirmPassword] = useState(false);
   const [suUsernameFocused, setSuUsernameFocused] = useState(false);
+
   const [emailFocused, setEmailFocused] = useState(false);
   const [suPwFocused, setSuPwFocused] = useState(false);
   const [suCpwFocused, setSuCpwFocused] = useState(false);
+  const [suLocationFocused, setSuLocationFocused] = useState(false);
   const suUsernameRef = useRef<TextInput>(null);
   const suEmailRef = useRef<TextInput>(null);
   const suPasswordRef = useRef<TextInput>(null);
   const suConfirmRef = useRef<TextInput>(null);
   const suLocationRef = useRef<TextInput>(null);
   const phoneNumberRef = useRef<TextInput>(null);
+
+  // Check LocationIQ API key on app start
+  useEffect(() => {
+    console.log('LIQ KEY?', process.env.EXPO_PUBLIC_LOCATIONIQ_KEY ? 'present' : 'missing');
+  }, []);
 
   // Dismiss keyboard when tapping outside of text inputs
   // Reference to the ScrollView
@@ -575,16 +582,21 @@ const AuthScreen: React.FC<Props> = ({ initialTab = 'login' }) => {
                             // setGeo({ lat: hit.lat, lon: hit.lon, country: hit.country });
                           }
                         }}
-                        // identification:
-                        userAgent="MobileAppDesign/0.1 (contact: dev@yourdomain.com)" // used on Android
-                        email="dev@yourdomain.com"                                    // used on iOS
-                        acceptLanguage="en"
-                        minChars={1}         // ← easier to verify now; you can raise to 3 later
+                        minChars={2}            // 2 while testing; consider 3 in prod
                         dropdownOffsetY={48}
-                        debug={true}
+                        maxDropdownHeight={220}  // match AreaCodeInline height
+                        useShortDisplay={true}   // use concise format: "City, State, Country"
+                        language="en"
+                        // countrycodes="us,gb" // optional narrowing
+                        debug={true}            // turn off later
+                        onFocus={() => setSuLocationFocused(true)}
+                        onBlur={() => setSuLocationFocused(false)}
                       />
 
-                      <MaterialCommunityIcons name="chevron-down" size={22} color={Colors.black} />
+                      <ClearButton
+                        visible={suLocationFocused && suLocation.length > 0}
+                        onPress={() => setSuLocation('')}
+                      />
                     </View>
                   </View>
 
@@ -677,6 +689,13 @@ const AuthScreen: React.FC<Props> = ({ initialTab = 'login' }) => {
                 </View>
               </TouchableOpacity>
             </Modal>
+
+            {/* LocationIQ Attribution (required for free plan) */}
+            <View style={styles.attributionContainer}>
+              <Text style={styles.attributionText}>
+                Search by <Text style={styles.attributionLink}>LocationIQ.com</Text>
+              </Text>
+            </View>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -727,6 +746,20 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.xs,
     marginRight: Spacing.xs,
     backgroundColor: colors.light.buttonBg,
+  },
+  attributionContainer: {
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+    marginTop: Spacing.xs,
+  },
+  attributionText: {
+    fontSize: Typography.fontSize.xs,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    opacity: 0.6,
+  },
+  attributionLink: {
+    textDecorationLine: 'underline',
   },
 });
 

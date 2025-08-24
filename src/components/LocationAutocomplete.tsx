@@ -1,53 +1,48 @@
 // src/components/LocationAutocomplete.tsx
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  View,
-  TextInput,
-  Pressable,
-  Text,
-  ScrollView,
-  StyleSheet,
-  Keyboard,
-  Platform,
+  View, TextInput, Pressable, Text, ScrollView,
+  StyleSheet, Keyboard, Platform,
 } from 'react-native';
 import { Colors, Spacing, BorderRadius, Typography, Shadows } from '../theme/designSystem';
-import { searchCities, CityHit } from '../services/cities';
+import { searchCitiesLocationIQ, CityHit } from '../services/locationiq';
 
-// shadow fallback
 const SHADOW: any = (Shadows as any)?.medium ?? (Shadows as any)?.small ?? {};
 
 type Props = {
-  /** Committed value. Will NOT change until user picks a suggestion. */
-  value: string;
-  /** Fires ONLY when a suggestion is picked. */
-  onCommit: (displayName: string, hit?: CityHit) => void;
-  /** Characters before search; set to 1 for testing. */
-  minChars?: number; // default 1 here to help you verify quickly
-  maxResults?: number; // default 8
-  dropdownOffsetY?: number; // ~48 for a ~45px row
+  value: string; // committed text from parent
+  onCommit: (displayName: string, hit?: CityHit) => void; // ONLY on pick
+  minChars?: number;
+  dropdownOffsetY?: number;
+  maxDropdownHeight?: number;
+  useShortDisplay?: boolean;  // <-- add this: use concise format in textbox
   inputStyle?: any;
   containerStyle?: any;
-  /** Identification for providers (use BOTH where possible) */
-  userAgent?: string;      // Android UA
-  email?: string;          // iOS email fallback
-  acceptLanguage?: string;
-  referer?: string;
+  language?: string;
+  countrycodes?: string;
+  limit?: number;
+  dedupe?: 0 | 1;
   debug?: boolean;
+  onFocus?: () => void;
+  onBlur?: () => void;
 };
 
 export default function LocationAutocomplete({
   value,
   onCommit,
-  minChars = 1,           // ← make it easy to test; raise to 3 later if you want
-  maxResults = 8,
+  minChars = 2,
   dropdownOffsetY = 48,
+  maxDropdownHeight = 220,
+  useShortDisplay = true,  // <-- add this, default to concise format
   inputStyle,
   containerStyle,
-  userAgent,
-  email,
-  acceptLanguage = 'en',
-  referer,
-  debug = true,           // turn off later
+  language = 'en',
+  countrycodes,
+  limit = 8,
+  dedupe = 1,
+  debug = false,
+  onFocus,
+  onBlur,
 }: Props) {
   const [draft, setDraft] = useState<string>(value);
   const [open, setOpen] = useState(false);
@@ -55,20 +50,69 @@ export default function LocationAutocomplete({
   const [loading, setLoading] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const timerRef = useRef<any>(null);
+  const committedRef = useRef<string>(value); // <-- add this for revert logic
+  const justPickedRef = useRef<boolean>(false); // <-- add this to prevent search after pick
+  const justClearedRef = useRef<boolean>(false); // <-- add this to prevent search after clear
+  const justDismissedRef = useRef<boolean>(false); // <-- add this to prevent search after dismiss
 
+  const apiKey = process.env.EXPO_PUBLIC_LOCATIONIQ_KEY || '';
+
+  // Keep committedRef in sync if parent updates programmatically
   useEffect(() => {
-    setDraft(value);
-  }, [value]);
+    const prevCommitted = committedRef.current;
+    committedRef.current = value;
+    
+    // If parent cleared the value (e.g., clear button), clear everything
+    if (!value && prevCommitted) {
+      if (debug) console.log('[LocationAutocomplete] parent cleared value, resetting');
+      justClearedRef.current = true; // prevent search after clear
+      setDraft('');
+      setOpen(false);
+      setHits([]);
+      abortRef.current?.abort();
+      if (timerRef.current) clearTimeout(timerRef.current);
+    }
+  }, [value, debug]);
 
   useEffect(() => {
     const q = (draft || '').trim();
-    if (q.length < minChars) {
+    
+    // Prevent search if we just picked a location
+    if (justPickedRef.current) {
+      if (debug) console.log('[LocationAutocomplete] just picked, skipping search');
+      justPickedRef.current = false;
+      return;
+    }
+    
+    // Prevent search if we just cleared via clear button
+    if (justClearedRef.current) {
+      if (debug) console.log('[LocationAutocomplete] just cleared, skipping search');
+      justClearedRef.current = false;
+      return;
+    }
+    
+    // Prevent search if we just dismissed without commit
+    if (justDismissedRef.current) {
+      if (debug) console.log('[LocationAutocomplete] just dismissed, skipping search');
+      justDismissedRef.current = false;
+      return;
+    }
+    
+    // If draft is empty, close list and stop requests
+    if (q.length === 0) {
       setHits([]);
+      setOpen(false);
+      if (debug) console.log('[LocationAutocomplete] empty draft, closing list');
+      return;
+    }
+    
+    if (q.length < minChars) {
+      setHits([]); 
       setOpen(false);
       if (debug) console.log('[LocationAutocomplete] too short, closing list');
       return;
     }
-
+    
     if (timerRef.current) clearTimeout(timerRef.current);
     setLoading(true);
 
@@ -77,63 +121,94 @@ export default function LocationAutocomplete({
       const ac = new AbortController();
       abortRef.current = ac;
 
-      const results = await searchCities(q, ac.signal, {
-        userAgent,
-        email,
-        acceptLanguage,
-        referer,
-        max: maxResults,
-        debug,
-      });
+      try {
+        const results = await searchCitiesLocationIQ(q, {
+          apiKey,
+          language,
+          countrycodes,
+          limit,
+          dedupe,
+          debug,
+        }, ac.signal);
 
-      if (debug) console.log('[LocationAutocomplete] results:', results.length);
-      setHits(results);
-      setOpen(true); // show panel (even 0 → shows "No matches")
-      setLoading(false);
+        if (debug) console.log('[LocationAutocomplete] results:', results.length);
+        setHits(results);
+        setOpen(true);  // open even if 0 -> show "No matches"
+      } catch (error) {
+        if (debug) console.log('[LocationAutocomplete] search error:', error);
+        setHits([]);
+        setOpen(false);
+      } finally {
+        setLoading(false);
+      }
     }, 220);
 
     return () => clearTimeout(timerRef.current);
-  }, [draft, minChars, maxResults, userAgent, email, acceptLanguage, referer, debug]);
+  }, [draft, minChars, apiKey, language, countrycodes, limit, dedupe, debug]);
 
   const dismissWithoutCommit = () => {
-    if (debug) console.log('[LocationAutocomplete] dismiss → revert');
+    if (debug) console.log('[LocationAutocomplete] dismiss → revert to:', committedRef.current);
     abortRef.current?.abort();
     setOpen(false);
-    setDraft(value);
+    justDismissedRef.current = true; // <-- set flag to prevent search after dismiss
+    onBlur?.(); // call onBlur BEFORE setDraft to ensure focus state is updated
+    setDraft(committedRef.current); // revert to committed value
     Keyboard.dismiss();
   };
 
   const pick = (hit: CityHit) => {
-    if (debug) console.log('[LocationAutocomplete] pick:', hit.displayName);
+    const displayText = useShortDisplay ? hit.shortDisplay : hit.displayName;
+    if (debug) console.log('[LocationAutocomplete] pick:', displayText);
     setOpen(false);
-    setDraft(hit.displayName);
-    onCommit(hit.displayName, hit);
+    justPickedRef.current = true; // <-- set flag to prevent search
+    setDraft(''); // clear draft to avoid triggering new search
+    committedRef.current = displayText; // update committed value
+    onCommit(displayText, hit); // commit only here
+    onBlur?.(); // <-- notify parent that focus is lost
     Keyboard.dismiss();
   };
+
+  // Compute display value: show draft while typing, committed value otherwise
+  // This matches AreaCodeInline's displayArea logic
+  const displayValue = draft.length > 0 ? draft : (committedRef.current || '');
 
   return (
     <View style={[styles.wrap, containerStyle, { overflow: 'visible', zIndex: 20, elevation: 20 }]}>
       <TextInput
-        value={draft}
-        onChangeText={setDraft} // DO NOT commit here
+        value={displayValue}
+        onChangeText={setDraft} // don't commit while typing
         placeholder="City"
         placeholderTextColor={Colors.textSecondary}
         autoCapitalize="words"
         autoCorrect={false}
         keyboardType={Platform.OS === 'ios' ? 'default' : 'visible-password'}
-        onFocus={() => debug && console.log('[LocationAutocomplete] focus')}
+        onFocus={() => {
+          if (debug) console.log('[LocationAutocomplete] focus');
+          onFocus?.();
+        }}
         style={[styles.text, inputStyle]}
       />
 
       {open && <Pressable style={styles.overlay} onPress={dismissWithoutCommit} />}
 
       {open && (
-        <View style={[styles.dropdown, { top: dropdownOffsetY }]}>
-          <ScrollView keyboardShouldPersistTaps="handled">
+        <View style={[styles.dropdown, { top: dropdownOffsetY, maxHeight: maxDropdownHeight }]}>
+          <ScrollView 
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={true}
+            nestedScrollEnabled={false}
+          >
             {hits.map((h) => (
-              <Pressable key={h.id} onPress={() => pick(h)} style={styles.option}>
+              <Pressable 
+                key={h.id} 
+                onPress={() => pick(h)} 
+                style={({ pressed }) => [
+                  styles.option,
+                  pressed && { backgroundColor: Colors.calendarGrid }
+                ]}
+              >
                 <Text numberOfLines={1} style={styles.optionText}>
-                  {h.displayName}
+                  {useShortDisplay ? h.shortDisplay : h.displayName}
                 </Text>
               </Pressable>
             ))}
@@ -158,31 +233,31 @@ const styles = StyleSheet.create({
     color: Colors.black,
     includeFontPadding: false,
     textAlignVertical: 'center',
-    paddingVertical: 0,
-    paddingHorizontal: 0,
+    paddingVertical: 0, paddingHorizontal: 0,
     marginLeft: Spacing.sm,
     flex: 1,
   },
-  overlay: {
-    position: 'absolute',
-    left: -1000, right: -1000, top: -1000, bottom: -1000, zIndex: 19,
-  },
+  overlay: { position: 'absolute', left: -1000, right: -1000, top: -1000, bottom: -1000, zIndex: 19 },
   dropdown: {
     position: 'absolute',
     left: 0, right: 0,
-    maxHeight: 260,
     backgroundColor: Colors.white,
     borderRadius: BorderRadius.md,
     borderWidth: 1,
     borderColor: Colors.calendarGrid,
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    ...SHADOW,
     zIndex: 21, elevation: 21,
+    minWidth: 280,  // ensure consistent width like area code
   },
-  option: { paddingVertical: 12, paddingHorizontal: 14 },
-  optionText: { fontSize: Typography.fontSize.sm, color: Colors.black },
+  option: { 
+    paddingVertical: 12, 
+    paddingHorizontal: 16,  // match area code padding
+  },
+  optionText: { 
+    fontSize: Typography.fontSize.md,  // match area code font size
+    fontWeight: '600',                 // match area code font weight
+    color: Colors.black 
+  },
   loading: { fontSize: Typography.fontSize.xs, color: Colors.textSecondary, padding: 10, textAlign: 'center' },
   noMatchRow: { paddingVertical: 10, paddingHorizontal: 14 },
   noMatchText: { fontSize: Typography.fontSize.xs, color: Colors.textSecondary },

@@ -73,7 +73,7 @@ export const mockTrips: Trip[] = [
     photos: [],
     audioCount: 0,
     videoCount: 0,
-    mood: 'neutral',
+    mood: 'sad',
     isSaved: false,
     isLocked: false,
     companions: []
@@ -134,7 +134,7 @@ export const mockTrips: Trip[] = [
     photos: [],
     audioCount: 5,
     videoCount: 0,
-    mood: 'neutral',
+    mood: 'depressed',
     isSaved: true,
     isLocked: true,
     companions: ['Work Team']
@@ -153,5 +153,20 @@ export const mockTrips: Trip[] = [
     isSaved: true,
     isLocked: false,
     companions: ['Best Friends']
+  },
+  
+  {
+    id: '11',
+    title: 'Quiet Evening at Home',
+    location: 'Madison, WI',
+    createdAt: '2024-11-20T18:00:00Z',
+    displayDate: '2024-11-20T18:00:00Z',
+    photos: [],
+    audioCount: 0,
+    videoCount: 0,
+    mood: 'neutral',
+    isSaved: false,
+    isLocked: false,
+    companions: []
   }
 ];

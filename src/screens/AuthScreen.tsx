@@ -204,7 +204,7 @@ const AuthScreen: React.FC<Props> = ({ initialTab = 'login' }) => {
 
   return (
     <LinearGradient
-      colors={[Colors.backgroundTop, '#E3EDDC', Colors.backgroundGreen]}
+      colors={[Colors.backgroundTop, Colors.backgroundGreen, Colors.backgroundGreen]}
       locations={[0, 0.6, 1]}
       start={{ x: 0.5, y: 0 }}
       end={{ x: 0.5, y: 1 }}

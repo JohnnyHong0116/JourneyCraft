@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   View,
+  Text,
   StyleSheet,
   Platform,
   Pressable,
@@ -86,7 +87,7 @@ export default function BottomNavBar() {
           {/* 统一加 10% 白色蒙版，不受明暗模式影响 */}
           <View
             pointerEvents="none"
-            style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(255,255,255,0.1)' }]}
+            style={[StyleSheet.absoluteFill, { backgroundColor: Platform.OS === 'ios' ? 'rgba(255,255,255,0.1)' : 'rgba(230, 230, 230, 0.3)' }]}
           />
         </MaskedView>
       </View>
@@ -170,13 +171,25 @@ export default function BottomNavBar() {
       </View>
 
       {/* 3) 最上层 FAB（半嵌） */}
-      <Pressable
-        onPress={() => router.push('/card/new')}
-        style={[styles.fab, { bottom: FAB_BOTTOM_ABS, backgroundColor: fabBg }]}
-        android_ripple={{ color: '#E6F5E6', borderless: true }}
-      >
-        <Icon name="add-selected" size={38} color="#FFFFFF" />
-      </Pressable>
+      {Platform.OS === 'android' ? (
+        <Pressable
+          onPress={() => router.push('/card/new')}
+          style={[styles.fab, styles.androidFab, { bottom: FAB_BOTTOM_ABS }]}
+          android_ripple={{ color: '#E6F5E6', borderless: true }}
+        >
+          <View style={styles.androidGreenCircle}>
+            <Text style={styles.androidAddText}>+</Text>
+          </View>
+        </Pressable>
+      ) : (
+        <Pressable
+          onPress={() => router.push('/card/new')}
+          style={[styles.fab, { bottom: FAB_BOTTOM_ABS, backgroundColor: fabBg }]}
+          android_ripple={{ color: '#E6F5E6', borderless: true }}
+        >
+          <Icon name="add-selected" size={38} color="#FFFFFF" />
+        </Pressable>
+      )}
     </View>
   );
 }
@@ -202,10 +215,14 @@ const styles = StyleSheet.create({
         shadowRadius: 16,
         backgroundColor: 'transparent',
       },
-      android: {
-        elevation: 12,
-        backgroundColor: 'transparent',
-      },
+              android: {
+          elevation: 8,
+          backgroundColor: 'transparent',
+          shadowColor: '#333333',
+          shadowOpacity: 0.25,
+          shadowOffset: { width: 0, height: 4 },
+          shadowRadius: 12,
+        },
     }),
   },
   row: {
@@ -241,7 +258,32 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 8 },
         shadowRadius: 16,
       },
-      android: { elevation: 8 },
+      android: { elevation: 0 },
     }),
+  },
+  androidFab: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  androidGreenCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#b7d58c',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+  },
+  androidAddText: {
+    fontSize: 40,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    lineHeight: 40,
   },
 });

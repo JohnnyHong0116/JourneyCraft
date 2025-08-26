@@ -78,6 +78,13 @@
 - `people2.svg`
 - `peoplemulti.svg`
 
+### 心情状态（单态）
+- `overjoyed.svg`
+- `happy.svg`
+- `neural.svg`
+- `sad.svg`
+- `depressed.svg`
+
 ## 🔧 代码接入
 
 图标统一通过 `Icon` 组件使用，文件映射在 `src/assets/icons.ts` 的 `IconSvg` 中已注册：
@@ -95,6 +102,10 @@ import { Icon } from '@/components/Icon';
 // 根据状态动态切换
 const isActive = true;
 <Icon name={isActive ? 'map-selected' : 'map-unselected'} size={24} color={isActive ? '#22C55E' : '#6B7280'} />
+
+// 心情图标使用
+<Icon name="happy" size={25} color={Colors.textPrimary} />
+<Icon name="sad" size={25} color={Colors.textPrimary} />
 ```
 
 注意：单态图标在 `icons.ts` 中已通过 `single('file.svg')` 处理为 selected/unselected 同源，因此在使用层可以同样写成 `*-selected` / `*-unselected`。

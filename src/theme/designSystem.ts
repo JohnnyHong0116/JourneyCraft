@@ -41,6 +41,10 @@ export const Colors = {
   // Buttons
   addButton: c.addButton,
 
+  // Navigation
+  navbarSelected: c.navbarSelected,
+  navbarUnselected: c.navbarUnselected,
+
   // Borders
   borderBrandTertiary: c.grayBar,
   calendarGrid: c.calendar.grid,

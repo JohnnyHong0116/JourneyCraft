@@ -16,14 +16,14 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({ title }) => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.backgroundDefault,
+    backgroundColor: 'transparent',
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.lg,
   },
   title: {
     fontSize: Typography.fontSize.lg,
     fontWeight: '700',
-    color: Colors.black,
+    color: Colors.textPrimary,
     textTransform: 'capitalize',
   },
 });

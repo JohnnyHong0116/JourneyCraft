@@ -137,6 +137,28 @@ export const IconSvg = {
     unselected: require('./icons/undooutline.svg').default,
   } as TwoStateSvg,
 
+  // 心情状态（单态）
+  overjoyed: {
+    selected: require('./icons/overjoyed.svg').default,
+    unselected: require('./icons/overjoyed.svg').default,
+  } as TwoStateSvg,
+  happy: {
+    selected: require('./icons/happy.svg').default,
+    unselected: require('./icons/happy.svg').default,
+  } as TwoStateSvg,
+  neutral: {
+    selected: require('./icons/neural.svg').default,
+    unselected: require('./icons/neural.svg').default,
+  } as TwoStateSvg,
+  sad: {
+    selected: require('./icons/sad.svg').default,
+    unselected: require('./icons/sad.svg').default,
+  } as TwoStateSvg,
+  depressed: {
+    selected: require('./icons/depressed.svg').default,
+    unselected: require('./icons/depressed.svg').default,
+  } as TwoStateSvg,
+
   // 圆形功能类（单态）
   circlecalendarview: {
     selected: require('./icons/circlecalendarview.svg').default,

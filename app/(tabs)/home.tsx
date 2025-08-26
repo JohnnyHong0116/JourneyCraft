@@ -9,6 +9,7 @@ import {
   SectionListRenderItemInfo,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { Colors, Spacing } from '@/theme/designSystem';
 import { Trip, TripSection } from '@/types/trip';
@@ -66,40 +67,48 @@ export default function HomeTab() {
   ), []);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Header
-        selectedTab={selectedTab}
-        onTabChange={handleTabChange}
-        onSearch={handleSearch}
-        onSort={handleSort}
-        onViewChange={handleViewChange}
-      />
+    <LinearGradient
+      colors={[Colors.backgroundTop, '#E3EDDC', Colors.backgroundGreen]}
+      locations={[0, 0.6, 1]}
+      start={{ x: 0.5, y: 0 }}
+      end={{ x: 0.5, y: 1 }}
+      style={{ flex: 1 }}
+    >
+      <SafeAreaView style={styles.container}>
+        <Header
+          selectedTab={selectedTab}
+          onTabChange={handleTabChange}
+          onSearch={handleSearch}
+          onSort={handleSort}
+          onViewChange={handleViewChange}
+        />
 
-      <SectionList<Trip, TripSection>
-        ref={sectionListRef}
-        sections={sections}
-        keyExtractor={(item) => item.id}
-        renderSectionHeader={renderSectionHeader}
-        renderItem={renderTripItem}
-        stickySectionHeadersEnabled={true}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            tintColor={Colors.black}
-          />
-        }
-      />
-    </SafeAreaView>
+        <SectionList<Trip, TripSection>
+          ref={sectionListRef}
+          sections={sections}
+          keyExtractor={(item) => item.id}
+          renderSectionHeader={renderSectionHeader}
+          renderItem={renderTripItem}
+          stickySectionHeadersEnabled={true}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={Colors.black}
+            />
+          }
+        />
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.backgroundDefault, },
+  container: { flex: 1, backgroundColor: 'transparent', },
   listContent: {
-    paddingBottom: 80, // 为底部导航栏留出空间
+    paddingBottom: 100, // 为底部导航栏和add button留出空间
     paddingTop: Spacing.sm,
   },
 });

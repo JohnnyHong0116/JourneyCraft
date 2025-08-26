@@ -53,11 +53,26 @@ export function formatDisplayDate(date: string): string {
   return `${month} ${day}, ${year}`;
 }
 
-export function groupTripsBySection(trips: Trip[]): TripSection[] {
-  // 按 displayDate 降序排序
-  const sortedTrips = [...trips].sort((a, b) => 
-    new Date(b.displayDate).getTime() - new Date(a.displayDate).getTime()
-  );
+export function groupTripsBySection(trips: Trip[], sortBy: 'edited' | 'created' = 'edited', order: 'asc' | 'desc' = 'desc'): TripSection[] {
+  // 根据传入的排序参数排序
+  const sortedTrips = [...trips].sort((a, b) => {
+    let dateA: Date;
+    let dateB: Date;
+    
+    if (sortBy === 'edited') {
+      dateA = new Date(a.displayDate);
+      dateB = new Date(b.displayDate);
+    } else {
+      dateA = new Date(a.createdAt);
+      dateB = new Date(b.createdAt);
+    }
+    
+    if (order === 'asc') {
+      return dateA.getTime() - dateB.getTime();
+    } else {
+      return dateB.getTime() - dateA.getTime();
+    }
+  });
   
   const sections: TripSection[] = [];
   let currentSection: TripSection | null = null;

@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef } from 'react';
 import {
   View,
+  TouchableOpacity,
   StyleSheet,
   RefreshControl,
   Alert,
@@ -18,14 +19,20 @@ import { groupTripsBySection } from '@/utils/date';
 import { Header } from '../../features/home/components/Header';
 import { TripCard } from '../../features/home/components/TripCard';
 import { SectionHeader } from '../../features/home/components/SectionHeader';
+import SortMenu from '../../src/components/ui/SortMenu';
 
 export default function HomeTab() {
   const [selectedTab, setSelectedTab] = useState<'visited' | 'planned'>('visited');
-  const [trips, setTrips] = useState<Trip[]>(mockTrips);
   const [refreshing, setRefreshing] = useState(false);
+  const [sortMenuVisible, setSortMenuVisible] = useState(false);
+  const [sortBy, setSortBy] = useState<'edited' | 'created'>('created');
+  const [order, setOrder] = useState<'asc' | 'desc'>('desc');
   const sectionListRef = useRef<SectionList<Trip, TripSection>>(null);
+  const sortButtonRef = useRef<any>(null);
 
-  const sections = groupTripsBySection(trips);
+  const [trips, setTrips] = useState<Trip[]>(mockTrips);
+
+  const sections = groupTripsBySection(trips, sortBy, order);
 
   const handleTabChange = (tab: 'visited' | 'planned') => {
     setSelectedTab(tab);
@@ -49,7 +56,15 @@ export default function HomeTab() {
   };
 
   const handleSort = () => {
-    // 排序功能
+    setSortMenuVisible(true);
+  };
+
+  const handleSortByChange = (newSortBy: 'edited' | 'created') => {
+    setSortBy(newSortBy);
+  };
+
+  const handleOrderChange = (newOrder: 'asc' | 'desc') => {
+    setOrder(newOrder);
   };
 
   const handleViewChange = () => {
@@ -81,6 +96,17 @@ export default function HomeTab() {
           onSearch={handleSearch}
           onSort={handleSort}
           onViewChange={handleViewChange}
+          sortButtonRef={sortButtonRef}
+        />
+
+        <SortMenu
+          visible={sortMenuVisible}
+          onDismiss={() => setSortMenuVisible(false)}
+          anchor={sortButtonRef.current}
+          sortBy={sortBy}
+          order={order}
+          onSortByChange={handleSortByChange}
+          onOrderChange={handleOrderChange}
         />
 
         <SectionList<Trip, TripSection>

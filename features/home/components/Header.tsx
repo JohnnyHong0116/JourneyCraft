@@ -14,6 +14,7 @@ interface HeaderProps {
   onSearch: () => void;
   onSort: () => void;
   onViewChange: () => void;
+  sortButtonRef?: React.RefObject<any>;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -22,6 +23,7 @@ export const Header: React.FC<HeaderProps> = ({
   onSearch,
   onSort,
   onViewChange,
+  sortButtonRef,
 }) => {
   const colorScheme = useColorScheme() || 'light';
   return (
@@ -32,7 +34,12 @@ export const Header: React.FC<HeaderProps> = ({
           <TouchableOpacity style={styles.iconButton} onPress={onSearch} activeOpacity={0.7}>
             <Icon name="circlesearch" size={30} color={Colors.textPrimary} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton} onPress={onSort} activeOpacity={0.7}>
+          <TouchableOpacity 
+            ref={sortButtonRef}
+            style={styles.iconButton} 
+            onPress={onSort} 
+            activeOpacity={0.7}
+          >
             <Icon name="circlesort" size={30} color={Colors.textPrimary} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.iconButton} onPress={onViewChange} activeOpacity={0.7}>

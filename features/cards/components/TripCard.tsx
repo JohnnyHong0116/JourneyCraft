@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import {
 } from '@/components/Icon';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/theme/designSystem';
 import { Trip } from '@/types/trip';
+import { CardMenu } from '@/components/ui/CardMenu';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -29,9 +30,35 @@ export const TripCard: React.FC<TripCardProps> = ({
   groupLabel
 }) => {
   const colorScheme = useColorScheme() || 'light';
+  const [cardMenuVisible, setCardMenuVisible] = useState(false);
+  const moreButtonRef = useRef<any>(null);
 
   const handleCardPress = () => {
     router.push(`/trip/${trip.id}` as any);
+  };
+
+  const handleMorePress = () => {
+    setCardMenuVisible(true);
+  };
+
+  const handlePin = () => {
+    // TODO: Implement pin functionality
+    console.log('Pin trip:', trip.id);
+  };
+
+  const handleSave = () => {
+    // TODO: Implement save functionality
+    console.log('Save trip:', trip.id);
+  };
+
+  const handleLock = () => {
+    // TODO: Implement lock functionality
+    console.log('Lock trip:', trip.id);
+  };
+
+  const handleDelete = () => {
+    // TODO: Implement delete functionality
+    console.log('Delete trip:', trip.id);
   };
 
 
@@ -110,11 +137,28 @@ export const TripCard: React.FC<TripCardProps> = ({
               )}
             </View>
           )}
-          <TouchableOpacity style={styles.moreButton}>
+          <TouchableOpacity 
+            ref={moreButtonRef}
+            style={styles.moreButton}
+            onPress={handleMorePress}
+          >
             <Icon name="threedotsSmaller" size={20} color={Colors.black} />
           </TouchableOpacity>
         </View>
       </View>
+
+      <CardMenu
+        visible={cardMenuVisible}
+        onDismiss={() => setCardMenuVisible(false)}
+        anchor={moreButtonRef.current}
+        onPin={handlePin}
+        onSave={handleSave}
+        onLock={handleLock}
+        onDelete={handleDelete}
+        isPinned={trip.isPinned}
+        isSaved={trip.isSaved}
+        isLocked={trip.isLocked}
+      />
     </View>
   );
 };

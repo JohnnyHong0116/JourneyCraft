@@ -12,6 +12,7 @@ export interface Trip {
   mood?: TripMood;          // 无则不显示圆点
   isSaved?: boolean;
   isLocked?: boolean;
+  isPinned?: boolean;        // 是否置顶
   companions?: string[];     // 有元素则显示 people 图标
 }
 

@@ -45,8 +45,12 @@ export const IconSvg = {
     unselected: require('./icons/photo-unselected.svg').default,
   } as TwoStateSvg,
   pin: {
-    selected: require('./icons/pin-selected.svg').default,
-    unselected: require('./icons/pin-unselected.svg').default,
+    selected: require('./icons/pin.svg').default,
+    unselected: require('./icons/pin.svg').default,
+  } as TwoStateSvg,
+  unpin: {
+    selected: require('./icons/unpin.svg').default,
+    unselected: require('./icons/unpin.svg').default,
   } as TwoStateSvg,
 
   // 时间/状态（有两态）

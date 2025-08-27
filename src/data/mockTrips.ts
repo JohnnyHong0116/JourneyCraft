@@ -14,6 +14,7 @@ export const mockTrips: Trip[] = [
     mood: 'happy',
     isSaved: true,
     isLocked: false,
+    isPinned: true,
     companions: ['Sarah']
   },
   
@@ -30,6 +31,7 @@ export const mockTrips: Trip[] = [
     mood: 'neutral',
     isSaved: false,
     isLocked: true,
+    isPinned: false,
     companions: []
   },
   

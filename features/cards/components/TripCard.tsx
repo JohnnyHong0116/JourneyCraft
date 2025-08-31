@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -22,16 +22,30 @@ interface TripCardProps {
   trip: Trip;
   showGroupLabel?: boolean;
   groupLabel?: string;
+  onPinToggle?: (tripId: string) => void;
+  onDelete?: (tripId: string) => void;
 }
 
 export const TripCard: React.FC<TripCardProps> = ({
   trip,
   showGroupLabel = false,
-  groupLabel
+  groupLabel,
+  onPinToggle,
+  onDelete
 }) => {
   const colorScheme = useColorScheme() || 'light';
   const [cardMenuVisible, setCardMenuVisible] = useState(false);
   const moreButtonRef = useRef<any>(null);
+  
+  // 本地状态管理，用于立即更新UI
+  const [localIsSaved, setLocalIsSaved] = useState(trip.isSaved || false);
+  const [localIsLocked, setLocalIsLocked] = useState(trip.isLocked || false);
+
+  // 当trip props更新时，同步本地状态
+  useEffect(() => {
+    setLocalIsSaved(trip.isSaved || false);
+    setLocalIsLocked(trip.isLocked || false);
+  }, [trip.isSaved, trip.isLocked, trip.isPinned]);
 
   const handleCardPress = () => {
     router.push(`/trip/${trip.id}` as any);
@@ -42,22 +56,34 @@ export const TripCard: React.FC<TripCardProps> = ({
   };
 
   const handlePin = () => {
-    // TODO: Implement pin functionality
-    console.log('Pin trip:', trip.id);
+    // 调用父组件的回调
+    if (onPinToggle) {
+      onPinToggle(trip.id);
+    }
+    // TODO: 这里可以添加API调用来持久化状态
+    console.log('Pin/Unpin trip:', trip.id);
   };
 
   const handleSave = () => {
-    // TODO: Implement save functionality
-    console.log('Save trip:', trip.id);
+    // 立即更新本地状态
+    setLocalIsSaved(!localIsSaved);
+    // TODO: 这里可以添加API调用来持久化状态
+    console.log('Save/Unsave trip:', trip.id, !localIsSaved);
   };
 
   const handleLock = () => {
-    // TODO: Implement lock functionality
-    console.log('Lock trip:', trip.id);
+    // 立即更新本地状态
+    setLocalIsLocked(!localIsLocked);
+    // TODO: 这里可以添加API调用来持久化状态
+    console.log('Lock/Unlock trip:', trip.id, !localIsLocked);
   };
 
   const handleDelete = () => {
-    // TODO: Implement delete functionality
+    // 调用父组件的回调
+    if (onDelete) {
+      onDelete(trip.id);
+    }
+    // TODO: 这里可以添加API调用来持久化删除
     console.log('Delete trip:', trip.id);
   };
 
@@ -83,10 +109,10 @@ export const TripCard: React.FC<TripCardProps> = ({
         <View style={styles.leftContent}>
           <View style={styles.leftIcons}>
             <View style={styles.iconContainer}>
-              <Icon name="cardsave" size={15} color={trip.isSaved ? Colors.addButton : Colors.navbarUnselected} />
+              <Icon name="cardsave" size={15} color={localIsSaved ? Colors.addButton : Colors.navbarUnselected} />
             </View>
             <View style={styles.iconContainer}>
-              <Icon name="cardlock" size={15} color={trip.isLocked ? Colors.addButton : Colors.navbarUnselected} />
+              <Icon name="cardlock" size={15} color={localIsLocked ? Colors.addButton : Colors.navbarUnselected} />
             </View>
             <View style={styles.iconContainer}>
               <Icon name="cardpeople" size={15} color={hasCompanions ? Colors.addButton : Colors.navbarUnselected} />
@@ -156,8 +182,8 @@ export const TripCard: React.FC<TripCardProps> = ({
         onLock={handleLock}
         onDelete={handleDelete}
         isPinned={trip.isPinned}
-        isSaved={trip.isSaved}
-        isLocked={trip.isLocked}
+        isSaved={localIsSaved}
+        isLocked={localIsLocked}
       />
     </View>
   );

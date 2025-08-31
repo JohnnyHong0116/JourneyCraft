@@ -12,6 +12,10 @@ export const IconSvg = {
     selected: require('./icons/home-selected.svg').default,
     unselected: require('./icons/home-unselected.svg').default,
   } as TwoStateSvg,
+  location: {
+    selected: require('./icons/location-selected.svg').default,
+    unselected: require('./icons/location-unselected.svg').default,
+  } as TwoStateSvg,
   map: {
     selected: require('./icons/map-selected.svg').default,
     unselected: require('./icons/map-unselected.svg').default,

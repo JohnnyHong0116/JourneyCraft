@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useMemo } from 'react';
 import {
   View,
   TouchableOpacity,
@@ -19,6 +19,7 @@ import { groupTripsBySection } from '@/utils/date';
 import { Header } from '../../features/home/components/Header';
 import { TripCard } from '../../features/home/components/TripCard';
 import { SectionHeader } from '../../features/home/components/SectionHeader';
+import { PinnedSection } from '../../features/home/components/PinnedSection';
 import SortMenu from '../../src/components/ui/SortMenu';
 
 export default function HomeTab() {
@@ -32,7 +33,11 @@ export default function HomeTab() {
 
   const [trips, setTrips] = useState<Trip[]>(mockTrips);
 
-  const sections = groupTripsBySection(trips, sortBy, order);
+  // 分离pinned和unpinned trips
+  const pinnedTrips = useMemo(() => trips.filter(trip => trip.isPinned), [trips]);
+  const unpinnedTrips = useMemo(() => trips.filter(trip => !trip.isPinned), [trips]);
+  
+  const sections = useMemo(() => groupTripsBySection(unpinnedTrips, sortBy, order), [unpinnedTrips, sortBy, order]);
 
   const handleTabChange = (tab: 'visited' | 'planned') => {
     setSelectedTab(tab);
@@ -71,6 +76,20 @@ export default function HomeTab() {
     // 视图切换功能
   };
 
+  const handlePinToggle = (tripId: string) => {
+    setTrips(prevTrips => 
+      prevTrips.map(trip => 
+        trip.id === tripId 
+          ? { ...trip, isPinned: !trip.isPinned }
+          : trip
+      )
+    );
+  };
+
+  const handleDeleteTrip = (tripId: string) => {
+    setTrips(prevTrips => prevTrips.filter(trip => trip.id !== tripId));
+  };
+
   const renderSectionHeader = useCallback(({ section }: { section: TripSection }) => (
     <SectionHeader title={section.title} />
   ), []);
@@ -78,8 +97,10 @@ export default function HomeTab() {
   const renderTripItem: SectionListRenderItem<Trip, TripSection> = useCallback(({ item }) => (
     <TripCard
       trip={item}
+      onPinToggle={handlePinToggle}
+      onDelete={handleDeleteTrip}
     />
-  ), []);
+  ), [handlePinToggle, handleDeleteTrip]);
 
   return (
     <LinearGradient
@@ -118,6 +139,13 @@ export default function HomeTab() {
           stickySectionHeadersEnabled={true}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContent}
+          ListHeaderComponent={
+            <PinnedSection
+              pinnedTrips={pinnedTrips}
+              onPinToggle={handlePinToggle}
+              onDelete={handleDeleteTrip}
+            />
+          }
           refreshControl={
             <RefreshControl
               refreshing={refreshing}

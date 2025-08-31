@@ -141,7 +141,7 @@ export default function BottomNavBar() {
             </Pressable>
             <Pressable style={styles.tab} onPress={() => router.replace('/(tabs)/location')}>
               <Icon 
-                name={'pin-selected'}
+                name={'location-selected'}
                 size={24} 
                 color={current === 'location' ? iconActive : iconInactive} 
               />

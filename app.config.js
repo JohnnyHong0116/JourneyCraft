@@ -1,3 +1,5 @@
+import 'dotenv/config';
+
 export default {
   expo: {
     name: "Mobile App Design",
@@ -30,7 +32,7 @@ export default {
       favicon: "./assets/icon.png"
     },
     extra: {
-      EXPO_PUBLIC_LOCATIONIQ_KEY: "pk_xxxxxxxxxxxxxxxxxxxxxx", // your real LocationIQ token
+      EXPO_PUBLIC_LOCATIONIQ_KEY: process.env.EXPO_PUBLIC_LOCATIONIQ_KEY,
     }
   }
 };

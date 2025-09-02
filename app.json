@@ -10,7 +10,11 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Allow access to choose a cover photo.",
+        "NSCameraUsageDescription": "Allow camera to take a new cover photo."
+      }
     },
     "android": {
       "adaptiveIcon": {

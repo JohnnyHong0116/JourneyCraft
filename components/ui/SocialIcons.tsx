@@ -17,7 +17,7 @@ export const WeChatIcon: React.FC<SocialIconProps> = ({ size = ICON_SIZE }) => (
 
 export const AppleIcon: React.FC<SocialIconProps> = ({ size = ICON_SIZE }) => (
   <View style={boxStyle}>
-    <AntDesign name="apple1" size={size} color="#000000" style={{ transform: [{ scale: 0.9 }] }} />
+    <AntDesign name="apple" size={size} color="#000000" style={{ transform: [{ scale: 0.9 }] }} />
   </View>
 );
 

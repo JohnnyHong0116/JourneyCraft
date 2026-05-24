@@ -24,7 +24,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
       activeOpacity={0.85}
     >
       <View style={styles.button}>
-        <AddIcon size={30} style={{ tintColor: Colors.white }} />
+        <AddIcon size={30} color={Colors.white} />
       </View>
     </TouchableOpacity>
   );

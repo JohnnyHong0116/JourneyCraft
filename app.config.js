@@ -2,9 +2,9 @@ import 'dotenv/config';
 
 export default {
   expo: {
-    name: "Mobile App Design",
-    slug: "mobile-app-design",
-    scheme: "mobileappdesign",             // <— add this for deep linking
+    name: "JourneyCraft",
+    slug: "journeycraft-app",
+    scheme: "journeycraft",
     version: "1.0.0",
     orientation: "portrait",
     icon: "./assets/icon.png",
@@ -19,14 +19,14 @@ export default {
     ],
     ios: {
       supportsTablet: true,
-      bundleIdentifier: "com.yourcompany.mobileappdesign"  // <— add this
+      bundleIdentifier: "com.journeycraft.app"
     },
     android: {
       adaptiveIcon: {
         foregroundImage: "./assets/icon.png",
         backgroundColor: "#ffffff"
       },
-      package: "com.yourcompany.mobileappdesign"           // <— add this
+      package: "com.journeycraft.app"
     },
     web: {
       favicon: "./assets/icon.png"

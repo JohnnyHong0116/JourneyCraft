@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: Typography.fontSize.md,
-    fontWeight: '590',
+    fontWeight: '600',
     color: Colors.textPrimary,
     textAlign: 'center',
     textTransform: 'uppercase',
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: Typography.fontSize.sm,
-    fontWeight: '510',
+    fontWeight: '500',
     color: Colors.textPrimary,
     textAlign: 'center',
     letterSpacing: -0.08,
@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
   },
   deleteText: {
     fontSize: Typography.fontSize.md,
-    fontWeight: '510',
+    fontWeight: '500',
     color: '#C1221B', // Red color for delete
     textTransform: 'uppercase',
     letterSpacing: -0.4,

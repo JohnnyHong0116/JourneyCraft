@@ -9,3 +9,6 @@ yarn-debug.log*
 yarn-error.log*
 expo-*.log
 expo-go-qr.svg
+UI/
+.DS_Store
+**/.DS_Store

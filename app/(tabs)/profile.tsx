@@ -32,6 +32,9 @@ import * as ImageManipulator from 'expo-image-manipulator';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors, Spacing, BorderRadius } from '@/theme/designSystem';
 import { Icon } from '@/components/Icon';
+import { router } from 'expo-router';
+import { galleryImages, getProfileMetrics } from '@/data/appData';
+import { useAppState } from '@/state/AppStateContext';
 
 const { width } = Dimensions.get('window');
 
@@ -215,6 +218,8 @@ const CustomCropInterface = ({
 };
 
 export default function ProfileTab() {
+  const { profile } = useAppState();
+  const profileMetrics = getProfileMetrics();
   const insets = useSafeAreaInsets();
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
 
@@ -608,10 +613,10 @@ export default function ProfileTab() {
 
             {/* actions */}
             <Animated.View style={[styles.actionsRow, buttonsStyle]}>
-              <TouchableOpacity style={styles.editProfileButton}>
+              <TouchableOpacity style={styles.editProfileButton} onPress={() => router.push('/settings/profile')}>
                 <Text style={styles.editProfileText}>Edit Profile</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.gearButton}>
+              <TouchableOpacity style={styles.gearButton} onPress={() => router.push('/settings')}>
                 <Icon name="setting" size={22} color={Colors.textPrimary} />
               </TouchableOpacity>
             </Animated.View>
@@ -619,15 +624,15 @@ export default function ProfileTab() {
             {/* name + stats */}
             <View style={styles.contentRow}>
               <View style={styles.leftTextBlock}>
-                <Text style={styles.username} numberOfLines={1}>Username</Text>
-                <Text style={styles.bio} numberOfLines={2}>balabababa 亲亲抱抱举高高</Text>
-                <Text style={styles.bio} numberOfLines={2}>阿巴阿巴阿巴阿巴</Text>
+                <Text style={styles.username} numberOfLines={1}>{profile.username}</Text>
+                <Text style={styles.bio} numberOfLines={2}>{profile.bio}</Text>
+                {profile.location ? <Text style={styles.bio} numberOfLines={1}>{profile.location}</Text> : null}
               </View>
 
               <View style={styles.statsBlock}>
-                <View style={styles.statCell}><Text style={styles.statNumber}>85</Text><Text style={styles.statLabel}>Posts</Text></View>
-                <View style={styles.statCell}><Text style={styles.statNumber}>520</Text><Text style={styles.statLabel}>Days</Text></View>
-                <View style={styles.statCell}><Text style={styles.statNumber}>116</Text><Text style={styles.statLabel}>Countries</Text></View>
+                <View style={styles.statCell}><Text style={styles.statNumber}>{profileMetrics.posts}</Text><Text style={styles.statLabel}>Posts</Text></View>
+                <View style={styles.statCell}><Text style={styles.statNumber}>{profileMetrics.days}</Text><Text style={styles.statLabel}>Days</Text></View>
+                <View style={styles.statCell}><Text style={styles.statNumber}>{profileMetrics.places}</Text><Text style={styles.statLabel}>Places</Text></View>
               </View>
             </View>
           </Animated.View>
@@ -635,9 +640,9 @@ export default function ProfileTab() {
           {/* ---- highlights row (unchanged) ---- */}
           <View style={styles.highlightsContainer}>
             <Animated.ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }}>
-              {[1, 2, 3, 4, 5].map((i) => (
-                <View key={i} style={{ marginRight: 12 }}>
-                  <View style={styles.highlightThumb} />
+              {galleryImages.slice(0, 5).map((image) => (
+                <View key={image} style={{ marginRight: 12 }}>
+                  <Image source={{ uri: image }} style={styles.highlightThumb} />
                 </View>
               ))}
             </Animated.ScrollView>
@@ -649,29 +654,23 @@ export default function ProfileTab() {
           {/* ---- photo grid (unchanged) ---- */}
           <View style={styles.photoGrid}>
             <View style={styles.gridRow}>
-              <View style={styles.gridImage} />
-              <View style={styles.gridImage} />
-              <View style={styles.gridImage} />
+              {galleryImages.slice(0, 3).map((image) => <Image key={image} source={{ uri: image }} style={styles.gridImage} />)}
             </View>
 
             <View style={styles.gridRow}>
-              <View style={[styles.gridImage, styles.largeImage]} />
+              <Image source={{ uri: galleryImages[3] }} style={[styles.gridImage, styles.largeImage]} />
               <View style={styles.smallImagesContainer}>
-                <View style={styles.smallImage} />
-                <View style={styles.smallImage} />
+                <Image source={{ uri: galleryImages[4] }} style={styles.smallImage} />
+                <Image source={{ uri: galleryImages[5] }} style={styles.smallImage} />
               </View>
             </View>
 
             <View style={styles.gridRow}>
-              <View style={styles.gridImage} />
-              <View style={styles.gridImage} />
-              <View style={styles.gridImage} />
+              {galleryImages.slice(6, 9).map((image) => <Image key={image} source={{ uri: image }} style={styles.gridImage} />)}
             </View>
 
             <View style={styles.gridRow}>
-              <View style={styles.gridImage} />
-              <View style={styles.gridImage} />
-              <View style={styles.gridImage} />
+              {galleryImages.slice(0, 3).map((image) => <Image key={`repeat-${image}`} source={{ uri: image }} style={styles.gridImage} />)}
             </View>
 
             <View style={{ height: 100 }} />
@@ -926,5 +925,3 @@ const styles = StyleSheet.create({
     marginHorizontal: SAFE_PADDING,
   },
 });
-
-

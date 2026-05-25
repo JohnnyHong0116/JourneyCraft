@@ -15,6 +15,7 @@ import { router } from 'expo-router';
 import { Colors, Spacing } from '@/theme/designSystem';
 import { Trip, TripSection } from '@/types/trip';
 import { mockTrips } from '@/data/mockTrips';
+import { plannedTripCards } from '@/data/mockApp';
 import { groupTripsBySection } from '@/utils/date';
 import { Header } from '../../features/home/components/Header';
 import { TripCard } from '../../features/home/components/TripCard';
@@ -34,8 +35,12 @@ export default function HomeTab() {
   const [trips, setTrips] = useState<Trip[]>(mockTrips);
 
   // 分离pinned和unpinned trips
-  const pinnedTrips = useMemo(() => trips.filter(trip => trip.isPinned), [trips]);
-  const unpinnedTrips = useMemo(() => trips.filter(trip => !trip.isPinned), [trips]);
+  const visibleTrips = useMemo(
+    () => selectedTab === 'visited' ? trips : plannedTripCards,
+    [selectedTab, trips],
+  );
+  const pinnedTrips = useMemo(() => visibleTrips.filter(trip => trip.isPinned), [visibleTrips]);
+  const unpinnedTrips = useMemo(() => visibleTrips.filter(trip => !trip.isPinned), [visibleTrips]);
   
   const sections = useMemo(() => groupTripsBySection(unpinnedTrips, sortBy, order), [unpinnedTrips, sortBy, order]);
 
@@ -57,7 +62,7 @@ export default function HomeTab() {
   }, []);
 
   const handleSearch = () => {
-    // 搜索功能
+    router.push('/search');
   };
 
   const handleSort = () => {
@@ -73,7 +78,7 @@ export default function HomeTab() {
   };
 
   const handleViewChange = () => {
-    // 视图切换功能
+    router.push({ pathname: '/(tabs)/calendar', params: { mode: selectedTab } });
   };
 
   const handlePinToggle = (tripId: string) => {
@@ -166,5 +171,4 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.sm,
   },
 });
-
 

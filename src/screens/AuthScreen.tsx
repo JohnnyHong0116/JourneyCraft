@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, StatusBar, KeyboardAvoidingView, Platform, Modal, Animated, Easing, Keyboard, TouchableWithoutFeedback, Dimensions } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, StatusBar, KeyboardAvoidingView, Platform, Modal, Animated, Easing, Keyboard, TouchableWithoutFeedback, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Spacing, BorderRadius, Typography, Shadows } from '../theme/designSystem';
@@ -12,6 +12,8 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { colors } from '../tokens';
 import AreaCodeInline from '../components/AreaCodeInline';
 import LocationAutocomplete from '../components/LocationAutocomplete';
+import { router } from 'expo-router';
+import { useAppState } from '../state/AppStateContext';
 
 const CONTENT_WIDTH = 360;
 
@@ -40,6 +42,9 @@ const ClearButton = ({
 };
 
 const AuthScreen: React.FC<Props> = ({ initialTab = 'login' }) => {
+  const { signIn, signUp } = useAppState();
+  const { width: viewportWidth } = useWindowDimensions();
+  const formWidth = Math.min(CONTENT_WIDTH, viewportWidth - Spacing.lg * 2);
   const [active, setActive] = useState<AuthTab>(initialTab);
   const slideX = useRef(new Animated.Value(0)).current;
 
@@ -135,7 +140,7 @@ const AuthScreen: React.FC<Props> = ({ initialTab = 'login' }) => {
 
   const animateTo = (tab: AuthTab) => {
     Animated.timing(slideX, {
-      toValue: tab === 'signup' ? -CONTENT_WIDTH : 0,
+      toValue: tab === 'signup' ? -formWidth : 0,
       duration: 260,
       easing: Easing.out(Easing.quad),
       useNativeDriver: true,
@@ -174,14 +179,23 @@ const AuthScreen: React.FC<Props> = ({ initialTab = 'login' }) => {
     return re.test(val.trim());
   };
 
-  const handleLoginSubmit = () => {
-    // ...submit auth when backend is ready
+  const handleLoginSubmit = async () => {
+    await signIn(username);
+    router.replace('/(tabs)/home');
   };
 
-  const handleSignupSubmit = () => {
+  const handleSignupSubmit = async () => {
     // Email is validated inline; prevent submit if invalid
     if (email.trim().length === 0 || !isValidEmail(email)) return;
-    // ...submit signup when backend is ready
+    await signUp({
+      username: suUsername,
+      email,
+      phone: [countryCode, phone].filter(Boolean).join(' '),
+      dateOfBirth: dobDate ? formatDate(dobDate) : '',
+      gender,
+      location: suLocation,
+    });
+    router.replace('/(tabs)/home');
   };
 
   const emailInvalid = email.trim().length > 0 && !isValidEmail(email);
@@ -231,20 +245,20 @@ const AuthScreen: React.FC<Props> = ({ initialTab = 'login' }) => {
             <TouchableWithoutFeedback onPress={dismissAll} accessible={false}>
               <View>
             {/* Header */}
-            <View style={{ width: CONTENT_WIDTH, alignSelf: 'center' }}>
+            <View style={{ width: formWidth, alignSelf: 'center' }}>
               <AuthHeader />
             </View>
 
             {/* Segmented Selector */}
-            <View style={{ width: CONTENT_WIDTH, alignSelf: 'center' }}>
+            <View style={{ width: formWidth, alignSelf: 'center' }}>
               <SegmentedAuthControl active={active} onChange={handleTabChange} />
             </View>
 
             {/* Animated forms area (only below selector moves) */}
-            <View style={{ width: CONTENT_WIDTH, alignSelf: 'center', marginTop: Spacing.lg, overflow: 'hidden' }}>
-              <Animated.View style={{ width: CONTENT_WIDTH * 2, flexDirection: 'row', transform: [{ translateX: slideX }] }}>
+            <View style={{ width: formWidth, alignSelf: 'center', marginTop: Spacing.lg, overflow: 'hidden' }}>
+              <Animated.View style={{ width: formWidth * 2, flexDirection: 'row', transform: [{ translateX: slideX }] }}>
                 {/* Login form */}
-                <Animated.View style={{ width: CONTENT_WIDTH, transform: [{ translateY: loginShiftY }] }}>
+                <Animated.View style={{ width: formWidth, transform: [{ translateY: loginShiftY }] }}>
                   {/* Username/Email */}
                   <View style={styles.inputGroup}>
                     <Text style={styles.inputLabel}>Username / Email</Text>
@@ -315,7 +329,7 @@ const AuthScreen: React.FC<Props> = ({ initialTab = 'login' }) => {
                       <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]} />
                       <Text style={styles.rememberText}>Remember me</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity>
+                    <TouchableOpacity onPress={() => router.push('/auth/forgot-password')}>
                       <Text style={styles.forgotPassword}>Forgot Password?</Text>
                     </TouchableOpacity>
                   </View>
@@ -342,7 +356,7 @@ const AuthScreen: React.FC<Props> = ({ initialTab = 'login' }) => {
                 </Animated.View>
 
                 {/* Sign Up form */}
-                <Animated.View style={[{ width: CONTENT_WIDTH }, active === 'signup' ? signupShiftStyle : null]}>
+                <Animated.View style={[{ width: formWidth }, active === 'signup' ? signupShiftStyle : null]}>
                   {/* Username */}
                   <View style={styles.inputGroup}>
                     <Text style={styles.inputLabel}>Username</Text>

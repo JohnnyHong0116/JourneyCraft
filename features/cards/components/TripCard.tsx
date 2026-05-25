@@ -4,7 +4,6 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Dimensions,
   Image,
 } from 'react-native';
 import { router } from 'expo-router';
@@ -15,8 +14,6 @@ import {
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/theme/designSystem';
 import { Trip } from '@/types/trip';
 import { CardMenu } from '@/components/ui/CardMenu';
-
-const { width: screenWidth } = Dimensions.get('window');
 
 interface TripCardProps {
   trip: Trip;
@@ -213,7 +210,7 @@ const styles = StyleSheet.create({
   rightSection: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, marginLeft: -Spacing.md, },
   moreButton: { width: 24, height: 30, justifyContent: 'center', alignItems: 'center', marginRight: Spacing.lg, },
   moreIcon: { tintColor: Colors.black, } as any,
-  middleDivider: {height: StyleSheet.hairlineWidth, backgroundColor: Colors.textPrimary, marginTop: Spacing.md, marginLeft: -(40 + Spacing.sm), width: screenWidth - Spacing.lg * 2, alignSelf: 'stretch', },
+  middleDivider: { height: StyleSheet.hairlineWidth, backgroundColor: Colors.textPrimary, marginTop: Spacing.md, marginLeft: -(40 + Spacing.sm), flexBasis: '100%', alignSelf: 'stretch' },
   mediaIcons: { flexDirection: 'row', gap: Spacing.xs, },
   mediaIconContainer: { width: 18, height: 30, justifyContent: 'center', alignItems: 'center', },
   mediaIcon: { tintColor: Colors.black, } as any,

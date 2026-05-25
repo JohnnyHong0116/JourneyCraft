@@ -1,0 +1,6 @@
+import React from 'react';
+import { TripEditorScreen } from '../../../features/trip/TripEditorScreen';
+
+export default function EditTripScreen() {
+  return <TripEditorScreen />;
+}

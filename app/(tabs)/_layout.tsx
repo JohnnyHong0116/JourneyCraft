@@ -18,6 +18,7 @@ export default function TabsLayout() {
           <Tabs.Screen name="location" options={{ title: 'Location' }} />
           <Tabs.Screen name="stats" options={{ title: 'Stats' }} />
           <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
+          <Tabs.Screen name="calendar" options={{ href: null }} />
         </Tabs>
       </View>
       
@@ -36,5 +37,4 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
-
 

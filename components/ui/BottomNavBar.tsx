@@ -6,7 +6,6 @@ import {
   Platform,
   Pressable,
   useWindowDimensions,
-  useColorScheme,
 } from 'react-native';
 import { Svg, Path, Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import MaskedView from '@react-native-masked-view/masked-view';
@@ -16,7 +15,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Icon
 } from '@/components/Icon';
-import { colors, ColorScheme } from '@/tokens';
+import { colors } from '@/tokens';
+import { useAppState } from '@/state/AppStateContext';
 
 // ======= 可按 Figma 微调 =======
 const BAR_HEIGHT = 92;        // 底栏高度（含凹槽区域）
@@ -32,10 +32,10 @@ export default function BottomNavBar() {
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const scheme = (useColorScheme() ?? 'light') as ColorScheme;
+  const { mode } = useAppState();
 
   // 直接从 tokens 读取单个颜色字符串（避免类型不匹配）
-  const palette = colors[scheme];
+  const palette = colors[mode];
   const navBg = palette.navbar;
   const iconActive = palette.navbarSelected;
   const iconInactive = palette.navbarUnselected;
@@ -80,14 +80,14 @@ export default function BottomNavBar() {
           }
         >
           <BlurView
-            tint={Platform.OS === 'ios' ? 'extraLight' : 'light'}
+            tint={mode === 'dark' ? 'dark' : Platform.OS === 'ios' ? 'extraLight' : 'light'}
             intensity={80}
             style={StyleSheet.absoluteFill}
           />
           {/* 统一加 10% 白色蒙版，不受明暗模式影响 */}
           <View
             pointerEvents="none"
-            style={[StyleSheet.absoluteFill, { backgroundColor: Platform.OS === 'ios' ? 'rgba(255,255,255,0.1)' : 'rgba(230, 230, 230, 0.3)' }]}
+            style={[StyleSheet.absoluteFill, { backgroundColor: mode === 'dark' ? 'rgba(0,0,0,0.12)' : Platform.OS === 'ios' ? 'rgba(255,255,255,0.1)' : 'rgba(230, 230, 230, 0.3)' }]}
           />
         </MaskedView>
       </View>

@@ -1,138 +1,78 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, Dimensions } from 'react-native';
-import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/theme/designSystem';
+import { Pressable, StyleSheet, Text } from 'react-native';
+import { AppPalette } from '@/components/layout/AppScreen';
+import { useAppState } from '@/state/AppStateContext';
+import { BorderRadius, Spacing, Typography } from '@/theme/designSystem';
+import { ActionSheetModal } from './OverlaySurface';
 
 interface DeleteConfirmationModalProps {
   visible: boolean;
   onDismiss: () => void;
   onConfirm: () => void;
-  title?: string;
-  message?: string;
 }
 
 export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
   visible,
   onDismiss,
   onConfirm,
-  title = 'Alarm',
-  message = 'Are you sure to delete this entry?',
 }) => {
-  const handleCancel = () => {
-    onDismiss();
-  };
-
-  const handleDelete = () => {
-    onConfirm();
-    onDismiss();
-  };
+  const { mode } = useAppState();
+  const palette = AppPalette[mode];
+  const styles = createStyles(palette);
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={handleCancel}
-    >
-      <View style={styles.overlay}>
-        <View style={styles.modalContainer}>
-          {/* Dialog details */}
-          <View style={styles.dialogDetails}>
-            <Text style={styles.title}>{title}</Text>
-            <Text style={styles.description}>{message}</Text>
-          </View>
-
-          {/* Buttons */}
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={handleCancel}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.cancelText}>Cancel</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={styles.deleteButton}
-              onPress={handleDelete}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.deleteText}>Delete</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    </Modal>
+    <ActionSheetModal visible={visible} onDismiss={onDismiss} dismissOnBackdrop={false}>
+      <Text style={styles.title}>Delete this memory?</Text>
+      <Text style={styles.description}>This trip entry and its saved moments will be removed.</Text>
+      <Pressable accessibilityRole="button" accessibilityLabel="Delete Memory" style={styles.deleteButton} onPress={onConfirm}>
+        <Text style={styles.deleteText}>Delete Memory</Text>
+      </Pressable>
+      <Pressable accessibilityRole="button" accessibilityLabel="Cancel" style={styles.cancelButton} onPress={onDismiss}>
+        <Text style={styles.cancelText}>Cancel</Text>
+      </Pressable>
+    </ActionSheetModal>
   );
 };
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-  },
-  modalContainer: {
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.xl,
-    width: 270,
-    ...Shadows.large,
-    elevation: 8,
-  },
-  dialogDetails: {
-    padding: Spacing.lg,
-    gap: 5,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0, 0, 0, 0.15)',
-  },
+const createStyles = (palette: typeof AppPalette.light | typeof AppPalette.dark) => StyleSheet.create({
   title: {
-    fontSize: Typography.fontSize.md,
-    fontWeight: '600',
-    color: Colors.textPrimary,
+    color: palette.text,
+    fontSize: Typography.fontSize.xl,
+    lineHeight: 27,
+    fontWeight: '700',
     textAlign: 'center',
-    textTransform: 'uppercase',
-    letterSpacing: -0.4,
   },
   description: {
+    color: palette.secondaryText,
     fontSize: Typography.fontSize.sm,
-    fontWeight: '500',
-    color: Colors.textPrimary,
+    lineHeight: 20,
     textAlign: 'center',
-    letterSpacing: -0.08,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    height: 44,
-  },
-  cancelButton: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderBottomLeftRadius: BorderRadius.xl,
-    backgroundColor: Colors.white,
+    marginBottom: Spacing.md,
+    paddingHorizontal: Spacing.md,
   },
   deleteButton: {
-    flex: 1,
-    justifyContent: 'center',
+    minHeight: 52,
+    borderRadius: BorderRadius.lg,
+    borderCurve: 'continuous',
+    backgroundColor: '#d9463f',
     alignItems: 'center',
-    borderBottomRightRadius: BorderRadius.xl,
-    backgroundColor: Colors.white,
-    borderLeftWidth: 1,
-    borderLeftColor: 'rgba(0, 0, 0, 0.15)',
-  },
-  cancelText: {
-    fontSize: Typography.fontSize.md,
-    fontWeight: '400',
-    color: Colors.navbarSelected, // Green color for cancel
-    textTransform: 'uppercase',
-    letterSpacing: -0.4,
+    justifyContent: 'center',
   },
   deleteText: {
+    color: '#ffffff',
     fontSize: Typography.fontSize.md,
-    fontWeight: '500',
-    color: '#C1221B', // Red color for delete
-    textTransform: 'uppercase',
-    letterSpacing: -0.4,
+    fontWeight: '700',
+  },
+  cancelButton: {
+    minHeight: 48,
+    borderRadius: BorderRadius.lg,
+    borderCurve: 'continuous',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelText: {
+    color: palette.text,
+    fontSize: Typography.fontSize.md,
+    fontWeight: '600',
   },
 });

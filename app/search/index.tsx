@@ -1,31 +1,35 @@
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { SemanticIcon } from '@/components/Icon';
 import { router } from 'expo-router';
 import { AppPalette, AppScreen, ContentContainer } from '@/components/layout/AppScreen';
 import { searchCategories } from '@/data/mockApp';
+import { useAppState } from '@/state/AppStateContext';
 import { Spacing, Typography } from '@/theme/designSystem';
 
 export default function SearchScreen() {
   const [query, setQuery] = useState('');
+  const { mode } = useAppState();
+  const palette = AppPalette[mode];
+  const styles = createStyles(palette);
 
   return (
     <AppScreen>
       <ContentContainer style={styles.content}>
         <View style={styles.searchRow}>
           <View style={styles.searchField}>
-            <Ionicons name="search" size={20} color={AppPalette.light.secondaryText} />
+            <SemanticIcon name="search" size={20} color={palette.secondaryText} />
             <TextInput
               value={query}
               onChangeText={setQuery}
               autoFocus
               placeholder="Search"
-              placeholderTextColor={AppPalette.light.secondaryText}
+              placeholderTextColor={palette.secondaryText}
               style={styles.input}
             />
             {query.length > 0 ? (
               <Pressable onPress={() => setQuery('')}>
-                <Ionicons name="close-circle" size={19} color={AppPalette.light.secondaryText} />
+                <SemanticIcon name="close-circle" size={19} color={palette.secondaryText} />
               </Pressable>
             ) : null}
           </View>
@@ -40,9 +44,9 @@ export default function SearchScreen() {
             onPress={() => router.push({ pathname: '/search/[category]', params: { category: category.label.toLowerCase().replace(' ', '-') } })}
             style={styles.row}
           >
-            <Ionicons name={category.icon} size={23} color={AppPalette.light.text} />
+            <SemanticIcon name={category.icon} size={23} color={palette.text} />
             <Text style={styles.rowLabel}>{category.label}</Text>
-            <Ionicons name="chevron-forward" size={17} color={AppPalette.light.secondaryText} />
+            <SemanticIcon name="chevron-forward" size={17} color={palette.secondaryText} />
           </Pressable>
         ))}
       </ContentContainer>
@@ -50,7 +54,7 @@ export default function SearchScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (palette: typeof AppPalette.light | typeof AppPalette.dark) => StyleSheet.create({
   content: { flex: 1, paddingTop: Spacing.sm },
   searchRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.xl },
   searchField: {
@@ -58,21 +62,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: 10,
-    backgroundColor: '#e3e3e5',
+    backgroundColor: palette.cardMuted,
     height: 38,
     paddingHorizontal: Spacing.sm,
     gap: Spacing.xs,
   },
-  input: { flex: 1, fontSize: Typography.fontSize.md, color: AppPalette.light.text, paddingVertical: 0 },
+  input: { flex: 1, fontSize: Typography.fontSize.md, color: palette.text, paddingVertical: 0 },
   cancel: { color: '#3366ff', fontSize: Typography.fontSize.md },
-  heading: { fontSize: Typography.fontSize.xl, fontWeight: '700', color: AppPalette.light.text, marginBottom: Spacing.md },
+  heading: { fontSize: Typography.fontSize.xl, fontWeight: '700', color: palette.text, marginBottom: Spacing.md },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
     height: 48,
-    borderBottomColor: AppPalette.light.divider,
+    borderBottomColor: palette.divider,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  rowLabel: { flex: 1, fontSize: Typography.fontSize.md, color: AppPalette.light.text, fontWeight: '500' },
+  rowLabel: { flex: 1, fontSize: Typography.fontSize.md, color: palette.text, fontWeight: '500' },
 });

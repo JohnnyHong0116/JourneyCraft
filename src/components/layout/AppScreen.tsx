@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -15,8 +16,11 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BorderRadius, Shadows, Spacing, Typography } from '@/theme/designSystem';
+import { useAppState } from '@/state/AppStateContext';
+import { SemanticIcon } from '@/components/Icon';
+import { getFooterBottomInset, getFooterVisualHeight, getScrollBottomInset } from './appScreenModel';
 
 export type AppThemeMode = 'light' | 'dark';
 
@@ -47,6 +51,11 @@ export const AppPalette = {
   },
 } as const;
 
+function useResolvedMode(explicitMode?: AppThemeMode): AppThemeMode {
+  const { mode } = useAppState();
+  return explicitMode ?? mode;
+}
+
 interface AppScreenProps {
   children: React.ReactNode;
   mode?: AppThemeMode;
@@ -54,24 +63,51 @@ interface AppScreenProps {
   keyboardSafe?: boolean;
   contentContainerStyle?: StyleProp<ViewStyle>;
   bottomInset?: number;
+  footer?: (bottomInset: number) => React.ReactNode;
+  footerHeight?: number;
 }
 
 export function AppScreen({
   children,
-  mode = 'light',
+  mode,
   scroll = false,
   keyboardSafe = false,
   contentContainerStyle,
   bottomInset = 20,
+  footer,
+  footerHeight = 0,
 }: AppScreenProps) {
-  const colors = AppPalette[mode];
-  const body = scroll ? (
+  const resolvedMode = useResolvedMode(mode);
+  const colors = AppPalette[resolvedMode];
+  const insets = useSafeAreaInsets();
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    if (!keyboardSafe) return undefined;
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showSubscription = Keyboard.addListener(showEvent, () => setKeyboardVisible(true));
+    const hideSubscription = Keyboard.addListener(hideEvent, () => setKeyboardVisible(false));
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, [keyboardSafe]);
+
+  const footerBottomInset = footer
+    ? getFooterBottomInset(insets.bottom, keyboardSafe && keyboardVisible)
+    : 0;
+  const visualFooterHeight = footer
+    ? getFooterVisualHeight(footerHeight, footerBottomInset)
+    : 0;
+  const contentBottomInset = getScrollBottomInset(bottomInset, visualFooterHeight);
+  const content = scroll ? (
     <ScrollView
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
       contentContainerStyle={[
         styles.scrollContent,
-        { paddingBottom: bottomInset },
+        { paddingBottom: contentBottomInset },
         contentContainerStyle,
       ]}
     >
@@ -80,10 +116,19 @@ export function AppScreen({
   ) : (
     <View style={[styles.flex, contentContainerStyle]}>{children}</View>
   );
+  const body = footer ? (
+    <View style={styles.flex}>
+      {content}
+      <View style={styles.footer}>{footer(footerBottomInset)}</View>
+    </View>
+  ) : content;
 
   return (
     <LinearGradient colors={[colors.backgroundTop, colors.backgroundBottom]} style={styles.flex}>
-      <SafeAreaView style={styles.flex} edges={['top', 'left', 'right', 'bottom']}>
+      <SafeAreaView
+        style={styles.flex}
+        edges={footer ? ['top', 'left', 'right'] : ['top', 'left', 'right', 'bottom']}
+      >
         {keyboardSafe ? (
           <KeyboardAvoidingView
             style={styles.flex}
@@ -117,12 +162,13 @@ interface ScreenHeaderProps {
 
 export function ScreenHeader({
   title,
-  mode = 'light',
+  mode,
   backLabel,
   onBack,
   right,
 }: ScreenHeaderProps) {
-  const colors = AppPalette[mode];
+  const resolvedMode = useResolvedMode(mode);
+  const colors = AppPalette[resolvedMode];
   return (
     <View style={styles.header}>
       <Pressable
@@ -131,7 +177,7 @@ export function ScreenHeader({
         onPress={onBack ?? (() => router.back())}
         style={styles.headerSide}
       >
-        <Ionicons name="chevron-back" size={25} color={colors.text} />
+        <SemanticIcon name="chevron-back" size={25} color={colors.text} />
         {backLabel ? <Text style={[styles.backLabel, { color: colors.text }]}>{backLabel}</Text> : null}
       </Pressable>
       <Text style={[styles.headerTitle, { color: colors.text }]}>{title}</Text>
@@ -142,17 +188,18 @@ export function ScreenHeader({
 
 export function IconCircleButton({
   icon,
-  mode = 'light',
+  mode,
   onPress,
 }: {
   icon: React.ComponentProps<typeof Ionicons>['name'];
   mode?: AppThemeMode;
   onPress?: () => void;
 }) {
-  const colors = AppPalette[mode];
+  const resolvedMode = useResolvedMode(mode);
+  const colors = AppPalette[resolvedMode];
   return (
     <Pressable onPress={onPress} style={[styles.iconCircle, { backgroundColor: colors.cardMuted }]}>
-      <Ionicons name={icon} size={20} color={colors.text} />
+      <SemanticIcon name={icon} size={20} color={colors.text} />
     </Pressable>
   );
 }
@@ -161,16 +208,17 @@ export function SegmentedControl<T extends string>({
   options,
   value,
   onChange,
-  mode = 'light',
+  mode,
 }: {
   options: Array<{ value: T; label: string }>;
   value: T;
   onChange: (value: T) => void;
   mode?: AppThemeMode;
 }) {
-  const colors = AppPalette[mode];
+  const resolvedMode = useResolvedMode(mode);
+  const colors = AppPalette[resolvedMode];
   return (
-    <View style={[styles.segmented, { backgroundColor: mode === 'light' ? '#e5e1e0' : '#393939' }]}>
+    <View style={[styles.segmented, { backgroundColor: resolvedMode === 'light' ? '#e5e1e0' : '#393939' }]}>
       {options.map((option) => {
         const active = option.value === value;
         return (
@@ -180,7 +228,7 @@ export function SegmentedControl<T extends string>({
             style={[
               styles.segment,
               active && {
-                backgroundColor: mode === 'light' ? colors.card : '#646668',
+                backgroundColor: resolvedMode === 'light' ? colors.card : '#646668',
               },
             ]}
           >
@@ -194,16 +242,17 @@ export function SegmentedControl<T extends string>({
 
 export function SurfaceCard({
   children,
-  mode = 'light',
+  mode,
   style,
 }: {
   children: React.ReactNode;
   mode?: AppThemeMode;
   style?: StyleProp<ViewStyle>;
 }) {
-  const colors = AppPalette[mode];
+  const resolvedMode = useResolvedMode(mode);
+  const colors = AppPalette[resolvedMode];
   return (
-    <View style={[styles.surfaceCard, { backgroundColor: colors.card }, mode === 'light' && Shadows.small, style]}>
+    <View style={[styles.surfaceCard, { backgroundColor: colors.card }, resolvedMode === 'light' && Shadows.small, style]}>
       {children}
     </View>
   );
@@ -213,7 +262,7 @@ export function Chip({
   label,
   icon,
   active = false,
-  mode = 'light',
+  mode,
   onPress,
 }: {
   label: string;
@@ -222,7 +271,8 @@ export function Chip({
   mode?: AppThemeMode;
   onPress?: () => void;
 }) {
-  const colors = AppPalette[mode];
+  const resolvedMode = useResolvedMode(mode);
+  const colors = AppPalette[resolvedMode];
   return (
     <Pressable
       onPress={onPress}
@@ -231,8 +281,8 @@ export function Chip({
         { backgroundColor: active ? colors.accent : colors.card },
       ]}
     >
-      {icon ? <Ionicons name={icon} size={17} color={mode === 'dark' && !active ? colors.text : '#27252a'} /> : null}
-      <Text style={[styles.chipText, { color: active || mode === 'light' ? '#27252a' : colors.text }]}>{label}</Text>
+      {icon ? <SemanticIcon name={icon} size={17} color={resolvedMode === 'dark' && !active ? colors.text : '#27252a'} /> : null}
+      <Text style={[styles.chipText, { color: active || resolvedMode === 'light' ? '#27252a' : colors.text }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -240,7 +290,7 @@ export function Chip({
 export function PrimaryButton({
   title,
   onPress,
-  mode = 'light',
+  mode,
   icon,
 }: {
   title: string;
@@ -248,11 +298,12 @@ export function PrimaryButton({
   mode?: AppThemeMode;
   icon?: React.ComponentProps<typeof Ionicons>['name'];
 }) {
-  const colors = AppPalette[mode];
+  const resolvedMode = useResolvedMode(mode);
+  const colors = AppPalette[resolvedMode];
   return (
     <Pressable onPress={onPress} style={[styles.primaryButton, { backgroundColor: colors.accent }]}>
       <Text style={styles.primaryText}>{title}</Text>
-      {icon ? <Ionicons name={icon} size={19} color="#253021" /> : null}
+      {icon ? <SemanticIcon name={icon} size={19} color="#253021" /> : null}
     </Pressable>
   );
 }
@@ -264,13 +315,14 @@ interface FormFieldProps extends TextInputProps {
   right?: React.ReactNode;
 }
 
-export function FormField({ label, icon, mode = 'light', right, style, ...props }: FormFieldProps) {
-  const colors = AppPalette[mode];
+export function FormField({ label, icon, mode, right, style, ...props }: FormFieldProps) {
+  const resolvedMode = useResolvedMode(mode);
+  const colors = AppPalette[resolvedMode];
   return (
     <View style={styles.fieldGroup}>
       {label ? <Text style={[styles.fieldLabel, { color: colors.text }]}>{label}</Text> : null}
       <View style={[styles.field, { backgroundColor: colors.input }]}>
-        {icon ? <Ionicons name={icon} color={colors.text} size={23} /> : null}
+        {icon ? <SemanticIcon name={icon} color={colors.text} size={23} /> : null}
         <TextInput
           {...props}
           placeholderTextColor={colors.secondaryText}
@@ -285,7 +337,7 @@ export function FormField({ label, icon, mode = 'light', right, style, ...props 
 export function StatePanel({
   title,
   message,
-  mode = 'light',
+  mode,
   icon = 'images-outline',
 }: {
   title: string;
@@ -293,10 +345,11 @@ export function StatePanel({
   mode?: AppThemeMode;
   icon?: React.ComponentProps<typeof Ionicons>['name'];
 }) {
-  const colors = AppPalette[mode];
+  const resolvedMode = useResolvedMode(mode);
+  const colors = AppPalette[resolvedMode];
   return (
     <SurfaceCard mode={mode} style={styles.statePanel}>
-      <Ionicons name={icon} size={32} color={colors.accentStrong} />
+      <SemanticIcon name={icon} size={32} color={colors.accentStrong} />
       <Text style={[styles.stateTitle, { color: colors.text }]}>{title}</Text>
       <Text style={[styles.stateMessage, { color: colors.secondaryText }]}>{message}</Text>
     </SurfaceCard>
@@ -306,6 +359,7 @@ export function StatePanel({
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   scrollContent: { flexGrow: 1 },
+  footer: { position: 'absolute', left: 0, right: 0, bottom: 0 },
   contentContainer: {
     width: '100%',
     maxWidth: 560,

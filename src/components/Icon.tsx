@@ -1,5 +1,7 @@
 import React from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import { IconSvg } from '@/assets/icons';
+import { resolveAppIconName } from './iconModel';
 
 export interface IconProps {
   name: string;
@@ -34,6 +36,15 @@ export const Icon: React.FC<IconProps> = ({
 
   // 关键：把 color 透传给 svg，使其被 currentColor 使用
   return <IconComponent width={size} height={size} color={color} />;
+};
+
+export const SemanticIcon: React.FC<IconProps> = ({ name, size = 24, color }) => {
+  const appIconName = resolveAppIconName(name);
+  return appIconName ? (
+    <Icon name={appIconName} size={size} color={color} />
+  ) : (
+    <Ionicons name={name as React.ComponentProps<typeof Ionicons>['name']} size={size} color={color} />
+  );
 };
 
 // 预定义的图标组件 - 使用新的命名方式（始终 selected，由颜色控制状态）

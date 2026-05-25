@@ -2,11 +2,13 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
 import BottomNavBar from '../../components/ui/BottomNavBar';
-import { Colors } from '@/theme/designSystem';
+import { AppPalette } from '@/components/layout/AppScreen';
+import { useAppState } from '@/state/AppStateContext';
 
 export default function TabsLayout() {
+  const { mode } = useAppState();
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: AppPalette[mode].backgroundTop }]}>
       <View style={styles.content}>
         <Tabs 
           screenOptions={{ 
@@ -31,7 +33,6 @@ export default function TabsLayout() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.backgroundDefault,
   },
   content: {
     flex: 1,

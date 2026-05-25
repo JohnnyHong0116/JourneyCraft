@@ -6,8 +6,10 @@ import {
   StyleSheet,
   Animated,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { SemanticIcon } from '@/components/Icon';
 import { Colors, Typography, Spacing, BorderRadius } from '@/theme/designSystem';
+import { AppPalette } from '@/components/layout/AppScreen';
+import { useAppState } from '@/state/AppStateContext';
 import { Trip } from '@/types/trip';
 import { TripCard } from '../../cards/components/TripCard';
 
@@ -22,6 +24,9 @@ export const PinnedSection: React.FC<PinnedSectionProps> = ({
   onPinToggle,
   onDelete,
 }) => {
+  const { mode } = useAppState();
+  const palette = AppPalette[mode];
+  const styles = createStyles(palette);
   const [isExpanded, setIsExpanded] = useState(true);
   const [animation] = useState(new Animated.Value(1));
 
@@ -62,7 +67,7 @@ export const PinnedSection: React.FC<PinnedSectionProps> = ({
             },
           ]}
         >
-          <Ionicons name="chevron-down" size={20} color={Colors.textPrimary} />
+          <SemanticIcon name="chevron-down" size={20} color={palette.text} />
         </Animated.View>
       </TouchableOpacity>
 
@@ -91,7 +96,7 @@ export const PinnedSection: React.FC<PinnedSectionProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (palette: typeof AppPalette.light | typeof AppPalette.dark) => StyleSheet.create({
   container: {
     marginBottom: Spacing.md,
   },
@@ -106,7 +111,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: Typography.fontSize.lg,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: palette.text,
     textTransform: 'capitalize',
   },
   chevron: {

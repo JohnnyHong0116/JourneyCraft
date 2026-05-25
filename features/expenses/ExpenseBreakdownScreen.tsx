@@ -1,9 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { SemanticIcon } from '@/components/Icon';
 import { router } from 'expo-router';
 import { AppPalette, AppScreen, Chip, ContentContainer, ScreenHeader, SurfaceCard } from '@/components/layout/AppScreen';
 import { ExpenseItem, expenseItems } from '@/data/mockApp';
+import { useAppState } from '@/state/AppStateContext';
 import { Spacing, Typography } from '@/theme/designSystem';
 
 export type ExpenseFilter = 'dates' | 'category' | 'people';
@@ -19,6 +20,9 @@ const categoryColors: Record<ExpenseItem['category'], string> = {
 
 export function ExpenseBreakdownScreen({ initialFilter = 'category' }: { initialFilter?: ExpenseFilter }) {
   const [filter, setFilter] = useState<ExpenseFilter>(initialFilter);
+  const { mode } = useAppState();
+  const palette = AppPalette[mode];
+  const styles = createStyles(palette);
   const total = expenseItems.reduce((sum, item) => sum + item.amount, 0);
   const grouped = useMemo(() => {
     if (filter === 'category') {
@@ -46,19 +50,18 @@ export function ExpenseBreakdownScreen({ initialFilter = 'category' }: { initial
   }, [filter]);
 
   return (
-    <AppScreen mode="dark" scroll bottomInset={Spacing.xxl}>
+    <AppScreen scroll bottomInset={Spacing.xxl}>
       <ContentContainer style={styles.content}>
         <ScreenHeader
           title="Chengdu Trip"
-          mode="dark"
           right={
             <Pressable onPress={() => router.push('/expenses/new')} style={styles.add}>
-              <Ionicons name="add" size={24} color={AppPalette.dark.text} />
+              <SemanticIcon name="add" size={24} color={palette.text} />
             </Pressable>
           }
         />
         <Text style={styles.summary}>Summary</Text>
-        <SurfaceCard mode="dark" style={styles.graph}>
+        <SurfaceCard style={styles.graph}>
           <View style={styles.donut}><View style={styles.center} /></View>
           <View style={styles.legend}>
             {Object.entries(categoryColors).slice(0, 4).map(([name, color]) => (
@@ -71,21 +74,21 @@ export function ExpenseBreakdownScreen({ initialFilter = 'category' }: { initial
           <Text style={styles.graphTotal}>¥{total}</Text>
         </SurfaceCard>
         <View style={styles.filters}>
-          <Chip mode="dark" label="Dates" icon="calendar-outline" active={filter === 'dates'} onPress={() => setFilter('dates')} />
-          <Chip mode="dark" label="Category" icon="grid-outline" active={filter === 'category'} onPress={() => setFilter('category')} />
-          <Chip mode="dark" label="People" icon="people-outline" active={filter === 'people'} onPress={() => setFilter('people')} />
+          <Chip label="Dates" icon="calendar-outline" active={filter === 'dates'} onPress={() => setFilter('dates')} />
+          <Chip label="Category" icon="grid-outline" active={filter === 'category'} onPress={() => setFilter('category')} />
+          <Chip label="People" icon="people-outline" active={filter === 'people'} onPress={() => setFilter('people')} />
         </View>
         <Text style={styles.summary}>Expenditure</Text>
-        <SurfaceCard mode="dark" style={styles.list}>
+        <SurfaceCard style={styles.list}>
           {grouped.map((item) => (
             <Pressable key={item.title} style={styles.row} onPress={() => router.push(item.route as any)}>
-              <Ionicons name={filter === 'dates' ? 'calendar-outline' : filter === 'people' ? 'person-outline' : 'pricetag-outline'} size={25} color={filter === 'category' ? categoryColors[item.title as ExpenseItem['category']] : AppPalette.dark.accent} />
+              <SemanticIcon name={filter === 'dates' ? 'calendar-outline' : filter === 'people' ? 'person-outline' : 'pricetag-outline'} size={25} color={filter === 'category' ? categoryColors[item.title as ExpenseItem['category']] : palette.accent} />
               <View style={styles.rowBody}>
                 <Text style={styles.rowTitle}>{item.title}</Text>
                 <Text style={styles.muted}>{item.subtitle}</Text>
               </View>
               <Text style={styles.amount}>¥{item.amount.toFixed(2)}</Text>
-              <Ionicons name="chevron-forward" size={20} color={AppPalette.dark.text} />
+              <SemanticIcon name="chevron-forward" size={20} color={palette.text} />
             </Pressable>
           ))}
           {filter === 'category' ? (
@@ -99,23 +102,23 @@ export function ExpenseBreakdownScreen({ initialFilter = 'category' }: { initial
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (palette: typeof AppPalette.light | typeof AppPalette.dark) => StyleSheet.create({
   content: { gap: Spacing.md, paddingTop: Spacing.sm },
-  add: { width: 38, height: 38, borderRadius: 19, backgroundColor: AppPalette.dark.cardMuted, alignItems: 'center', justifyContent: 'center' },
-  summary: { color: AppPalette.dark.text, fontSize: Typography.fontSize.xl, fontWeight: '700' },
+  add: { width: 38, height: 38, borderRadius: 19, backgroundColor: palette.cardMuted, alignItems: 'center', justifyContent: 'center' },
+  summary: { color: palette.text, fontSize: Typography.fontSize.xl, fontWeight: '700' },
   graph: { minHeight: 164, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around' },
   donut: { height: 102, width: 102, borderRadius: 51, borderWidth: 27, borderColor: '#43bfd8', borderTopColor: '#8d77f6', borderRightColor: '#ff8988' },
   center: { flex: 1 },
   legend: { gap: 7 },
   legendRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   dot: { height: 8, width: 8, borderRadius: 4 },
-  muted: { fontSize: Typography.fontSize.sm, color: AppPalette.dark.secondaryText },
-  graphTotal: { position: 'absolute', bottom: 10, right: 16, color: AppPalette.dark.text, fontWeight: '600' },
+  muted: { fontSize: Typography.fontSize.sm, color: palette.secondaryText },
+  graphTotal: { position: 'absolute', bottom: 10, right: 16, color: palette.text, fontWeight: '600' },
   filters: { flexDirection: 'row', gap: Spacing.sm },
   list: { paddingVertical: Spacing.sm },
-  row: { minHeight: 67, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: AppPalette.dark.divider, flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
+  row: { minHeight: 67, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: palette.divider, flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
   rowBody: { flex: 1 },
-  rowTitle: { color: AppPalette.dark.text, fontWeight: '700', fontSize: Typography.fontSize.md },
-  amount: { color: AppPalette.dark.text, fontSize: Typography.fontSize.lg, fontWeight: '600' },
+  rowTitle: { color: palette.text, fontWeight: '700', fontSize: Typography.fontSize.md },
+  amount: { color: palette.text, fontSize: Typography.fontSize.lg, fontWeight: '600' },
   newCategory: { alignItems: 'center', paddingVertical: Spacing.md },
 });

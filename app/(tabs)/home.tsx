@@ -12,7 +12,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { Colors, Spacing } from '@/theme/designSystem';
+import { Spacing } from '@/theme/designSystem';
+import { AppPalette } from '@/components/layout/AppScreen';
+import { useAppState } from '@/state/AppStateContext';
 import { Trip, TripSection } from '@/types/trip';
 import { mockTrips } from '@/data/mockTrips';
 import { plannedTripCards } from '@/data/mockApp';
@@ -21,9 +23,12 @@ import { Header } from '../../features/home/components/Header';
 import { TripCard } from '../../features/home/components/TripCard';
 import { SectionHeader } from '../../features/home/components/SectionHeader';
 import { PinnedSection } from '../../features/home/components/PinnedSection';
+import { HOME_TIMELINE_STICKY_SECTION_HEADERS } from '../../features/home/components/homeTimelineModel';
 import SortMenu from '../../src/components/ui/SortMenu';
 
 export default function HomeTab() {
+  const { mode } = useAppState();
+  const palette = AppPalette[mode];
   const [selectedTab, setSelectedTab] = useState<'visited' | 'planned'>('visited');
   const [refreshing, setRefreshing] = useState(false);
   const [sortMenuVisible, setSortMenuVisible] = useState(false);
@@ -109,7 +114,7 @@ export default function HomeTab() {
 
   return (
     <LinearGradient
-      colors={[Colors.backgroundTop, '#E3EDDC', Colors.backgroundGreen]}
+      colors={[palette.backgroundTop, mode === 'dark' ? '#101f1b' : '#E3EDDC', palette.backgroundBottom]}
       locations={[0, 0.6, 1]}
       start={{ x: 0.5, y: 0 }}
       end={{ x: 0.5, y: 1 }}
@@ -141,7 +146,7 @@ export default function HomeTab() {
           keyExtractor={(item) => item.id}
           renderSectionHeader={renderSectionHeader}
           renderItem={renderTripItem}
-          stickySectionHeadersEnabled={true}
+          stickySectionHeadersEnabled={HOME_TIMELINE_STICKY_SECTION_HEADERS}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContent}
           ListHeaderComponent={
@@ -155,7 +160,7 @@ export default function HomeTab() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={handleRefresh}
-              tintColor={Colors.black}
+              tintColor={palette.text}
             />
           }
         />

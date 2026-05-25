@@ -1,12 +1,16 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { SemanticIcon } from '@/components/Icon';
 import { router, useLocalSearchParams } from 'expo-router';
 import { AppPalette, AppScreen, ContentContainer, ScreenHeader, SurfaceCard } from '@/components/layout/AppScreen';
 import { getStatisticsMonthOptions, getStatisticsSummary } from '@/data/appData';
+import { useAppState } from '@/state/AppStateContext';
 import { Spacing, Typography } from '@/theme/designSystem';
 
 export default function StatsSummaryScreen() {
+  const { mode } = useAppState();
+  const palette = AppPalette[mode];
+  const styles = createStyles(palette);
   const params = useLocalSearchParams<{ period?: string; year?: string; month?: string }>();
   const period = params.period === 'annual' ? 'annual' : 'monthly';
   const year = Number(params.year) || 2025;
@@ -17,18 +21,18 @@ export default function StatsSummaryScreen() {
     : String(year);
 
   return (
-    <AppScreen mode="dark" scroll>
+    <AppScreen scroll>
       <ContentContainer style={styles.content}>
-        <ScreenHeader mode="dark" title={`${periodTitle} Summary`} right={<Ionicons name="ellipsis-horizontal-circle" size={28} color={AppPalette.dark.text} />} />
+        <ScreenHeader title={`${periodTitle} Summary`} right={<SemanticIcon name="ellipsis-horizontal-circle" size={28} color={palette.text} />} />
         <Pressable onPress={() => router.push('/expenses')}>
-          <SurfaceCard mode="dark" style={styles.totalCard}>
+          <SurfaceCard style={styles.totalCard}>
             <Text style={styles.label}>Total Expenses</Text>
             <Text style={styles.total}>¥ {summary.total.toFixed(2)}</Text>
             <View style={styles.progress}><View style={styles.progressFill} /></View>
             <Text style={styles.muted}>{summary.tripCount} recorded trips in this period</Text>
           </SurfaceCard>
         </Pressable>
-        <SurfaceCard mode="dark" style={styles.chartCard}>
+        <SurfaceCard style={styles.chartCard}>
           <View style={styles.donut}>
             <View style={styles.donutInside} />
           </View>
@@ -43,27 +47,27 @@ export default function StatsSummaryScreen() {
         </SurfaceCard>
         <Pressable onPress={() => router.push('/expenses')} style={styles.expensesButton}>
           <Text style={styles.buttonText}>Open expense breakdown</Text>
-          <Ionicons name="chevron-forward" size={20} color={AppPalette.dark.text} />
+          <SemanticIcon name="chevron-forward" size={20} color={palette.text} />
         </Pressable>
       </ContentContainer>
     </AppScreen>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (palette: typeof AppPalette.light | typeof AppPalette.dark) => StyleSheet.create({
   content: { paddingTop: Spacing.sm, gap: Spacing.xxl },
   totalCard: { gap: Spacing.sm },
-  label: { color: AppPalette.dark.text, fontSize: Typography.fontSize.lg, fontWeight: '700' },
-  total: { color: AppPalette.dark.text, fontSize: 46, fontWeight: '600' },
-  muted: { color: AppPalette.dark.secondaryText, fontSize: Typography.fontSize.sm },
+  label: { color: palette.text, fontSize: Typography.fontSize.lg, fontWeight: '700' },
+  total: { color: palette.text, fontSize: 46, fontWeight: '600' },
+  muted: { color: palette.secondaryText, fontSize: Typography.fontSize.sm },
   progress: { height: 13, backgroundColor: '#737475', borderRadius: 8, overflow: 'hidden' },
-  progressFill: { width: '94%', height: '100%', backgroundColor: AppPalette.dark.accent },
-  chartCard: { minHeight: 160, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', backgroundColor: '#919493' },
+  progressFill: { width: '94%', height: '100%', backgroundColor: palette.accent },
+  chartCard: { minHeight: 160, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', backgroundColor: palette.cardMuted },
   donut: { width: 110, height: 110, borderRadius: 55, borderWidth: 27, borderColor: '#44c1dc', borderTopColor: '#8b76ef', borderRightColor: '#ff8884' },
   donutInside: { flex: 1 },
   legend: { gap: Spacing.sm },
   legendRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   dot: { width: 8, height: 8, borderRadius: 4 },
-  expensesButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: Spacing.lg, borderRadius: 16, backgroundColor: AppPalette.dark.card },
-  buttonText: { color: AppPalette.dark.text, fontWeight: '600', fontSize: Typography.fontSize.md },
+  expensesButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: Spacing.lg, borderRadius: 16, backgroundColor: palette.card },
+  buttonText: { color: palette.text, fontWeight: '600', fontSize: Typography.fontSize.md },
 });

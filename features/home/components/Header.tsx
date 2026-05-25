@@ -1,10 +1,9 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
-import { useColorScheme } from 'react-native';
-import {
-  Icon
-} from '@/components/Icon';
+import { Icon, SemanticIcon } from '@/components/Icon';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/theme/designSystem';
+import { AppPalette } from '@/components/layout/AppScreen';
+import { useAppState } from '@/state/AppStateContext';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -25,14 +24,16 @@ export const Header: React.FC<HeaderProps> = ({
   onViewChange,
   sortButtonRef,
 }) => {
-  const colorScheme = useColorScheme() || 'light';
+  const { mode } = useAppState();
+  const palette = AppPalette[mode];
+  const styles = createStyles(palette);
   return (
     <View style={styles.container}>
       <View style={styles.topSection}>
         <Text style={styles.appTitle}>JourneyCraft</Text>
         <View style={styles.headerIcons}>
           <TouchableOpacity style={styles.iconButton} onPress={onSearch} activeOpacity={0.7}>
-            <Icon name="circlesearch" size={30} color={Colors.textPrimary} />
+            <SemanticIcon name="search-outline" size={21} color={palette.text} />
           </TouchableOpacity>
           <TouchableOpacity 
             ref={sortButtonRef}
@@ -40,10 +41,10 @@ export const Header: React.FC<HeaderProps> = ({
             onPress={onSort} 
             activeOpacity={0.7}
           >
-            <Icon name="circlesort" size={30} color={Colors.textPrimary} />
+            <Icon name="sort" size={21} color={palette.text} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.iconButton} onPress={onViewChange} activeOpacity={0.7}>
-            <Icon name="circlecalendarview" size={30} color={Colors.textPrimary} />
+            <SemanticIcon name="calendar-outline" size={21} color={palette.text} />
           </TouchableOpacity>
         </View>
       </View>
@@ -59,16 +60,15 @@ export const Header: React.FC<HeaderProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: { backgroundColor: Colors.backgroundDefault, paddingTop: Spacing.lg, paddingBottom: Spacing.md, paddingHorizontal: Spacing.lg, },
+const createStyles = (palette: typeof AppPalette.light | typeof AppPalette.dark) => StyleSheet.create({
+  container: { backgroundColor: 'transparent', paddingTop: Spacing.lg, paddingBottom: Spacing.md, paddingHorizontal: Spacing.lg, },
   topSection: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.lg, },
-  appTitle: { fontSize: 32, fontWeight: '700', color: Colors.textPrimary, letterSpacing: -0.5, },
-  headerIcons: { flexDirection: 'row', gap: Spacing.md, },
-  iconButton: { width: 32, height: 32, justifyContent: 'center', alignItems: 'center', },
-  headerIcon: { tintColor: Colors.textPrimary, } as any,
-  segmentedControl: { flexDirection: 'row', backgroundColor: Colors.inputSearchBackground, borderRadius: BorderRadius.lg, padding: 4, gap: 4, },
+  appTitle: { fontSize: 32, fontWeight: '700', color: palette.text, letterSpacing: 0, },
+  headerIcons: { flexDirection: 'row', gap: Spacing.sm, },
+  iconButton: { width: 42, height: 42, borderRadius: 21, backgroundColor: palette.cardMuted, justifyContent: 'center', alignItems: 'center' },
+  segmentedControl: { flexDirection: 'row', backgroundColor: palette.cardMuted, borderRadius: BorderRadius.lg, padding: 4, gap: 4, },
   segment: { flex: 1, paddingVertical: Spacing.sm, paddingHorizontal: Spacing.md, borderRadius: BorderRadius.md, alignItems: 'center', justifyContent: 'center', },
-  activeSegment: { backgroundColor: Colors.white, ...Shadows.small, },
-  segmentText: { fontSize: Typography.fontSize.md, fontWeight: '600', color: Colors.textSecondary, },
-  activeSegmentText: { color: Colors.textPrimary, fontWeight: '700', },
+  activeSegment: { backgroundColor: palette.card, ...Shadows.small, },
+  segmentText: { fontSize: Typography.fontSize.md, fontWeight: '600', color: palette.secondaryText, },
+  activeSegmentText: { color: palette.text, fontWeight: '700', },
 });

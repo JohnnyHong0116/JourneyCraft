@@ -1,8 +1,10 @@
 import React from 'react';
 import { Pressable, StyleProp, StyleSheet, Text, View, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { SemanticIcon } from '@/components/Icon';
 import { AppPalette } from '@/components/layout/AppScreen';
 import { Spacing, Typography } from '@/theme/designSystem';
+import { useAppState } from '@/state/AppStateContext';
 
 interface SettingsRowProps {
   label: string;
@@ -27,22 +29,24 @@ export function SettingsRow({
   onPress,
   style,
 }: SettingsRowProps) {
+  const { mode } = useAppState();
+  const palette = AppPalette[mode];
   return (
-    <Pressable onPress={onPress} style={[styles.card, style]}>
-      <View style={[styles.icon, danger && styles.dangerIcon]}>
-        <Ionicons name={icon} size={25} color={danger ? '#111' : AppPalette.dark.text} />
+    <Pressable onPress={onPress} style={[styles.card, { backgroundColor: palette.card }, style]}>
+      <View style={[styles.icon, { backgroundColor: palette.cardMuted }, danger && styles.dangerIcon]}>
+        <SemanticIcon name={icon} size={25} color={danger ? '#111' : palette.text} />
       </View>
       <View style={styles.text}>
-        <Text style={styles.label}>{label}</Text>
-        {description ? <Text style={styles.description}>{description}</Text> : null}
+        <Text style={[styles.label, { color: palette.text }]}>{label}</Text>
+        {description ? <Text style={[styles.description, { color: palette.secondaryText }]}>{description}</Text> : null}
       </View>
-      {detail ? <Text style={styles.detail}>{detail}</Text> : null}
+      {detail ? <Text style={[styles.detail, { color: palette.secondaryText }]}>{detail}</Text> : null}
       {toggle ? (
-        <View style={[styles.toggle, enabled && styles.toggleActive]}>
-          <View style={[styles.knob, enabled && styles.knobActive]} />
+        <View style={[styles.toggle, enabled && { backgroundColor: palette.accent }]}>
+          <View style={[styles.knob, { backgroundColor: mode === 'dark' ? '#31343a' : '#ffffff' }, enabled && styles.knobActive]} />
         </View>
       ) : (
-        <Ionicons name="chevron-forward" size={25} color={AppPalette.dark.text} />
+        <SemanticIcon name="chevron-forward" size={25} color={palette.text} />
       )}
     </Pressable>
   );
@@ -51,7 +55,6 @@ export function SettingsRow({
 const styles = StyleSheet.create({
   card: {
     minHeight: 74,
-    backgroundColor: AppPalette.dark.card,
     borderRadius: 16,
     flexDirection: 'row',
     alignItems: 'center',
@@ -63,17 +66,15 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#32313d',
     alignItems: 'center',
     justifyContent: 'center',
   },
   dangerIcon: { backgroundColor: '#f0746c' },
   text: { flex: 1, gap: 5 },
-  label: { color: AppPalette.dark.text, fontSize: Typography.fontSize.md, fontWeight: '700' },
-  description: { color: AppPalette.dark.secondaryText, fontSize: Typography.fontSize.sm, lineHeight: 21 },
-  detail: { color: AppPalette.dark.secondaryText, fontSize: Typography.fontSize.sm },
+  label: { fontSize: Typography.fontSize.md, fontWeight: '700' },
+  description: { fontSize: Typography.fontSize.sm, lineHeight: 21 },
+  detail: { fontSize: Typography.fontSize.sm },
   toggle: { width: 54, height: 29, borderRadius: 15, backgroundColor: '#6d7073', padding: 3 },
-  toggleActive: { backgroundColor: AppPalette.dark.accent },
   knob: { width: 23, height: 23, borderRadius: 12, backgroundColor: '#31343a' },
   knobActive: { alignSelf: 'flex-end' },
 });

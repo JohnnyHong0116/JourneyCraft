@@ -1,18 +1,22 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { SemanticIcon } from '@/components/Icon';
 import { router } from 'expo-router';
 import { AppPalette, AppScreen, ContentContainer, ScreenHeader } from '@/components/layout/AppScreen';
 import { expenseItems } from '@/data/mockApp';
+import { useAppState } from '@/state/AppStateContext';
 import { Spacing, Typography } from '@/theme/designSystem';
 
 export default function ExpenseDayScreen() {
+  const { mode } = useAppState();
+  const palette = AppPalette[mode];
+  const styles = createStyles(palette);
   const items = expenseItems.filter((item) => item.day === 1);
   const total = items.reduce((sum, item) => sum + item.amount, 0);
   return (
-    <AppScreen mode="dark">
+    <AppScreen>
       <ContentContainer style={styles.content}>
-        <ScreenHeader mode="dark" title="Day 1" backLabel="Back" right={<Ionicons name="ellipsis-horizontal-circle" color="#fff" size={29} />} />
+        <ScreenHeader title="Day 1" backLabel="Back" right={<SemanticIcon name="ellipsis-horizontal-circle" color={palette.text} size={29} />} />
         <Text style={styles.total}>¥{total.toFixed(2)}</Text>
         {items.map((item) => (
           <View key={item.id} style={styles.row}>
@@ -30,12 +34,12 @@ export default function ExpenseDayScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (palette: typeof AppPalette.light | typeof AppPalette.dark) => StyleSheet.create({
   content: { paddingTop: Spacing.sm },
-  total: { color: AppPalette.dark.text, fontSize: 49, fontWeight: '500', textAlign: 'center', marginVertical: Spacing.lg },
-  row: { minHeight: 55, borderBottomColor: AppPalette.dark.divider, borderBottomWidth: StyleSheet.hairlineWidth, flexDirection: 'row', alignItems: 'center' },
+  total: { color: palette.text, fontSize: 49, fontWeight: '500', textAlign: 'center', marginVertical: Spacing.lg },
+  row: { minHeight: 55, borderBottomColor: palette.divider, borderBottomWidth: StyleSheet.hairlineWidth, flexDirection: 'row', alignItems: 'center' },
   body: { flex: 1 },
-  title: { color: AppPalette.dark.text, fontSize: Typography.fontSize.lg },
-  amount: { color: AppPalette.dark.text, fontSize: Typography.fontSize.md },
-  receipt: { color: AppPalette.dark.accent, fontSize: Typography.fontSize.sm },
+  title: { color: palette.text, fontSize: Typography.fontSize.lg },
+  amount: { color: palette.text, fontSize: Typography.fontSize.md },
+  receipt: { color: palette.accent, fontSize: Typography.fontSize.sm },
 });

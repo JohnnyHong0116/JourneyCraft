@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { SemanticIcon } from '@/components/Icon';
 import { router, useLocalSearchParams } from 'expo-router';
 import { AppPalette, AppScreen, ContentContainer, SegmentedControl, SurfaceCard } from '@/components/layout/AppScreen';
 import { plannedDays } from '@/data/mockApp';
+import { useAppState } from '@/state/AppStateContext';
 import { BorderRadius, Spacing, Typography } from '@/theme/designSystem';
 
 type TimelineMode = 'visited' | 'planned';
@@ -13,6 +15,9 @@ const dates = Array.from({ length: 35 }, (_, index) => index - 3);
 export default function CalendarTab() {
   const params = useLocalSearchParams<{ mode?: TimelineMode }>();
   const [mode, setMode] = useState<TimelineMode>(params.mode === 'planned' ? 'planned' : 'visited');
+  const { mode: themeMode } = useAppState();
+  const palette = AppPalette[themeMode];
+  const styles = createStyles(palette);
 
   return (
     <AppScreen scroll bottomInset={128}>
@@ -20,7 +25,7 @@ export default function CalendarTab() {
         <View style={styles.top}>
           <Text style={styles.title}>JourneyCraft</Text>
           <Pressable style={styles.circle} onPress={() => router.replace('/(tabs)/home')}>
-            <Ionicons name="list-outline" size={22} color={AppPalette.light.text} />
+            <SemanticIcon name="list-outline" size={22} color={palette.text} />
           </Pressable>
         </View>
         <SegmentedControl
@@ -30,9 +35,9 @@ export default function CalendarTab() {
         />
         <SurfaceCard style={styles.calendar}>
           <View style={styles.month}>
-            <Ionicons name="chevron-back" size={23} color={AppPalette.light.text} />
+            <SemanticIcon name="chevron-back" size={23} color={palette.text} />
             <Text style={styles.monthText}>July 2025</Text>
-            <Ionicons name="chevron-forward" size={23} color={AppPalette.light.text} />
+            <SemanticIcon name="chevron-forward" size={23} color={palette.text} />
           </View>
           <View style={styles.week}>
             {['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'].map((day) => (
@@ -61,7 +66,7 @@ export default function CalendarTab() {
                   <Text style={styles.planTitle}>{day.label}</Text>
                   <Text style={styles.location}>{day.location}</Text>
                 </View>
-                <Ionicons name={day.complete ? 'checkmark-circle' : 'ellipse-outline'} size={22} color={AppPalette.light.accentStrong} />
+                <Ionicons name={day.complete ? 'checkmark-circle' : 'ellipse-outline'} size={22} color={palette.accentStrong} />
               </View>
             ))
           ) : (
@@ -75,28 +80,28 @@ export default function CalendarTab() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (palette: typeof AppPalette.light | typeof AppPalette.dark) => StyleSheet.create({
   content: { paddingTop: Spacing.lg, gap: Spacing.lg },
   top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  title: { fontSize: Typography.fontSize.xxl, fontWeight: '700', color: AppPalette.light.text },
-  circle: { backgroundColor: '#eceaeb', width: 34, height: 34, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  calendar: { padding: Spacing.md, borderWidth: 2, borderColor: '#c5c6c8' },
+  title: { fontSize: Typography.fontSize.xxl, fontWeight: '700', color: palette.text },
+  circle: { backgroundColor: palette.cardMuted, width: 34, height: 34, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  calendar: { padding: Spacing.md, borderWidth: 2, borderColor: palette.divider },
   month: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm },
-  monthText: { fontSize: Typography.fontSize.md, fontWeight: '700', color: AppPalette.light.text },
+  monthText: { fontSize: Typography.fontSize.md, fontWeight: '700', color: palette.text },
   week: { flexDirection: 'row', marginTop: Spacing.md },
-  weekLabel: { width: `${100 / 7}%`, textAlign: 'center', fontSize: 10, color: AppPalette.light.secondaryText },
+  weekLabel: { width: `${100 / 7}%`, textAlign: 'center', fontSize: 10, color: palette.secondaryText },
   grid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: Spacing.sm },
   day: { width: `${100 / 7}%`, minHeight: 45, alignItems: 'center', justifyContent: 'center', borderRadius: BorderRadius.md },
   selectedDay: { backgroundColor: '#b7d58d' },
-  dayText: { fontSize: Typography.fontSize.xs, color: AppPalette.light.text, fontWeight: '600' },
+  dayText: { fontSize: Typography.fontSize.xs, color: palette.text, fontWeight: '600' },
   disabled: { color: '#adadb1' },
   mood: { fontSize: 17, marginTop: 2 },
   itinerary: { gap: Spacing.md },
   range: { fontSize: Typography.fontSize.sm, color: '#253021', fontWeight: '600' },
-  planRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: Spacing.sm, borderBottomWidth: StyleSheet.hairlineWidth, borderColor: AppPalette.light.divider },
+  planRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: Spacing.sm, borderBottomWidth: StyleSheet.hairlineWidth, borderColor: palette.divider },
   planText: { flex: 1 },
-  planTitle: { fontSize: Typography.fontSize.md, fontWeight: '700', color: AppPalette.light.text },
-  location: { fontSize: Typography.fontSize.xs, color: AppPalette.light.secondaryText, marginTop: 3 },
+  planTitle: { fontSize: Typography.fontSize.md, fontWeight: '700', color: palette.text },
+  location: { fontSize: Typography.fontSize.xs, color: palette.secondaryText, marginTop: 3 },
   moodRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: Spacing.md },
   bigMood: { fontSize: 30 },
 });

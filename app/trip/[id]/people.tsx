@@ -2,19 +2,23 @@ import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppPalette, AppScreen, ContentContainer, PrimaryButton, ScreenHeader, SurfaceCard } from '@/components/layout/AppScreen';
+import { useAppState } from '@/state/AppStateContext';
 import { Spacing, Typography } from '@/theme/designSystem';
 
 const people = ['Amily Zhang', 'Johnny He', 'Mia Liu', 'Chris Wong'];
 
 export default function TripPeopleScreen() {
   const [selected, setSelected] = useState(['Amily Zhang', 'Johnny He']);
+  const { mode } = useAppState();
+  const palette = AppPalette[mode];
+  const styles = createStyles(palette);
 
   return (
-    <AppScreen mode="dark" scroll>
+    <AppScreen scroll>
       <ContentContainer style={styles.content}>
-        <ScreenHeader title="People" mode="dark" />
+        <ScreenHeader title="People" />
         <Text style={styles.heading}>Share this memory with</Text>
-        <SurfaceCard mode="dark" style={styles.list}>
+        <SurfaceCard style={styles.list}>
           {people.map((person) => {
             const checked = selected.includes(person);
             return (
@@ -25,23 +29,23 @@ export default function TripPeopleScreen() {
               >
                 <View style={styles.avatar}><Text style={styles.initial}>{person[0]}</Text></View>
                 <Text style={styles.person}>{person}</Text>
-                <Ionicons name={checked ? 'checkmark-circle' : 'ellipse-outline'} size={24} color={checked ? AppPalette.dark.accent : AppPalette.dark.secondaryText} />
+                <Ionicons name={checked ? 'checkmark-circle' : 'ellipse-outline'} size={24} color={checked ? palette.accent : palette.secondaryText} />
               </Pressable>
             );
           })}
         </SurfaceCard>
-        <PrimaryButton mode="dark" title={`Add ${selected.length} people`} icon="checkmark" />
+        <PrimaryButton title={`Add ${selected.length} people`} icon="checkmark" />
       </ContentContainer>
     </AppScreen>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (palette: typeof AppPalette.light | typeof AppPalette.dark) => StyleSheet.create({
   content: { gap: Spacing.lg, paddingTop: Spacing.sm },
-  heading: { color: AppPalette.dark.text, fontSize: Typography.fontSize.lg, fontWeight: '700' },
+  heading: { color: palette.text, fontSize: Typography.fontSize.lg, fontWeight: '700' },
   list: { gap: Spacing.sm },
-  row: { minHeight: 56, flexDirection: 'row', alignItems: 'center', gap: Spacing.md, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: AppPalette.dark.divider },
-  avatar: { width: 38, height: 38, borderRadius: 20, backgroundColor: '#47464d', alignItems: 'center', justifyContent: 'center' },
-  initial: { color: AppPalette.dark.text, fontWeight: '700' },
-  person: { flex: 1, color: AppPalette.dark.text, fontSize: Typography.fontSize.md },
+  row: { minHeight: 56, flexDirection: 'row', alignItems: 'center', gap: Spacing.md, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: palette.divider },
+  avatar: { width: 38, height: 38, borderRadius: 20, backgroundColor: palette.cardMuted, alignItems: 'center', justifyContent: 'center' },
+  initial: { color: palette.text, fontWeight: '700' },
+  person: { flex: 1, color: palette.text, fontSize: Typography.fontSize.md },
 });

@@ -10,7 +10,6 @@ import {
   TouchableOpacity,
   Platform,
   Pressable,
-  Alert,
   Vibration,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -35,6 +34,8 @@ import { Icon } from '@/components/Icon';
 import { router } from 'expo-router';
 import { galleryImages, getProfileMetrics } from '@/data/appData';
 import { useAppState } from '@/state/AppStateContext';
+import { AppPalette } from '@/components/layout/AppScreen';
+import { ActionSheetModal, OverlayActionRow } from '@/components/ui/OverlaySurface';
 
 const { width } = Dimensions.get('window');
 
@@ -218,7 +219,8 @@ const CustomCropInterface = ({
 };
 
 export default function ProfileTab() {
-  const { profile } = useAppState();
+  const { profile, mode } = useAppState();
+  const palette = AppPalette[mode];
   const profileMetrics = getProfileMetrics();
   const insets = useSafeAreaInsets();
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
@@ -227,6 +229,7 @@ export default function ProfileTab() {
   const [customCoverUri, setCustomCoverUri] = useState<string | null>(null);
   const [cropInfo, setCropInfo] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const [croppedCoverUri, setCroppedCoverUri] = useState<string | null>(null);
+  const [coverActionsVisible, setCoverActionsVisible] = useState(false);
   const currentCoverUri = customCoverUri || COVER_URI;
 
   // load saved cover on mount
@@ -443,15 +446,23 @@ export default function ProfileTab() {
     setCroppedCoverUri(null);
   }
 
-  // replace your handleChangeCover with this action sheet-ish prompt
   function onPressChangeCover() {
-    // simple platform-neutral UI; replace with a fancy ActionSheet if you want
-    Alert.alert('Change Cover Photo', undefined, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Choose from Library', onPress: chooseFromLibrary },
-      { text: 'Take Photo', onPress: takePhoto },
-      { text: 'Reset to Default', style: 'destructive', onPress: resetCover },
-    ]);
+    setCoverActionsVisible(true);
+  }
+
+  async function handleChooseCoverFromLibrary() {
+    setCoverActionsVisible(false);
+    await chooseFromLibrary();
+  }
+
+  async function handleTakeCoverPhoto() {
+    setCoverActionsVisible(false);
+    await takePhoto();
+  }
+
+  async function handleResetCoverPhoto() {
+    setCoverActionsVisible(false);
+    await resetCover();
   }
 
   const scrollHandler = useAnimatedScrollHandler({
@@ -549,9 +560,9 @@ export default function ProfileTab() {
   });
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: palette.backgroundTop }]}>
       {/* draw under status bar */}
-      <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
+      <StatusBar translucent backgroundColor="transparent" barStyle={mode === 'dark' ? 'light-content' : 'dark-content'} />
 
       {/* NOTE: exclude 'top' here so content can live under the status bar */}
       <SafeAreaView edges={['left', 'right', 'bottom']} style={styles.container}>
@@ -605,7 +616,7 @@ export default function ProfileTab() {
           </Animated.View>
 
           {/* ---- HEADER BLOCK under the cover (keeps same padding; only cover height changes) ---- */}
-          <Animated.View style={[styles.headerContainer, headerContentStyle]}>
+          <Animated.View style={[styles.headerContainer, { backgroundColor: 'transparent' }, headerContentStyle]}>
             {/* avatar overlaps upward into the cover's lower edge */}
             <View style={styles.avatarContainer}>
               <View style={styles.avatar} />
@@ -613,26 +624,26 @@ export default function ProfileTab() {
 
             {/* actions */}
             <Animated.View style={[styles.actionsRow, buttonsStyle]}>
-              <TouchableOpacity style={styles.editProfileButton} onPress={() => router.push('/settings/profile')}>
-                <Text style={styles.editProfileText}>Edit Profile</Text>
+              <TouchableOpacity style={[styles.editProfileButton, { backgroundColor: palette.card, borderColor: palette.divider }]} onPress={() => router.push('/settings/profile')}>
+                <Text style={[styles.editProfileText, { color: palette.text }]}>Edit Profile</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.gearButton} onPress={() => router.push('/settings')}>
-                <Icon name="setting" size={22} color={Colors.textPrimary} />
+              <TouchableOpacity style={[styles.gearButton, { backgroundColor: palette.card, borderColor: palette.divider }]} onPress={() => router.push('/settings')}>
+                <Icon name="setting-unselected" size={22} color={palette.text} />
               </TouchableOpacity>
             </Animated.View>
 
             {/* name + stats */}
             <View style={styles.contentRow}>
               <View style={styles.leftTextBlock}>
-                <Text style={styles.username} numberOfLines={1}>{profile.username}</Text>
-                <Text style={styles.bio} numberOfLines={2}>{profile.bio}</Text>
-                {profile.location ? <Text style={styles.bio} numberOfLines={1}>{profile.location}</Text> : null}
+                <Text style={[styles.username, { color: palette.text }]} numberOfLines={1}>{profile.username}</Text>
+                <Text style={[styles.bio, { color: palette.secondaryText }]} numberOfLines={2}>{profile.bio}</Text>
+                {profile.location ? <Text style={[styles.bio, { color: palette.secondaryText }]} numberOfLines={1}>{profile.location}</Text> : null}
               </View>
 
               <View style={styles.statsBlock}>
-                <View style={styles.statCell}><Text style={styles.statNumber}>{profileMetrics.posts}</Text><Text style={styles.statLabel}>Posts</Text></View>
-                <View style={styles.statCell}><Text style={styles.statNumber}>{profileMetrics.days}</Text><Text style={styles.statLabel}>Days</Text></View>
-                <View style={styles.statCell}><Text style={styles.statNumber}>{profileMetrics.places}</Text><Text style={styles.statLabel}>Places</Text></View>
+                <View style={styles.statCell}><Text style={[styles.statNumber, { color: palette.text }]}>{profileMetrics.posts}</Text><Text style={[styles.statLabel, { color: palette.secondaryText }]}>Posts</Text></View>
+                <View style={styles.statCell}><Text style={[styles.statNumber, { color: palette.text }]}>{profileMetrics.days}</Text><Text style={[styles.statLabel, { color: palette.secondaryText }]}>Days</Text></View>
+                <View style={styles.statCell}><Text style={[styles.statNumber, { color: palette.text }]}>{profileMetrics.places}</Text><Text style={[styles.statLabel, { color: palette.secondaryText }]}>Places</Text></View>
               </View>
             </View>
           </Animated.View>
@@ -649,10 +660,10 @@ export default function ProfileTab() {
           </View>
 
           {/* Horizontal Divider */}
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: palette.divider }]} />
 
           {/* ---- photo grid (unchanged) ---- */}
-          <View style={styles.photoGrid}>
+          <View style={[styles.photoGrid, { backgroundColor: palette.backgroundTop }]}>
             <View style={styles.gridRow}>
               {galleryImages.slice(0, 3).map((image) => <Image key={image} source={{ uri: image }} style={styles.gridImage} />)}
             </View>
@@ -686,6 +697,38 @@ export default function ProfileTab() {
           onCancel={handleCropCancel}
         />
       )}
+
+      <ActionSheetModal visible={coverActionsVisible} onDismiss={() => setCoverActionsVisible(false)}>
+        <Text style={[styles.coverSheetTitle, { color: palette.text }]}>Change Cover Photo</Text>
+        <Text style={[styles.coverSheetDescription, { color: palette.secondaryText }]}>
+          Choose how your travel profile header should look.
+        </Text>
+        <OverlayActionRow
+          label="Choose from Library"
+          leading={<Icon name="cardimage" size={20} color={palette.text} />}
+          onPress={handleChooseCoverFromLibrary}
+        />
+        <OverlayActionRow
+          label="Take Photo"
+          leading={<Icon name="camera" size={20} color={palette.text} />}
+          onPress={handleTakeCoverPhoto}
+        />
+        <View style={[styles.coverSheetDivider, { backgroundColor: palette.divider }]} />
+        <OverlayActionRow
+          label="Reset Cover Photo"
+          danger
+          leading={<Icon name="trash" size={20} color="#ed5b55" />}
+          onPress={handleResetCoverPhoto}
+        />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Cancel"
+          style={styles.coverSheetCancel}
+          onPress={() => setCoverActionsVisible(false)}
+        >
+          <Text style={[styles.coverSheetCancelText, { color: palette.text }]}>Cancel</Text>
+        </Pressable>
+      </ActionSheetModal>
     </View>
   );
 }
@@ -923,5 +966,33 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.borderBrandTertiary,
     marginVertical: Spacing.md,
     marginHorizontal: SAFE_PADDING,
+  },
+  coverSheetTitle: {
+    fontSize: 20,
+    lineHeight: 26,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  coverSheetDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: 'center',
+    paddingHorizontal: Spacing.md,
+    marginBottom: Spacing.sm,
+  },
+  coverSheetDivider: {
+    height: StyleSheet.hairlineWidth,
+    marginHorizontal: Spacing.md,
+    marginVertical: Spacing.xs,
+  },
+  coverSheetCancel: {
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: Spacing.xs,
+  },
+  coverSheetCancelText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

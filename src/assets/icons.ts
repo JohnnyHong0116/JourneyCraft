@@ -86,6 +86,62 @@ export const IconSvg = {
     selected: require('./icons/add.svg').default,
     unselected: require('./icons/add.svg').default,
   } as TwoStateSvg,
+  back: {
+    selected: require('./icons/back.svg').default,
+    unselected: require('./icons/back.svg').default,
+  } as TwoStateSvg,
+  chevron: {
+    selected: require('./icons/chevron.svg').default,
+    unselected: require('./icons/chevron.svg').default,
+  } as TwoStateSvg,
+  chevrondown: {
+    selected: require('./icons/chevron-down.svg').default,
+    unselected: require('./icons/chevron-down.svg').default,
+  } as TwoStateSvg,
+  chevronup: {
+    selected: require('./icons/chevron-up.svg').default,
+    unselected: require('./icons/chevron-up.svg').default,
+  } as TwoStateSvg,
+  camera: {
+    selected: require('./icons/camera.svg').default,
+    unselected: require('./icons/camera.svg').default,
+  } as TwoStateSvg,
+  check: {
+    selected: require('./icons/check.svg').default,
+    unselected: require('./icons/check.svg').default,
+  } as TwoStateSvg,
+  close: {
+    selected: require('./icons/close.svg').default,
+    unselected: require('./icons/close.svg').default,
+  } as TwoStateSvg,
+  menu: {
+    selected: require('./icons/menu.svg').default,
+    unselected: require('./icons/menu.svg').default,
+  } as TwoStateSvg,
+  microphone: {
+    selected: require('./icons/microphone.svg').default,
+    unselected: require('./icons/microphone.svg').default,
+  } as TwoStateSvg,
+  send: {
+    selected: require('./icons/send.svg').default,
+    unselected: require('./icons/send.svg').default,
+  } as TwoStateSvg,
+  sparkle: {
+    selected: require('./icons/sparkle.svg').default,
+    unselected: require('./icons/sparkle.svg').default,
+  } as TwoStateSvg,
+  textformat: {
+    selected: require('./icons/text-format.svg').default,
+    unselected: require('./icons/text-format.svg').default,
+  } as TwoStateSvg,
+  trash: {
+    selected: require('./icons/trash.svg').default,
+    unselected: require('./icons/trash.svg').default,
+  } as TwoStateSvg,
+  sort: {
+    selected: require('./icons/sort.svg').default,
+    unselected: require('./icons/sort.svg').default,
+  } as TwoStateSvg,
 
   // 卡片内容/操作（单态 → 两态同源）
   cardimage: {

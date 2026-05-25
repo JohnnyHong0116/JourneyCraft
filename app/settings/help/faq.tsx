@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { AppPalette, AppScreen, ContentContainer, ScreenHeader, SurfaceCard } from '@/components/layout/AppScreen';
+import { useAppState } from '@/state/AppStateContext';
 import { Spacing, Typography } from '@/theme/designSystem';
 
 const questions = [
@@ -11,12 +12,14 @@ const questions = [
 ];
 
 export default function FaqScreen() {
+  const { mode } = useAppState();
+  const styles = createStyles(AppPalette[mode]);
   return (
-    <AppScreen mode="dark" scroll>
+    <AppScreen scroll>
       <ContentContainer style={styles.content}>
-        <ScreenHeader title="FAQs" mode="dark" />
+        <ScreenHeader title="FAQs" />
         {questions.map(([question, answer]) => (
-          <SurfaceCard key={question} mode="dark" style={styles.card}>
+          <SurfaceCard key={question} style={styles.card}>
             <Text style={styles.question}>{question}</Text>
             <Text style={styles.answer}>{answer}</Text>
           </SurfaceCard>
@@ -26,9 +29,9 @@ export default function FaqScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (palette: typeof AppPalette.light | typeof AppPalette.dark) => StyleSheet.create({
   content: { paddingTop: Spacing.sm, gap: Spacing.md },
   card: { gap: Spacing.sm },
-  question: { color: AppPalette.dark.text, fontSize: Typography.fontSize.md, fontWeight: '700' },
-  answer: { color: AppPalette.dark.secondaryText, lineHeight: 22, fontSize: Typography.fontSize.sm },
+  question: { color: palette.text, fontSize: Typography.fontSize.md, fontWeight: '700' },
+  answer: { color: palette.secondaryText, lineHeight: 22, fontSize: Typography.fontSize.sm },
 });

@@ -7,13 +7,13 @@ import { Spacing } from '@/theme/designSystem';
 export default function SecurityScreen() {
   const [faceId, setFaceId] = useState(true);
   return (
-    <AppScreen mode="dark">
+    <AppScreen>
       <ContentContainer style={styles.content}>
-        <ScreenHeader title="Security" mode="dark" />
+        <ScreenHeader title="Security" />
         <SettingsRow label="2FA" icon="shield-checkmark-outline" description="2FA is an identity and access management security method." />
         <SettingsRow label="Face ID" icon="scan-outline" description="Face ID lets you securely unlock your device." toggle enabled={faceId} onPress={() => setFaceId((state) => !state)} />
         <SettingsRow label="View Logged-in Devices" icon="phone-portrait-outline" />
-        <PrimaryButton mode="dark" title="Save Settings" icon="checkmark" />
+        <PrimaryButton title="Save Settings" icon="checkmark" />
       </ContentContainer>
     </AppScreen>
   );

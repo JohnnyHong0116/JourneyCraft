@@ -31,7 +31,7 @@ test('dark and light overlays use adaptive material styling', () => {
 
 test('popover is clamped horizontally and flips above a low anchor', () => {
   assert.deepEqual(getPopoverPosition({
-    anchorX: 350, anchorY: 720, anchorWidth: 24, anchorHeight: 24,
+    anchorX: 380, anchorY: 720, anchorWidth: 24, anchorHeight: 24,
     panelWidth: 248, panelHeight: 220, viewportWidth: 390, viewportHeight: 844,
   }), { left: 130, top: 492, placement: 'above' });
 });

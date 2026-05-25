@@ -1,8 +1,9 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { SemanticIcon } from '@/components/Icon';
 import { router } from 'expo-router';
 import { AppPalette, AppScreen, ContentContainer, SurfaceCard } from '@/components/layout/AppScreen';
+import { useAppState } from '@/state/AppStateContext';
 import { Spacing, Typography } from '@/theme/designSystem';
 
 const pins = [
@@ -12,13 +13,16 @@ const pins = [
 ];
 
 export default function LocationTab() {
+  const { mode } = useAppState();
+  const palette = AppPalette[mode];
+  const styles = createStyles(palette);
   return (
     <AppScreen bottomInset={116}>
       <ContentContainer style={styles.content}>
         <View style={styles.header}>
           <Text style={styles.title}>Map</Text>
           <Pressable style={styles.search} onPress={() => router.push('/search')}>
-            <Ionicons name="search" size={19} color={AppPalette.light.secondaryText} />
+            <SemanticIcon name="search" size={19} color={palette.secondaryText} />
             <Text style={styles.searchText}>Search places and entries</Text>
           </Pressable>
         </View>
@@ -27,7 +31,7 @@ export default function LocationTab() {
           <View style={styles.roadVertical} />
           {pins.map((pin) => (
             <View key={pin.label} style={[styles.marker, { top: pin.top, left: pin.left }]}>
-              <Ionicons name="location" size={26} color={AppPalette.light.accentStrong} />
+              <SemanticIcon name="location" size={26} color={palette.accentStrong} />
               <Text style={styles.markerLabel}>{pin.label}</Text>
             </View>
           ))}
@@ -37,7 +41,7 @@ export default function LocationTab() {
           <Text style={styles.previewSubtitle}>3 journal entries nearby</Text>
           <Pressable onPress={() => router.push('/trip/1')} style={styles.openRow}>
             <Text style={styles.openText}>View trip memories</Text>
-            <Ionicons name="chevron-forward" size={19} color={AppPalette.light.text} />
+            <SemanticIcon name="chevron-forward" size={19} color={palette.text} />
           </Pressable>
         </SurfaceCard>
       </ContentContainer>
@@ -45,20 +49,20 @@ export default function LocationTab() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (palette: typeof AppPalette.light | typeof AppPalette.dark) => StyleSheet.create({
   content: { flex: 1, paddingTop: Spacing.lg, gap: Spacing.md },
   header: { gap: Spacing.md },
-  title: { fontSize: Typography.fontSize.xxl, color: AppPalette.light.text, fontWeight: '700' },
-  search: { minHeight: 44, borderRadius: 12, backgroundColor: '#e5e3e5', flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.md, gap: Spacing.sm },
-  searchText: { fontSize: Typography.fontSize.md, color: AppPalette.light.secondaryText },
-  map: { flex: 1, minHeight: 340, borderRadius: 22, backgroundColor: '#dbe4d6', overflow: 'hidden', position: 'relative' },
-  roadHorizontal: { position: 'absolute', left: 0, right: 0, top: '48%', height: 10, backgroundColor: '#f5f2ed', transform: [{ rotate: '-9deg' }] },
-  roadVertical: { position: 'absolute', top: 0, bottom: 0, left: '60%', width: 9, backgroundColor: '#edeae4', transform: [{ rotate: '12deg' }] },
+  title: { fontSize: Typography.fontSize.xxl, color: palette.text, fontWeight: '700' },
+  search: { minHeight: 44, borderRadius: 12, backgroundColor: palette.cardMuted, flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.md, gap: Spacing.sm },
+  searchText: { fontSize: Typography.fontSize.md, color: palette.secondaryText },
+  map: { flex: 1, minHeight: 340, borderRadius: 22, backgroundColor: palette.cardMuted, overflow: 'hidden', position: 'relative' },
+  roadHorizontal: { position: 'absolute', left: 0, right: 0, top: '48%', height: 10, backgroundColor: palette.card, transform: [{ rotate: '-9deg' }] },
+  roadVertical: { position: 'absolute', top: 0, bottom: 0, left: '60%', width: 9, backgroundColor: palette.card, transform: [{ rotate: '12deg' }] },
   marker: { position: 'absolute', alignItems: 'center' },
-  markerLabel: { backgroundColor: '#fff', paddingHorizontal: 5, paddingVertical: 2, borderRadius: 6, fontSize: 10, fontWeight: '600' },
+  markerLabel: { backgroundColor: palette.card, color: palette.text, paddingHorizontal: 5, paddingVertical: 2, borderRadius: 6, fontSize: 10, fontWeight: '600' },
   preview: { marginBottom: 102, gap: Spacing.xs },
-  previewTitle: { fontSize: Typography.fontSize.lg, fontWeight: '700', color: AppPalette.light.text },
-  previewSubtitle: { color: AppPalette.light.secondaryText, fontSize: Typography.fontSize.sm },
+  previewTitle: { fontSize: Typography.fontSize.lg, fontWeight: '700', color: palette.text },
+  previewSubtitle: { color: palette.secondaryText, fontSize: Typography.fontSize.sm },
   openRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: Spacing.sm },
-  openText: { fontSize: Typography.fontSize.sm, color: AppPalette.light.accentStrong, fontWeight: '600' },
+  openText: { fontSize: Typography.fontSize.sm, color: palette.accentStrong, fontWeight: '600' },
 });

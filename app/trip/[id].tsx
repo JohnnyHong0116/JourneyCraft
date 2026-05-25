@@ -1,25 +1,46 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { AppPalette, AppScreen, Chip, ContentContainer, IconCircleButton, ScreenHeader, SurfaceCard } from '@/components/layout/AppScreen';
+import { useAppState } from '@/state/AppStateContext';
 import { Spacing, Typography } from '@/theme/designSystem';
+import { TRIP_UTILITY_TOOLBAR_HEIGHT, TripUtilityToolbar } from '@features/trip/TripUtilityToolbar';
+import { Icon, SemanticIcon } from '@/components/Icon';
 
 export default function TripDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { mode } = useAppState();
+  const palette = AppPalette[mode];
+  const styles = createStyles(palette);
 
   return (
-    <AppScreen mode="dark" scroll bottomInset={86}>
+    <AppScreen
+      scroll
+      bottomInset={Spacing.md}
+      footerHeight={TRIP_UTILITY_TOOLBAR_HEIGHT}
+      footer={(bottomInset) => (
+        <TripUtilityToolbar
+          bottomInset={bottomInset}
+          actions={[
+            { key: 'edit', icon: 'textformat', accessibilityLabel: 'Edit trip note', onPress: () => router.push(`/trip/${id}/edit` as any) },
+            { key: 'photos', icon: 'cardimage', accessibilityLabel: 'View photos', onPress: () => router.push(`/trip/${id}/media` as any) },
+            { key: 'camera', icon: 'camera', accessibilityLabel: 'Add a photo' },
+            { key: 'audio', icon: 'microphone', accessibilityLabel: 'Record audio' },
+            { key: 'share', icon: 'send', accessibilityLabel: 'Share trip', onPress: () => router.push(`/trip/${id}/share` as any) },
+            { key: 'add', icon: 'add', accessibilityLabel: 'Add trip item' },
+          ]}
+        />
+      )}
+    >
       <ContentContainer>
         <ScreenHeader
           title="Home"
           backLabel="Home"
-          mode="dark"
-          onBack={() => router.replace('/(tabs)/home')}
+          onBack={() => router.back()}
           right={
             <View style={styles.actions}>
-              <IconCircleButton mode="dark" icon="ellipsis-horizontal" />
-              <IconCircleButton mode="dark" icon="menu" onPress={() => router.push(`/trip/${id}/share` as any)} />
+              <IconCircleButton icon="ellipsis-horizontal" />
+              <IconCircleButton icon="menu" onPress={() => router.push(`/trip/${id}/share` as any)} />
             </View>
           }
         />
@@ -27,49 +48,40 @@ export default function TripDetailScreen() {
         <Text style={styles.title}>Trip to Chengdu</Text>
         <View style={styles.contentHeader}>
           <Text style={styles.subheading}>Main page</Text>
-          <View style={styles.avatar}><Ionicons name="person" size={37} color="#f4f3ee" /></View>
+          <View style={styles.avatar}><Icon name="profile-selected" size={37} color="#f4f3ee" /></View>
         </View>
         <View style={styles.chips}>
-          <Chip mode="dark" icon="images-outline" label="Photos  3" onPress={() => router.push(`/trip/${id}/media` as any)} />
-          <Chip mode="dark" icon="location-outline" label="Location  Chengdu" onPress={() => router.push(`/trip/${id}/location` as any)} />
-          <Chip mode="dark" icon="mic-outline" label="Recorded Audio  3" onPress={() => router.push(`/trip/${id}/edit` as any)} />
-          <Chip mode="dark" icon="people-outline" label="People" onPress={() => router.push(`/trip/${id}/people` as any)} />
+          <Chip icon="images-outline" label="Photos  3" onPress={() => router.push(`/trip/${id}/media` as any)} />
+          <Chip icon="location-outline" label="Location  Chengdu" onPress={() => router.push(`/trip/${id}/location` as any)} />
+          <Chip icon="mic-outline" label="Recorded Audio  3" onPress={() => router.push(`/trip/${id}/edit` as any)} />
+          <Chip icon="people-outline" label="People" onPress={() => router.push(`/trip/${id}/people` as any)} />
         </View>
         <Text style={styles.body}>content</Text>
         <Pressable onPress={() => router.push('/expenses')} style={styles.expenseLink}>
-          <SurfaceCard mode="dark" style={styles.expenseCard}>
+          <SurfaceCard style={styles.expenseCard}>
             <View>
               <Text style={styles.expenseTitle}>Expenses</Text>
               <Text style={styles.expenseSubtitle}>View Chengdu trip summary</Text>
             </View>
-            <Ionicons name="chevron-forward" size={22} color={AppPalette.dark.text} />
+            <SemanticIcon name="chevron-forward" size={22} color={palette.text} />
           </SurfaceCard>
         </Pressable>
       </ContentContainer>
-      <View style={styles.toolbar}>
-        <Pressable onPress={() => router.push(`/trip/${id}/edit` as any)}><Ionicons name="text-outline" size={24} color="#fff" /></Pressable>
-        <Ionicons name="image-outline" size={24} color="#fff" />
-        <Ionicons name="camera-outline" size={24} color="#fff" />
-        <Ionicons name="mic-outline" size={24} color="#fff" />
-        <Pressable onPress={() => router.push(`/trip/${id}/share` as any)}><Ionicons name="send-outline" size={24} color="#fff" /></Pressable>
-        <Ionicons name="add-circle-outline" size={27} color="#fff" />
-      </View>
     </AppScreen>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (palette: typeof AppPalette.light | typeof AppPalette.dark) => StyleSheet.create({
   actions: { flexDirection: 'row', gap: Spacing.sm },
-  timestamp: { textAlign: 'center', color: AppPalette.dark.secondaryText, fontSize: Typography.fontSize.sm },
-  title: { color: AppPalette.dark.text, fontSize: 26, fontWeight: '700', marginTop: Spacing.sm },
+  timestamp: { textAlign: 'center', color: palette.secondaryText, fontSize: Typography.fontSize.sm },
+  title: { color: palette.text, fontSize: 26, fontWeight: '700', marginTop: Spacing.sm },
   contentHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.sm },
-  subheading: { color: AppPalette.dark.text, fontSize: Typography.fontSize.lg, fontWeight: '700' },
-  avatar: { height: 55, width: 55, borderRadius: 28, backgroundColor: AppPalette.dark.accent, alignItems: 'center', justifyContent: 'center' },
+  subheading: { color: palette.text, fontSize: Typography.fontSize.lg, fontWeight: '700' },
+  avatar: { height: 55, width: 55, borderRadius: 28, backgroundColor: palette.accent, alignItems: 'center', justifyContent: 'center' },
   chips: { alignItems: 'flex-start', gap: Spacing.md },
-  body: { color: AppPalette.dark.text, fontSize: Typography.fontSize.lg, marginTop: Spacing.lg, minHeight: 160 },
+  body: { color: palette.text, fontSize: Typography.fontSize.lg, marginTop: Spacing.lg, minHeight: 160 },
   expenseLink: { marginTop: Spacing.lg },
   expenseCard: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  expenseTitle: { color: AppPalette.dark.text, fontSize: Typography.fontSize.lg, fontWeight: '700' },
-  expenseSubtitle: { color: AppPalette.dark.secondaryText, fontSize: Typography.fontSize.sm, marginTop: 4 },
-  toolbar: { backgroundColor: '#302f2f', height: 66, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', paddingBottom: Spacing.sm, marginTop: Spacing.xl },
+  expenseTitle: { color: palette.text, fontSize: Typography.fontSize.lg, fontWeight: '700' },
+  expenseSubtitle: { color: palette.secondaryText, fontSize: Typography.fontSize.sm, marginTop: 4 },
 });

@@ -1,6 +1,8 @@
 import React from 'react';
+import { useLocalSearchParams } from 'expo-router';
 import { TripEditorScreen } from '../../../features/trip/TripEditorScreen';
 
 export default function EditTripScreen() {
-  return <TripEditorScreen />;
+  const { id } = useLocalSearchParams<{ id: string }>();
+  return <TripEditorScreen tripId={id} />;
 }

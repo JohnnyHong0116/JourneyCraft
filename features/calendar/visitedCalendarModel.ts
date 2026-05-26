@@ -17,6 +17,8 @@ export interface SelectedRange {
   end: DateKey;
 }
 
+export type DateSelectionPresentation = 'none' | 'single' | 'rangeStart' | 'rangeMiddle' | 'rangeEnd';
+
 export interface AnchoredDrawerLayoutInput {
   containerHeight: number;
   calendarHeight: number;
@@ -182,6 +184,23 @@ export function getSelectedRange(anchors: readonly DateKey[]): SelectedRange | u
 export function isDateInSelectedRange(key: DateKey, anchors: readonly DateKey[]): boolean {
   const range = getSelectedRange(anchors);
   return Boolean(range && key >= range.start && key <= range.end);
+}
+
+export function getDateSelectionPresentation(
+  key: DateKey,
+  anchors: readonly DateKey[],
+): DateSelectionPresentation {
+  const range = getSelectedRange(anchors);
+  if (!range || key < range.start || key > range.end) return 'none';
+  if (range.start === range.end) return 'single';
+  if (key === range.start) return 'rangeStart';
+  if (key === range.end) return 'rangeEnd';
+  return 'rangeMiddle';
+}
+
+export function getMoodEditorDate(anchors: readonly DateKey[]): DateKey | undefined {
+  const range = getSelectedRange(anchors);
+  return range && range.start === range.end ? range.start : undefined;
 }
 
 export function formatMonthTitle(month: Date): string {

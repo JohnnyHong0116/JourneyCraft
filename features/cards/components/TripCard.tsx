@@ -8,6 +8,7 @@ import { getEmotionConfig } from '@/constants/emotions';
 import { useAppState } from '@/state/AppStateContext';
 import { BorderRadius, Shadows, Spacing, Typography } from '@/theme/designSystem';
 import { Trip } from '@/types/trip';
+import { getTripCoverUri } from './tripCardModel';
 
 interface TripCardProps {
   trip: Trip;
@@ -39,6 +40,7 @@ export const TripCard: React.FC<TripCardProps> = ({
 
   const hasCompanions = Boolean(trip.companions?.length);
   const showMood = Boolean(trip.mood);
+  const coverUri = getTripCoverUri(trip.photos);
   const displayDate = new Date(trip.displayDate).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -75,15 +77,11 @@ export const TripCard: React.FC<TripCardProps> = ({
             </View>
           </View>
 
-          <View style={styles.cover}>
-            {trip.photos.length > 0 ? (
-              <Image source={{ uri: trip.photos[0] }} style={styles.coverImage} resizeMode="cover" />
-            ) : (
-              <View style={styles.coverPlaceholder}>
-                <Icon name="cardimage" size={22} color={palette.secondaryText} />
-              </View>
-            )}
-          </View>
+          {coverUri ? (
+            <View style={styles.cover}>
+              <Image source={{ uri: coverUri }} style={styles.coverImage} resizeMode="cover" />
+            </View>
+          ) : null}
         </View>
 
         <View style={styles.footer}>
@@ -98,7 +96,7 @@ export const TripCard: React.FC<TripCardProps> = ({
             {hasCompanions ? <Icon name="cardpeople" size={17} color={palette.secondaryText} /> : null}
           </View>
           <View style={styles.actions}>
-            {trip.photos.length > 0 ? <Icon name="cardimage" size={18} color={palette.text} /> : null}
+            {coverUri ? <Icon name="cardimage" size={18} color={palette.text} /> : null}
             {trip.audioCount > 0 ? <Icon name="cardmic" size={18} color={palette.text} /> : null}
             {trip.videoCount > 0 ? <Icon name="cardvideo" size={18} color={palette.text} /> : null}
             <Pressable
@@ -192,12 +190,6 @@ const createStyles = (
     overflow: 'hidden',
   },
   coverImage: { width: '100%', height: '100%' },
-  coverPlaceholder: {
-    flex: 1,
-    backgroundColor: palette.cardMuted,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   footer: {
     height: 48,
     borderTopWidth: StyleSheet.hairlineWidth,

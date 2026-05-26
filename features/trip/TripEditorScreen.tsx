@@ -8,16 +8,24 @@ import { Spacing, Typography } from '@/theme/designSystem';
 import type { TripMood } from '@/types/trip';
 import { TRIP_UTILITY_TOOLBAR_HEIGHT, TripUtilityToolbar } from './TripUtilityToolbar';
 import { Icon } from '@/components/Icon';
+import { mockTrips } from '@/data/mockApp';
+import { getTripById } from './tripDetailModel';
 
-export function TripEditorScreen({ creating = false }: { creating?: boolean }) {
-  const [title, setTitle] = useState(creating ? '' : 'Trip to Chengdu');
-  const [content, setContent] = useState(creating ? '' : 'A joyful summer memory in Chengdu.');
-  const [mood] = useState<TripMood>('happy');
+export function TripEditorScreen({ creating = false, tripId }: { creating?: boolean; tripId?: string }) {
+  const trip = tripId ? getTripById(mockTrips, tripId) : undefined;
+  const [title, setTitle] = useState(creating ? '' : trip?.title ?? 'Untitled memory');
+  const [content, setContent] = useState('');
+  const [mood] = useState<TripMood>(trip?.mood ?? 'happy');
 
   const { mode } = useAppState();
   const palette = AppPalette[mode];
   const styles = createStyles(palette);
   const emotion = getEmotionConfig(mood);
+  const activeTripId = tripId ?? '1';
+  const coverUri = trip?.photos[0];
+  const displayDate = trip
+    ? new Date(trip.displayDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    : '';
 
   return (
     <AppScreen
@@ -43,17 +51,17 @@ export function TripEditorScreen({ creating = false }: { creating?: boolean }) {
     >
       <ContentContainer>
         <ScreenHeader
-          title={creating ? 'New Trip' : 'Trip to Chengdu'}
+          title={creating ? 'New Trip' : trip?.title ?? 'Memory'}
           right={<Pressable onPress={() => router.back()}><Text style={styles.done}>Done</Text></Pressable>}
         />
         <View style={styles.photo}>
-          {creating ? (
+          {!coverUri ? (
             <View style={styles.emptyPhoto}>
               <Icon name="camera" size={40} color={palette.secondaryText} />
               <Text style={styles.help}>Add a cover photo</Text>
             </View>
           ) : (
-            <Image source={{ uri: 'https://picsum.photos/id/1025/700/700' }} style={styles.photoImage} />
+            <Image source={{ uri: coverUri }} style={styles.photoImage} />
           )}
         </View>
         <View style={styles.editorCard}>
@@ -64,7 +72,7 @@ export function TripEditorScreen({ creating = false }: { creating?: boolean }) {
             placeholderTextColor={palette.secondaryText}
             style={styles.titleInput}
           />
-          <Pressable onPress={() => router.push('/trip/1/mood')} style={styles.mood}>
+          <Pressable onPress={() => router.push(`/trip/${activeTripId}/mood` as any)} style={styles.mood}>
             <Icon name={emotion.icon} size={31} />
           </Pressable>
           <TextInput
@@ -75,11 +83,11 @@ export function TripEditorScreen({ creating = false }: { creating?: boolean }) {
             multiline
             style={styles.bodyInput}
           />
-          <Text style={styles.date}>July 24, 2025</Text>
+          {displayDate ? <Text style={styles.date}>{displayDate}</Text> : null}
         </View>
         <View style={styles.chips}>
-          <Chip label="Location" icon="location-outline" onPress={() => router.push('/trip/1/location')} />
-          <Chip label="People" icon="people-outline" onPress={() => router.push('/trip/1/people')} />
+          <Chip label="Location" icon="location-outline" onPress={() => router.push(`/trip/${activeTripId}/location` as any)} />
+          <Chip label="People" icon="people-outline" onPress={() => router.push(`/trip/${activeTripId}/people` as any)} />
         </View>
       </ContentContainer>
     </AppScreen>

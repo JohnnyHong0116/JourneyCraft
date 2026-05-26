@@ -8,8 +8,10 @@ import {
   getAllowedMonthStarts,
   getCalendarMoodForDate,
   getCardsForDateRange,
+  getDateSelectionPresentation,
   getFirstCardMonth,
   getMajorityEmotionForDate,
+  getMoodEditorDate,
   getMonthCells,
   getSelectedRange,
   isDateInSelectedRange,
@@ -39,9 +41,9 @@ test('does not make dates after today selectable in the current month', () => {
 
 test('uses the majority card emotion and breaks ties by the earliest card emotion', () => {
   const trips: Trip[] = [
-    { ...mockTrips[0], id: 'later-happy', displayDate: '2025-01-03T03:00:00.000Z', mood: 'happy' },
-    { ...mockTrips[0], id: 'early-sad', displayDate: '2025-01-03T01:00:00.000Z', mood: 'sad' },
-    { ...mockTrips[0], id: 'third-happy', displayDate: '2025-01-03T04:00:00.000Z', mood: 'happy' },
+    { ...mockTrips[0], id: 'later-happy', displayDate: '2025-01-03T15:00:00.000Z', mood: 'happy' },
+    { ...mockTrips[0], id: 'early-sad', displayDate: '2025-01-03T13:00:00.000Z', mood: 'sad' },
+    { ...mockTrips[0], id: 'third-happy', displayDate: '2025-01-03T16:00:00.000Z', mood: 'happy' },
   ];
 
   assert.equal(getMajorityEmotionForDate(trips, '2025-01-03'), 'happy');
@@ -79,6 +81,20 @@ test('uses at most two anchors and shifts a range to the latest two tapped dates
     start: '2025-01-03',
     end: '2025-01-12',
   });
+});
+
+test('distinguishes one selected day from chronological range endpoints and interior days', () => {
+  assert.equal(getDateSelectionPresentation('2025-01-03', ['2025-01-03']), 'single');
+  assert.equal(getDateSelectionPresentation('2025-01-03', ['2025-01-08', '2025-01-03']), 'rangeStart');
+  assert.equal(getDateSelectionPresentation('2025-01-05', ['2025-01-08', '2025-01-03']), 'rangeMiddle');
+  assert.equal(getDateSelectionPresentation('2025-01-08', ['2025-01-08', '2025-01-03']), 'rangeEnd');
+  assert.equal(getDateSelectionPresentation('2025-01-10', ['2025-01-08', '2025-01-03']), 'none');
+});
+
+test('allows daily mood editing only when selection identifies one day', () => {
+  assert.equal(getMoodEditorDate(['2025-01-03']), '2025-01-03');
+  assert.equal(getMoodEditorDate(['2025-01-03', '2025-01-03']), '2025-01-03');
+  assert.equal(getMoodEditorDate(['2025-01-03', '2025-01-08']), undefined);
 });
 
 test('keeps the drawer bottom anchored while expanded height grows upward', () => {

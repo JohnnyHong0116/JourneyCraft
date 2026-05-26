@@ -30,10 +30,11 @@ import {
   getAllowedMonthStarts,
   getCalendarMoodForDate,
   getCardsForDateRange,
+  getDateSelectionPresentation,
   getMajorityEmotionForDate,
+  getMoodEditorDate,
   getMonthCells,
   getSelectedRange,
-  isDateInSelectedRange,
   monthStart,
   toDateKey,
   toMonthKey,
@@ -174,7 +175,7 @@ function VisitedCalendar({ palette }: { palette: typeof AppPalette.light | typeo
   const cells = getMonthCells(visibleMonth, today);
   const range = getSelectedRange(anchors);
   const selectedCards = range ? getCardsForDateRange(mockTrips, range.start, range.end) : [];
-  const selectedMoodDate = anchors[anchors.length - 1];
+  const selectedMoodDate = getMoodEditorDate(anchors);
   const selectedMood = selectedMoodDate
     ? getCalendarMoodForDate(mockTrips, overrides, selectedMoodDate)
     : undefined;
@@ -246,26 +247,38 @@ function VisitedCalendar({ palette }: { palette: typeof AppPalette.light | typeo
           <View style={styles.grid}>
             {cells.map((cell) => {
               if (!cell.inMonth) return <View key={cell.key} style={styles.day} />;
-              const isSelected = isDateInSelectedRange(cell.key, anchors);
+              const selectionPresentation = getDateSelectionPresentation(cell.key, anchors);
+              const isRangeEndpoint = selectionPresentation === 'rangeStart' || selectionPresentation === 'rangeEnd';
               const emotion = cell.selectable ? getCalendarMoodForDate(mockTrips, overrides, cell.key) : undefined;
               const hasCards = cell.selectable && dateHasCards(mockTrips, cell.key);
               return (
                 <Pressable
                   key={cell.key}
                   accessibilityLabel={`Select ${cell.date.toLocaleDateString('en-US')}`}
+                  accessibilityState={{ selected: selectionPresentation !== 'none', disabled: !cell.selectable }}
                   disabled={!cell.selectable}
                   onPress={() => setAnchors((current) => updateDateSelection(current, cell.key))}
                   style={({ pressed }) => [
                     styles.day,
-                    isSelected && styles.selectedDay,
+                    selectionPresentation === 'single' && styles.selectedDay,
+                    isRangeEndpoint && styles.rangeEndpointDay,
+                    selectionPresentation === 'rangeMiddle' && styles.rangeMiddleDay,
                     pressed && cell.selectable && styles.pressedDay,
                   ]}
                 >
-                  <Text style={[styles.dayText, !cell.selectable && styles.disabled]}>{cell.dayNumber}</Text>
+                  <Text style={[
+                    styles.dayText,
+                    !cell.selectable && styles.disabled,
+                    isRangeEndpoint && styles.rangeEndpointText,
+                  ]}>{cell.dayNumber}</Text>
                   <View style={styles.mood}>
                     {emotion ? <Icon name={getEmotionConfig(emotion).icon} size={18} /> : null}
                   </View>
-                  <View style={[styles.recordBar, !hasCards && styles.invisible]} />
+                  <View style={[
+                    styles.recordBar,
+                    isRangeEndpoint && styles.rangeEndpointRecordBar,
+                    !hasCards && styles.invisible,
+                  ]} />
                 </Pressable>
               );
             })}
@@ -291,21 +304,25 @@ function VisitedCalendar({ palette }: { palette: typeof AppPalette.light | typeo
           <View style={styles.dragHandle} />
         </View>
         <Text style={styles.range}>{formatSelectedRangeLabel(anchors)}</Text>
-        <Text style={styles.moodPrompt}>
-          {selectedMoodDate ? `Daily mood for ${dateFromKey(selectedMoodDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : 'Select a date'}
-        </Text>
-        <View style={styles.moodRow}>
-          {EMOTIONS.map((emotion) => (
-            <Pressable
-              key={emotion.id}
-              accessibilityLabel={`Set mood to ${emotion.label}`}
-              onPress={() => selectMood(emotion.id)}
-              style={[styles.moodButton, selectedMood === emotion.id && styles.moodButtonSelected]}
-            >
-              <Icon name={emotion.icon} size={30} />
-            </Pressable>
-          ))}
-        </View>
+        {selectedMoodDate ? (
+          <>
+            <Text style={styles.moodPrompt}>
+              {`Daily mood for ${dateFromKey(selectedMoodDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
+            </Text>
+            <View style={styles.moodRow}>
+              {EMOTIONS.map((emotion) => (
+                <Pressable
+                  key={emotion.id}
+                  accessibilityLabel={`Set mood to ${emotion.label}`}
+                  onPress={() => selectMood(emotion.id)}
+                  style={[styles.moodButton, selectedMood === emotion.id && styles.moodButtonSelected]}
+                >
+                  <Icon name={emotion.icon} size={30} />
+                </Pressable>
+              ))}
+            </View>
+          </>
+        ) : null}
         <ScrollView
           style={styles.drawerScroll}
           showsVerticalScrollIndicator={false}
@@ -413,11 +430,15 @@ const createStyles = (palette: typeof AppPalette.light | typeof AppPalette.dark)
   grid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: Spacing.sm },
   day: { width: `${100 / 7}%`, height: 45, alignItems: 'center', justifyContent: 'flex-start', borderRadius: BorderRadius.md, paddingTop: 3 },
   selectedDay: { backgroundColor: palette.accent },
+  rangeEndpointDay: { backgroundColor: palette.accentStrong },
+  rangeMiddleDay: { backgroundColor: 'rgba(183, 213, 141, 0.34)' },
+  rangeEndpointText: { color: '#ffffff' },
   pressedDay: { opacity: 0.72 },
   dayText: { fontSize: Typography.fontSize.xs, lineHeight: 15, color: palette.text, fontWeight: '600' },
   disabled: { color: palette.secondaryText, opacity: 0.45 },
   mood: { height: 19, alignItems: 'center', justifyContent: 'center' },
   recordBar: { width: 18, height: 3, marginTop: 2, borderRadius: 2, backgroundColor: palette.accentStrong },
+  rangeEndpointRecordBar: { backgroundColor: palette.card },
   invisible: { opacity: 0 },
   drawer: {
     position: 'absolute',

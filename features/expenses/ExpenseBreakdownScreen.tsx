@@ -1,11 +1,12 @@
 import React, { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { SemanticIcon } from '@/components/Icon';
 import { router } from 'expo-router';
+import { SemanticIcon } from '@/components/Icon';
 import { AppPalette, AppScreen, Chip, ContentContainer, ScreenHeader, SurfaceCard } from '@/components/layout/AppScreen';
-import { ExpenseItem, expenseItems } from '@/data/mockApp';
+import { ExpenseItem, expenseItems, mockTrips, statisticsExpenses } from '@/data/mockApp';
 import { useAppState } from '@/state/AppStateContext';
 import { Spacing, Typography } from '@/theme/designSystem';
+import { getTripById } from '../trip/tripDetailModel';
 
 export type ExpenseFilter = 'dates' | 'category' | 'people';
 
@@ -18,85 +19,122 @@ const categoryColors: Record<ExpenseItem['category'], string> = {
   Others: '#67c246',
 };
 
-export function ExpenseBreakdownScreen({ initialFilter = 'category' }: { initialFilter?: ExpenseFilter }) {
+export function ExpenseBreakdownScreen({
+  initialFilter = 'category',
+  tripId,
+}: {
+  initialFilter?: ExpenseFilter;
+  tripId?: string;
+}) {
   const [filter, setFilter] = useState<ExpenseFilter>(initialFilter);
   const { mode } = useAppState();
   const palette = AppPalette[mode];
   const styles = createStyles(palette);
-  const total = expenseItems.reduce((sum, item) => sum + item.amount, 0);
+  const trip = getTripById(mockTrips, tripId);
+  const visibleExpenses = useMemo(
+    () => (tripId ? statisticsExpenses.filter((item) => item.tripId === tripId) : expenseItems),
+    [tripId],
+  );
+  const total = visibleExpenses.reduce((sum, item) => sum + item.amount, 0);
   const grouped = useMemo(() => {
     if (filter === 'category') {
       return Object.entries(
-        expenseItems.reduce<Record<string, number>>((items, item) => {
+        visibleExpenses.reduce<Record<string, number>>((items, item) => {
           items[item.category] = (items[item.category] ?? 0) + item.amount;
           return items;
         }, {}),
-      ).map(([title, amount]) => ({ title, subtitle: 'Simple description', amount, route: '/expenses/category' }));
+      ).map(([title, amount]) => ({ title, subtitle: 'Category total', amount, route: '/expenses/category' }));
     }
+
     if (filter === 'people') {
-      return ['Amily Zhang', 'Johnny He', 'Mia Liu'].map((person, index) => ({
+      const people = trip?.companions?.length ? trip.companions : ['Amily Zhang', 'Johnny He', 'Mia Liu'];
+      return people.map((person) => ({
         title: person,
-        subtitle: `${index + 1} shared expenses`,
-        amount: [108, 72, 20][index],
+        subtitle: 'Shared total',
+        amount: total / people.length,
         route: '/expenses/people',
       }));
     }
-    return [1, 2, 3, 4].map((day) => ({
+
+    const dayTotals = visibleExpenses.reduce<Record<number, number>>((days, item) => {
+      days[item.day] = (days[item.day] ?? 0) + item.amount;
+      return days;
+    }, {});
+    return Object.entries(dayTotals).map(([day, amount]) => ({
       title: `Day ${day}`,
-      subtitle: `July ${23 + day}, 2025`,
-      amount: expenseItems.filter((item) => item.day === day).reduce((sum, item) => sum + item.amount, 0),
+      subtitle: `Day ${day} of this memory`,
+      amount,
       route: '/expenses/day',
     }));
-  }, [filter]);
+  }, [filter, total, trip?.companions, visibleExpenses]);
+
+  const openNewExpense = () => router.push({ pathname: '/expenses/new', params: tripId ? { tripId } : {} } as any);
 
   return (
     <AppScreen scroll bottomInset={Spacing.xxl}>
       <ContentContainer style={styles.content}>
         <ScreenHeader
-          title="Chengdu Trip"
+          title={trip?.title ?? 'Expenses'}
           right={
-            <Pressable onPress={() => router.push('/expenses/new')} style={styles.add}>
+            <Pressable accessibilityRole="button" accessibilityLabel="Add expense" onPress={openNewExpense} style={styles.add}>
               <SemanticIcon name="add" size={24} color={palette.text} />
             </Pressable>
           }
         />
-        <Text style={styles.summary}>Summary</Text>
-        <SurfaceCard style={styles.graph}>
-          <View style={styles.donut}><View style={styles.center} /></View>
-          <View style={styles.legend}>
-            {Object.entries(categoryColors).slice(0, 4).map(([name, color]) => (
-              <View key={name} style={styles.legendRow}>
-                <View style={[styles.dot, { backgroundColor: color }]} />
-                <Text style={styles.muted}>{name}</Text>
-              </View>
-            ))}
-          </View>
-          <Text style={styles.graphTotal}>¥{total}</Text>
-        </SurfaceCard>
-        <View style={styles.filters}>
-          <Chip label="Dates" icon="calendar-outline" active={filter === 'dates'} onPress={() => setFilter('dates')} />
-          <Chip label="Category" icon="grid-outline" active={filter === 'category'} onPress={() => setFilter('category')} />
-          <Chip label="People" icon="people-outline" active={filter === 'people'} onPress={() => setFilter('people')} />
-        </View>
-        <Text style={styles.summary}>Expenditure</Text>
-        <SurfaceCard style={styles.list}>
-          {grouped.map((item) => (
-            <Pressable key={item.title} style={styles.row} onPress={() => router.push(item.route as any)}>
-              <SemanticIcon name={filter === 'dates' ? 'calendar-outline' : filter === 'people' ? 'person-outline' : 'pricetag-outline'} size={25} color={filter === 'category' ? categoryColors[item.title as ExpenseItem['category']] : palette.accent} />
-              <View style={styles.rowBody}>
-                <Text style={styles.rowTitle}>{item.title}</Text>
-                <Text style={styles.muted}>{item.subtitle}</Text>
-              </View>
-              <Text style={styles.amount}>¥{item.amount.toFixed(2)}</Text>
-              <SemanticIcon name="chevron-forward" size={20} color={palette.text} />
+        {tripId && visibleExpenses.length === 0 ? (
+          <SurfaceCard style={styles.emptyState}>
+            <SemanticIcon name="receipt-outline" size={30} color={palette.secondaryText} />
+            <Text style={styles.emptyTitle}>No expenses yet</Text>
+            <Text style={styles.emptyCopy}>Add the first cost for this memory when you are ready.</Text>
+            <Pressable accessibilityRole="button" onPress={openNewExpense} style={styles.emptyAdd}>
+              <Text style={styles.emptyAddText}>Add Expense</Text>
             </Pressable>
-          ))}
-          {filter === 'category' ? (
-            <Pressable style={styles.newCategory} onPress={() => router.push('/expenses/new')}>
-              <Text style={styles.rowTitle}>+ Add Category</Text>
-            </Pressable>
-          ) : null}
-        </SurfaceCard>
+          </SurfaceCard>
+        ) : (
+          <>
+            <Text style={styles.summary}>Summary</Text>
+            <SurfaceCard style={styles.graph}>
+              <View style={styles.donut}><View style={styles.center} /></View>
+              <View style={styles.legend}>
+                {Object.entries(categoryColors).slice(0, 4).map(([name, color]) => (
+                  <View key={name} style={styles.legendRow}>
+                    <View style={[styles.dot, { backgroundColor: color }]} />
+                    <Text style={styles.muted}>{name}</Text>
+                  </View>
+                ))}
+              </View>
+              <Text style={styles.graphTotal}>{`\u00a5${total.toFixed(2)}`}</Text>
+            </SurfaceCard>
+            <View style={styles.filters}>
+              <Chip label="Dates" icon="calendar-outline" active={filter === 'dates'} onPress={() => setFilter('dates')} />
+              <Chip label="Category" icon="grid-outline" active={filter === 'category'} onPress={() => setFilter('category')} />
+              <Chip label="People" icon="people-outline" active={filter === 'people'} onPress={() => setFilter('people')} />
+            </View>
+            <Text style={styles.summary}>Expenditure</Text>
+            <SurfaceCard style={styles.list}>
+              {grouped.map((item) => (
+                <Pressable key={item.title} style={styles.row} onPress={() => router.push(item.route as any)}>
+                  <SemanticIcon
+                    name={filter === 'dates' ? 'calendar-outline' : filter === 'people' ? 'person-outline' : 'pricetag-outline'}
+                    size={25}
+                    color={filter === 'category' ? categoryColors[item.title as ExpenseItem['category']] : palette.accent}
+                  />
+                  <View style={styles.rowBody}>
+                    <Text style={styles.rowTitle}>{item.title}</Text>
+                    <Text style={styles.muted}>{item.subtitle}</Text>
+                  </View>
+                  <Text style={styles.amount}>{`\u00a5${item.amount.toFixed(2)}`}</Text>
+                  <SemanticIcon name="chevron-forward" size={20} color={palette.text} />
+                </Pressable>
+              ))}
+              {filter === 'category' ? (
+                <Pressable style={styles.newCategory} onPress={openNewExpense}>
+                  <Text style={styles.rowTitle}>+ Add Category</Text>
+                </Pressable>
+              ) : null}
+            </SurfaceCard>
+          </>
+        )}
       </ContentContainer>
     </AppScreen>
   );
@@ -106,6 +144,11 @@ const createStyles = (palette: typeof AppPalette.light | typeof AppPalette.dark)
   content: { gap: Spacing.md, paddingTop: Spacing.sm },
   add: { width: 38, height: 38, borderRadius: 19, backgroundColor: palette.cardMuted, alignItems: 'center', justifyContent: 'center' },
   summary: { color: palette.text, fontSize: Typography.fontSize.xl, fontWeight: '700' },
+  emptyState: { marginTop: Spacing.xl, minHeight: 254, alignItems: 'center', justifyContent: 'center', gap: Spacing.sm },
+  emptyTitle: { color: palette.text, fontSize: Typography.fontSize.lg, fontWeight: '700' },
+  emptyCopy: { color: palette.secondaryText, fontSize: Typography.fontSize.sm, lineHeight: 20, textAlign: 'center', maxWidth: 238 },
+  emptyAdd: { marginTop: Spacing.md, minHeight: 44, borderRadius: 22, backgroundColor: palette.accent, paddingHorizontal: Spacing.lg, alignItems: 'center', justifyContent: 'center' },
+  emptyAddText: { color: '#24301e', fontSize: Typography.fontSize.sm, fontWeight: '700' },
   graph: { minHeight: 164, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around' },
   donut: { height: 102, width: 102, borderRadius: 51, borderWidth: 27, borderColor: '#43bfd8', borderTopColor: '#8d77f6', borderRightColor: '#ff8988' },
   center: { flex: 1 },

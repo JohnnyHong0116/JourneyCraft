@@ -1,41 +1,51 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { router } from 'expo-router';
-import { AppPalette, AppScreen, ContentContainer, ScreenHeader } from '@/components/layout/AppScreen';
+import { router, useLocalSearchParams } from 'expo-router';
+import { Icon } from '@/components/Icon';
+import { AppPalette, AppScreen, ContentContainer, ScreenHeader, SurfaceCard } from '@/components/layout/AppScreen';
+import { mockTrips } from '@/data/mockApp';
 import { useAppState } from '@/state/AppStateContext';
-import { SemanticIcon } from '@/components/Icon';
 import { Spacing, Typography } from '@/theme/designSystem';
+import { getTripById } from '../../../features/trip/tripDetailModel';
 
 export default function TripLocationScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
   const { mode } = useAppState();
   const palette = AppPalette[mode];
   const styles = createStyles(palette);
+  const trip = getTripById(mockTrips, id);
+
   return (
     <AppScreen>
       <ContentContainer style={styles.content}>
-        <ScreenHeader title="Locations" right={<Pressable onPress={() => router.back()}><Text style={styles.done}>Cancel</Text></Pressable>} />
-        <View style={styles.search}>
-          <SemanticIcon name="search" color={palette.text} size={21} />
-          <Text style={styles.placeholder}>Search</Text>
-          <SemanticIcon name="close-circle" color={palette.secondaryText} size={20} />
-        </View>
-        {['Chengdu, China', 'Tianfu Airport', 'Panda Research Base'].map((place, index) => (
-          <Pressable key={place} style={styles.row} onPress={() => router.back()}>
-            <Text style={styles.place}>{place}</Text>
-            <Text style={styles.day}>Day {Math.min(index + 1, 2)}</Text>
-          </Pressable>
-        ))}
+        <ScreenHeader title="Location" right={<Pressable onPress={() => router.back()}><Text style={styles.done}>Done</Text></Pressable>} />
+        {trip ? (
+          <>
+            <Text style={styles.heading}>{trip.title}</Text>
+            <SurfaceCard style={styles.locationCard}>
+              <View style={styles.marker}>
+                <Icon name="location-unselected" size={24} color={palette.accentStrong} />
+              </View>
+              <View style={styles.locationCopy}>
+                <Text style={styles.locationLabel}>Saved location</Text>
+                <Text style={styles.place}>{trip.location}</Text>
+              </View>
+            </SurfaceCard>
+          </>
+        ) : <Text style={styles.muted}>Memory unavailable.</Text>}
       </ContentContainer>
     </AppScreen>
   );
 }
 
 const createStyles = (palette: typeof AppPalette.light | typeof AppPalette.dark) => StyleSheet.create({
-  content: { paddingTop: Spacing.sm },
-  done: { color: palette.accentStrong, fontWeight: '600', fontSize: Typography.fontSize.md },
-  search: { height: 42, borderRadius: 10, backgroundColor: palette.card, flexDirection: 'row', gap: Spacing.sm, paddingHorizontal: Spacing.sm, alignItems: 'center', marginBottom: Spacing.lg },
-  placeholder: { flex: 1, color: palette.text, fontSize: Typography.fontSize.md },
-  row: { borderBottomWidth: StyleSheet.hairlineWidth, borderColor: palette.divider, paddingVertical: Spacing.md },
-  place: { color: palette.text, fontSize: Typography.fontSize.md },
-  day: { color: palette.secondaryText, fontSize: Typography.fontSize.sm, marginTop: 3 },
+  content: { paddingTop: Spacing.sm, gap: Spacing.lg },
+  done: { color: palette.accentStrong, fontWeight: '700', fontSize: Typography.fontSize.md },
+  heading: { color: palette.text, fontSize: Typography.fontSize.lg, fontWeight: '700' },
+  locationCard: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
+  marker: { width: 52, height: 52, borderRadius: 26, backgroundColor: palette.cardMuted, alignItems: 'center', justifyContent: 'center' },
+  locationCopy: { flex: 1, gap: 4 },
+  locationLabel: { color: palette.secondaryText, fontSize: Typography.fontSize.xs },
+  place: { color: palette.text, fontSize: Typography.fontSize.md, fontWeight: '700' },
+  muted: { color: palette.secondaryText, fontSize: Typography.fontSize.md },
 });

@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useLocalSearchParams } from 'expo-router';
 import { AppPalette, AppScreen, ContentContainer, PrimaryButton, ScreenHeader, SurfaceCard } from '@/components/layout/AppScreen';
+import { mockTrips } from '@/data/mockApp';
 import { useAppState } from '@/state/AppStateContext';
 import { Spacing, Typography } from '@/theme/designSystem';
-
-const people = ['Amily Zhang', 'Johnny He', 'Mia Liu', 'Chris Wong'];
+import { getTripById } from '../../../features/trip/tripDetailModel';
 
 export default function TripPeopleScreen() {
-  const [selected, setSelected] = useState(['Amily Zhang', 'Johnny He']);
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const trip = getTripById(mockTrips, id);
+  const people = Array.from(new Set([...(trip?.companions ?? []), 'Amily Zhang', 'Johnny He', 'Mia Liu', 'Chris Wong']));
+  const [selected, setSelected] = useState<string[]>(trip?.companions ?? []);
   const { mode } = useAppState();
   const palette = AppPalette[mode];
   const styles = createStyles(palette);
@@ -17,7 +21,7 @@ export default function TripPeopleScreen() {
     <AppScreen scroll>
       <ContentContainer style={styles.content}>
         <ScreenHeader title="People" />
-        <Text style={styles.heading}>Share this memory with</Text>
+        <Text style={styles.heading}>{trip ? `People in ${trip.title}` : 'People in this memory'}</Text>
         <SurfaceCard style={styles.list}>
           {people.map((person) => {
             const checked = selected.includes(person);
@@ -34,7 +38,7 @@ export default function TripPeopleScreen() {
             );
           })}
         </SurfaceCard>
-        <PrimaryButton title={`Add ${selected.length} people`} icon="checkmark" />
+        <PrimaryButton title={`Save ${selected.length} ${selected.length === 1 ? 'person' : 'people'}`} icon="checkmark" />
       </ContentContainer>
     </AppScreen>
   );

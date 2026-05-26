@@ -1,25 +1,34 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { router } from 'expo-router';
+import { Pressable, StyleSheet, Text } from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
 import { AppPalette, AppScreen, ContentContainer, ScreenHeader, SurfaceCard } from '@/components/layout/AppScreen';
+import { mockTrips } from '@/data/mockApp';
 import { useAppState } from '@/state/AppStateContext';
 import { SemanticIcon } from '@/components/Icon';
 import { Spacing, Typography } from '@/theme/designSystem';
+import { getTripById } from '../../../features/trip/tripDetailModel';
 
 export default function ShareTripScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
   const { mode } = useAppState();
   const palette = AppPalette[mode];
   const styles = createStyles(palette);
+  const trip = getTripById(mockTrips, id);
+
   return (
     <AppScreen>
       <ContentContainer style={styles.content}>
-        <ScreenHeader title="Share Trip" />
+        <ScreenHeader title="Share Memory" />
         <SurfaceCard style={styles.shareCard}>
-          <SemanticIcon name="paper-plane-outline" size={36} color={palette.accent} />
-          <Text style={styles.title}>Trip to Chengdu</Text>
-          <Text style={styles.caption}>Share your journal, photos and trip highlights with friends.</Text>
+          <SemanticIcon name="paper-plane-outline" size={36} color={palette.accentStrong} />
+          <Text style={styles.title}>{trip?.title ?? 'Memory unavailable'}</Text>
+          <Text style={styles.caption}>Share your journal, photos and highlights with friends.</Text>
           {['Copy Link', 'Share as Story', 'Invite Collaborators'].map((action) => (
-            <Pressable key={action} style={styles.row} onPress={() => action === 'Invite Collaborators' && router.push('/trip/1/people')}>
+            <Pressable
+              key={action}
+              style={styles.row}
+              onPress={() => action === 'Invite Collaborators' && trip && router.push(`/trip/${trip.id}/people` as any)}
+            >
               <Text style={styles.rowText}>{action}</Text>
               <SemanticIcon name="chevron-forward" size={20} color={palette.text} />
             </Pressable>

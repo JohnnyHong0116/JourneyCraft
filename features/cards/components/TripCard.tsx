@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { Icon } from '@/components/Icon';
 import { AppPalette } from '@/components/layout/AppScreen';
 import { CardMenu } from '@/components/ui/CardMenu';
+import { getEmotionConfig } from '@/constants/emotions';
 import { useAppState } from '@/state/AppStateContext';
 import { BorderRadius, Shadows, Spacing, Typography } from '@/theme/designSystem';
 import { Trip } from '@/types/trip';
@@ -89,7 +90,7 @@ export const TripCard: React.FC<TripCardProps> = ({
           <View style={styles.signals}>
             {showMood && trip.mood ? (
               <View style={styles.mood}>
-                <Icon name={trip.mood} size={23} color={palette.text} />
+                <Icon name={getEmotionConfig(trip.mood).icon} size={23} color={palette.text} />
               </View>
             ) : null}
             {localIsSaved ? <Icon name="bookmarksmall-unselected" size={17} color={palette.secondaryText} /> : null}
@@ -210,8 +211,6 @@ const createStyles = (
   mood: {
     width: 32,
     height: 32,
-    borderRadius: BorderRadius.md,
-    backgroundColor: palette.cardMuted,
     alignItems: 'center',
     justifyContent: 'center',
   },

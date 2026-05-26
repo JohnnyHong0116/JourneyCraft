@@ -67,7 +67,7 @@ export default function HomeTab() {
   }, []);
 
   const handleSearch = () => {
-    router.push('/search');
+    router.push({ pathname: '/search', params: { timelineMode: selectedTab } });
   };
 
   const handleSort = () => {
@@ -176,4 +176,3 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.sm,
   },
 });
-

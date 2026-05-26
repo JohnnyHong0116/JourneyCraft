@@ -2,19 +2,22 @@ import React, { useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { router } from 'expo-router';
 import { AppPalette, AppScreen, Chip, ContentContainer, ScreenHeader } from '@/components/layout/AppScreen';
+import { getEmotionConfig } from '@/constants/emotions';
 import { useAppState } from '@/state/AppStateContext';
 import { Spacing, Typography } from '@/theme/designSystem';
+import type { TripMood } from '@/types/trip';
 import { TRIP_UTILITY_TOOLBAR_HEIGHT, TripUtilityToolbar } from './TripUtilityToolbar';
 import { Icon } from '@/components/Icon';
 
 export function TripEditorScreen({ creating = false }: { creating?: boolean }) {
   const [title, setTitle] = useState(creating ? '' : 'Trip to Chengdu');
   const [content, setContent] = useState(creating ? '' : 'A joyful summer memory in Chengdu.');
-  const [mood, setMood] = useState('🙂');
+  const [mood] = useState<TripMood>('happy');
 
   const { mode } = useAppState();
   const palette = AppPalette[mode];
   const styles = createStyles(palette);
+  const emotion = getEmotionConfig(mood);
 
   return (
     <AppScreen
@@ -62,7 +65,7 @@ export function TripEditorScreen({ creating = false }: { creating?: boolean }) {
             style={styles.titleInput}
           />
           <Pressable onPress={() => router.push('/trip/1/mood')} style={styles.mood}>
-            <Text style={styles.moodText}>{mood}</Text>
+            <Icon name={emotion.icon} size={31} />
           </Pressable>
           <TextInput
             value={content}
@@ -93,7 +96,6 @@ const createStyles = (palette: typeof AppPalette.light | typeof AppPalette.dark)
   editorCard: { backgroundColor: palette.card, marginTop: -1, borderBottomLeftRadius: 15, borderBottomRightRadius: 15, padding: Spacing.md, minHeight: 174 },
   titleInput: { color: palette.text, fontSize: 25, fontWeight: '700', padding: 0, paddingRight: 58 },
   mood: { position: 'absolute', right: Spacing.md, top: Spacing.md },
-  moodText: { fontSize: 31 },
   bodyInput: { color: palette.text, fontSize: Typography.fontSize.md, minHeight: 66, textAlignVertical: 'top', paddingTop: Spacing.lg },
   date: { color: palette.text, fontSize: Typography.fontSize.xl, fontWeight: '700', textAlign: 'center' },
   chips: { flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.lg },

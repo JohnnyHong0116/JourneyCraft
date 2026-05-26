@@ -1,12 +1,11 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
+import { Icon } from '@/components/Icon';
 import { AppPalette, AppScreen, ContentContainer, ScreenHeader, SurfaceCard } from '@/components/layout/AppScreen';
-import { moods } from '@/data/mockApp';
+import { EMOTIONS } from '@/constants/emotions';
 import { useAppState } from '@/state/AppStateContext';
 import { Spacing, Typography } from '@/theme/designSystem';
-
-const emoji = ['😄', '🙂', '😐', '☹', '😣'];
 
 export default function MoodPickerScreen() {
   const { mode } = useAppState();
@@ -18,10 +17,10 @@ export default function MoodPickerScreen() {
         <SurfaceCard style={styles.card}>
           <Text style={styles.title}>How did this moment feel?</Text>
           <View style={styles.options}>
-            {moods.map((mood, index) => (
-              <Pressable key={mood.label} onPress={() => router.back()} style={styles.option}>
-                <Text style={styles.emoji}>{emoji[index]}</Text>
-                <Text style={styles.label}>{mood.label}</Text>
+            {EMOTIONS.map((emotion) => (
+              <Pressable key={emotion.id} onPress={() => router.back()} style={styles.option}>
+                <Icon name={emotion.icon} size={30} />
+                <Text style={styles.label}>{emotion.label}</Text>
               </Pressable>
             ))}
           </View>
@@ -37,6 +36,5 @@ const createStyles = (palette: typeof AppPalette.light | typeof AppPalette.dark)
   title: { color: palette.text, textAlign: 'center', fontWeight: '700', fontSize: Typography.fontSize.lg },
   options: { gap: Spacing.md },
   option: { minHeight: 55, flexDirection: 'row', alignItems: 'center', gap: Spacing.lg, borderBottomWidth: StyleSheet.hairlineWidth, borderColor: palette.divider },
-  emoji: { fontSize: 30 },
   label: { color: palette.text, fontSize: Typography.fontSize.md, fontWeight: '600' },
 });

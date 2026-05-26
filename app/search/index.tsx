@@ -1,17 +1,28 @@
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SemanticIcon } from '@/components/Icon';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { AppPalette, AppScreen, ContentContainer } from '@/components/layout/AppScreen';
 import { searchCategories } from '@/data/mockApp';
 import { useAppState } from '@/state/AppStateContext';
 import { Spacing, Typography } from '@/theme/designSystem';
+import type { HomeTimelineMode } from '../../features/search/homeSearchModel';
 
 export default function SearchScreen() {
   const [query, setQuery] = useState('');
+  const params = useLocalSearchParams<{ timelineMode?: HomeTimelineMode }>();
+  const timelineMode: HomeTimelineMode = params.timelineMode === 'planned' ? 'planned' : 'visited';
   const { mode } = useAppState();
   const palette = AppPalette[mode];
   const styles = createStyles(palette);
+  const timelineLabel = timelineMode === 'planned' ? 'Planned' : 'Visited';
+
+  const startTextSearch = () => {
+    router.push({
+      pathname: '/search/[category]',
+      params: { category: 'text', timelineMode, query: query.trim() },
+    });
+  };
 
   return (
     <AppScreen>
@@ -23,9 +34,11 @@ export default function SearchScreen() {
               value={query}
               onChangeText={setQuery}
               autoFocus
-              placeholder="Search"
+              placeholder={`Search ${timelineLabel.toLowerCase()} cards`}
               placeholderTextColor={palette.secondaryText}
               style={styles.input}
+              returnKeyType="search"
+              onSubmitEditing={startTextSearch}
             />
             {query.length > 0 ? (
               <Pressable onPress={() => setQuery('')}>
@@ -37,11 +50,14 @@ export default function SearchScreen() {
             <Text style={styles.cancel}>Cancel</Text>
           </Pressable>
         </View>
-        <Text style={styles.heading}>Categories</Text>
+        <Text style={styles.heading}>Search {timelineLabel}</Text>
         {searchCategories.map((category) => (
           <Pressable
-            key={category.label}
-            onPress={() => router.push({ pathname: '/search/[category]', params: { category: category.label.toLowerCase().replace(' ', '-') } })}
+            key={category.id}
+            onPress={() => router.push({
+              pathname: '/search/[category]',
+              params: { category: category.id, timelineMode },
+            })}
             style={styles.row}
           >
             <SemanticIcon name={category.icon} size={23} color={palette.text} />

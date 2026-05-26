@@ -11,7 +11,7 @@ export function getOverlayMaterial(mode: OverlayMode) {
         selectedWash: 'rgba(98, 173, 116, 0.18)',
       }
     : {
-        tint: 'systemMaterial' as const,
+        tint: 'systemMaterialLight' as const,
         backdropColor: 'rgba(13, 17, 15, 0.18)',
         surfaceWash: 'rgba(255, 255, 255, 0.34)',
         sheetWash: 'rgba(246, 247, 243, 0.82)',

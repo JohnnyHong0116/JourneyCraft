@@ -1,6 +1,7 @@
-import type { Trip } from '../types/trip';
+import type { Trip, TripMood } from '../types/trip';
 
 export interface PlannedDay {
+  id: string;
   day: number;
   label: string;
   location: string;
@@ -19,10 +20,8 @@ export interface ExpenseItem {
 }
 
 export interface MoodMetric {
-  label: string;
+  id: TripMood;
   percentage: number;
-  color: string;
-  icon: string;
 }
 
 export interface StatisticsYearOption {
@@ -220,10 +219,10 @@ export const mockTrips: Trip[] = [
 ];
 
 export const plannedDays: PlannedDay[] = [
-  { day: 1, label: 'Day 1 July 24', location: 'Tianfu Airport', complete: true },
-  { day: 2, label: 'Day 2 July 25', location: 'Chunxi Road', complete: false },
-  { day: 3, label: 'Day 3 July 26', location: 'Panda Base', complete: false },
-  { day: 4, label: 'Day 4 July 27', location: 'Kuanzhai Alley', complete: false },
+  { id: 'planned-day-1', day: 1, label: 'Day 1 July 24', location: 'Tianfu Airport', complete: true },
+  { id: 'planned-day-2', day: 2, label: 'Day 2 July 25', location: 'Chunxi Road', complete: false },
+  { id: 'planned-day-3', day: 3, label: 'Day 3 July 26', location: 'Panda Base', complete: false },
+  { id: 'planned-day-4', day: 4, label: 'Day 4 July 27', location: 'Kuanzhai Alley', complete: false },
 ];
 
 export const plannedTripCards: Trip[] = [
@@ -278,11 +277,11 @@ const historicalExpenses: ExpenseItem[] = [
 export const statisticsExpenses = [...expenseItems, ...historicalExpenses];
 
 export const moods: MoodMetric[] = [
-  { label: 'Overjoyed', percentage: 10, color: '#facd19', icon: 'happy-outline' },
-  { label: 'Happy', percentage: 40, color: '#9bb167', icon: 'happy-outline' },
-  { label: 'Neutral', percentage: 20, color: '#c0a091', icon: 'remove-circle-outline' },
-  { label: 'Sad', percentage: 10, color: '#ef8834', icon: 'sad-outline' },
-  { label: 'Depressed', percentage: 20, color: '#a688fd', icon: 'sad-outline' },
+  { id: 'overjoyed', percentage: 10 },
+  { id: 'happy', percentage: 40 },
+  { id: 'neutral', percentage: 20 },
+  { id: 'sad', percentage: 10 },
+  { id: 'depressed', percentage: 20 },
 ];
 
 function yearMonth(date: string): string {
@@ -360,13 +359,14 @@ export const galleryImages = [
 ];
 
 export const searchCategories = [
-  { label: 'Photos', icon: 'images-outline' as const },
-  { label: 'Recorded Audio', icon: 'mic-outline' as const },
-  { label: 'Text Only', icon: 'document-text-outline' as const },
-  { label: 'Location', icon: 'location-outline' as const },
-  { label: 'Saved', icon: 'heart-outline' as const },
-  { label: 'People', icon: 'person-outline' as const },
-  { label: 'Emotion', icon: 'happy-outline' as const },
+  { id: 'photos', label: 'Photos', icon: 'images-outline' as const },
+  { id: 'audio', label: 'Recorded Audio', icon: 'mic-outline' as const },
+  { id: 'text', label: 'Text', icon: 'document-text-outline' as const },
+  { id: 'date', label: 'Date', icon: 'calendar-outline' as const },
+  { id: 'location', label: 'Location', icon: 'location-outline' as const },
+  { id: 'saved', label: 'Saved', icon: 'heart-outline' as const },
+  { id: 'people', label: 'People', icon: 'person-outline' as const },
+  { id: 'emotion', label: 'Emotion', icon: 'happy-outline' as const },
 ];
 
 export const settingsSections = [

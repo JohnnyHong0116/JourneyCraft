@@ -2,9 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { getOverlayMaterial, getPopoverPosition } from './overlayModel.ts';
 
-test('dark and light overlays use adaptive material styling', () => {
+test('overlay material tint follows the resolved app theme', () => {
   assert.equal(getOverlayMaterial('dark').tint, 'dark');
-  assert.equal(getOverlayMaterial('light').tint, 'systemMaterial');
+  assert.equal(getOverlayMaterial('light').tint, 'systemMaterialLight');
   assert.equal(getOverlayMaterial('dark').borderColor, 'rgba(255, 255, 255, 0.12)');
   assert.equal(getOverlayMaterial('light').sheetWash, 'rgba(246, 247, 243, 0.82)');
   assert.equal(getOverlayMaterial('dark').sheetWash, 'rgba(24, 24, 26, 0.74)');

@@ -1,8 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { SemanticIcon } from '@/components/Icon';
+import { Icon, SemanticIcon } from '@/components/Icon';
 import { router } from 'expo-router';
 import { AppPalette, AppScreen, ContentContainer, SegmentedControl, SurfaceCard } from '@/components/layout/AppScreen';
+import { getEmotionConfig } from '@/constants/emotions';
 import {
   AnnualSpendPoint,
   getAnnualSpend,
@@ -15,6 +16,7 @@ import {
 } from '@/data/appData';
 import { useAppState } from '@/state/AppStateContext';
 import { BorderRadius, Spacing, Typography } from '@/theme/designSystem';
+import type { TripMood } from '@/types/trip';
 
 type Period = 'monthly' | 'annual';
 
@@ -239,6 +241,10 @@ function AnnualStats({ year, summary }: { year: number; summary: ReturnType<type
   const styles = createStyles(AppPalette[mode]);
   const spend = useMemo(() => getAnnualSpend(year), [year]);
   const maximum = Math.max(...spend.map((month) => month.value), 1);
+  const frequentMood = moods.reduce(
+    (highest, mood) => mood.percentage > highest.percentage ? mood : highest,
+    moods[0],
+  );
 
   return (
     <>
@@ -251,16 +257,18 @@ function AnnualStats({ year, summary }: { year: number; summary: ReturnType<type
         </View>
       </SurfaceCard>
       <View style={styles.metricsGrid}>
-        {[
-          ['calendar', String(summary.travelDays), 'Traveled Days'],
-          ['location', String(summary.tripCount), 'Recorded Trips'],
-          ['happy', '40%', 'Frequent Mood'],
-          ['book', String(summary.tripCount), 'Journal Entries'],
-        ].map(([icon, value, label]) => (
-          <SurfaceCard key={label} style={styles.metricTile}>
-            <Metric icon={icon} value={value} label={label} compact />
-          </SurfaceCard>
-        ))}
+        <SurfaceCard style={styles.metricTile}>
+          <Metric icon="calendar" value={String(summary.travelDays)} label="Traveled Days" compact />
+        </SurfaceCard>
+        <SurfaceCard style={styles.metricTile}>
+          <Metric icon="location" value={String(summary.tripCount)} label="Recorded Trips" compact />
+        </SurfaceCard>
+        <SurfaceCard style={styles.metricTile}>
+          <Metric emotionId={frequentMood.id} value={`${frequentMood.percentage}%`} label="Frequent Mood" compact />
+        </SurfaceCard>
+        <SurfaceCard style={styles.metricTile}>
+          <Metric icon="book" value={String(summary.tripCount)} label="Journal Entries" compact />
+        </SurfaceCard>
       </View>
       <MoodCard />
     </>
@@ -294,27 +302,46 @@ function MoodCard() {
     <SurfaceCard style={styles.moodCard}>
       <Text style={styles.cardTitle}>Mood Bar</Text>
       <View style={styles.moods}>
-        {moods.map((mood) => (
-          <View key={mood.label} style={styles.moodItem}>
-            <View style={[styles.moodCircle, { backgroundColor: mood.color }]} />
-            <Text style={styles.percent}>{mood.percentage}%</Text>
-          </View>
-        ))}
+        {moods.map((mood) => {
+          const emotion = getEmotionConfig(mood.id);
+          return (
+            <View key={mood.id} style={styles.moodItem}>
+              <Icon name={emotion.icon} size={31} />
+              <Text style={styles.percent}>{mood.percentage}%</Text>
+            </View>
+          );
+        })}
       </View>
       <View style={styles.flow}>
-        {moods.map((mood) => <View key={mood.label} style={[styles.flowUnit, { backgroundColor: mood.color, flex: mood.percentage }]} />)}
+        {moods.map((mood) => <View key={mood.id} style={[styles.flowUnit, { backgroundColor: getEmotionConfig(mood.id).color, flex: mood.percentage }]} />)}
       </View>
     </SurfaceCard>
   );
 }
 
-function Metric({ icon, value, label, compact = false }: { icon: string; value: string; label: string; compact?: boolean }) {
+function Metric({
+  icon,
+  emotionId,
+  value,
+  label,
+  compact = false,
+}: {
+  icon?: string;
+  emotionId?: TripMood;
+  value: string;
+  label: string;
+  compact?: boolean;
+}) {
   const { mode } = useAppState();
   const palette = AppPalette[mode];
   const styles = createStyles(palette);
   return (
     <View style={styles.metric}>
-      <SemanticIcon name={`${icon}-outline`} size={compact ? 22 : 27} color={palette.accentStrong} />
+      {emotionId ? (
+        <Icon name={getEmotionConfig(emotionId).icon} size={compact ? 22 : 27} />
+      ) : (
+        <SemanticIcon name={`${icon ?? 'document'}-outline`} size={compact ? 22 : 27} color={palette.accentStrong} />
+      )}
       <View style={styles.metricCopy}>
         <Text style={[styles.metricValue, compact && styles.metricValueLarge]}>{value}</Text>
         <Text style={styles.metricLabel}>{label}</Text>
@@ -361,7 +388,6 @@ const createStyles = (palette: typeof AppPalette.light | typeof AppPalette.dark)
   moodCard: { gap: Spacing.md },
   moods: { flexDirection: 'row', justifyContent: 'space-between' },
   moodItem: { alignItems: 'center', gap: Spacing.xs },
-  moodCircle: { width: 31, height: 31, borderRadius: 16 },
   percent: { fontSize: 11, color: palette.text, borderRadius: 8, backgroundColor: palette.cardMuted, paddingHorizontal: 7 },
   flow: { height: 36, borderRadius: BorderRadius.xl, overflow: 'hidden', flexDirection: 'row' },
   flowUnit: { height: '100%' },

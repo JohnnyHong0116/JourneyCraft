@@ -1,4 +1,6 @@
-import { Trip, TripSection } from '@/types/trip';
+import type { Trip, TripSection } from '../types/trip.ts';
+import type { PlannedTrip } from '../types/plannedTrip.ts';
+import { formatAppDate, translate, type AppLanguage } from '../i18n/translations.ts';
 
 export function isToday(date: string): boolean {
   const today = new Date();
@@ -21,22 +23,12 @@ export function isYesterday(date: string): boolean {
   );
 }
 
-export function monthLabel(date: string): string {
+export function monthLabel(date: string, language: AppLanguage = 'en'): string {
   const targetDate = new Date(date);
   const now = new Date();
-  const monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ];
-  
-  const month = monthNames[targetDate.getMonth()];
-  
-  // 如果不是今年，显示年份
-  if (targetDate.getFullYear() !== now.getFullYear()) {
-    return `${month} ${targetDate.getFullYear()}`;
-  }
-  
-  return month;
+  return formatAppDate(targetDate, language, targetDate.getFullYear() !== now.getFullYear()
+    ? { month: 'long', year: 'numeric' }
+    : { month: 'long' });
 }
 
 export function formatDisplayDate(date: string): string {
@@ -53,19 +45,24 @@ export function formatDisplayDate(date: string): string {
   return `${month} ${day}, ${year}`;
 }
 
-export function groupTripsBySection(trips: Trip[], sortBy: 'edited' | 'created' = 'edited', order: 'asc' | 'desc' = 'desc'): TripSection[] {
-  // 根据传入的排序参数排序
+function isPlannedTrip(trip: Trip): trip is PlannedTrip {
+  return 'startDate' in trip && typeof trip.startDate === 'string';
+}
+
+export function getTripSortDate(trip: Trip, sortBy: 'edited' | 'created'): string {
+  if (sortBy === 'created') return trip.createdAt;
+  return isPlannedTrip(trip) ? trip.startDate : trip.displayDate;
+}
+
+export function groupTripsBySection(
+  trips: Trip[],
+  sortBy: 'edited' | 'created' = 'edited',
+  order: 'asc' | 'desc' = 'desc',
+  language: AppLanguage = 'en',
+): TripSection[] {
   const sortedTrips = [...trips].sort((a, b) => {
-    let dateA: Date;
-    let dateB: Date;
-    
-    if (sortBy === 'edited') {
-      dateA = new Date(a.displayDate);
-      dateB = new Date(b.displayDate);
-    } else {
-      dateA = new Date(a.createdAt);
-      dateB = new Date(b.createdAt);
-    }
+    const dateA = new Date(getTripSortDate(a, sortBy));
+    const dateB = new Date(getTripSortDate(b, sortBy));
     
     if (order === 'asc') {
       return dateA.getTime() - dateB.getTime();
@@ -78,14 +75,15 @@ export function groupTripsBySection(trips: Trip[], sortBy: 'edited' | 'created' 
   let currentSection: TripSection | null = null;
   
   sortedTrips.forEach(trip => {
+    const sectionDate = isPlannedTrip(trip) ? trip.startDate : trip.displayDate;
     let sectionTitle: string;
     
-    if (isToday(trip.displayDate)) {
-      sectionTitle = 'Today';
-    } else if (isYesterday(trip.displayDate)) {
-      sectionTitle = 'Yesterday';
+    if (isToday(sectionDate)) {
+      sectionTitle = translate(language, 'common.today');
+    } else if (isYesterday(sectionDate)) {
+      sectionTitle = translate(language, 'common.yesterday');
     } else {
-      sectionTitle = monthLabel(trip.displayDate);
+      sectionTitle = monthLabel(sectionDate, language);
     }
     
     if (!currentSection || currentSection.title !== sectionTitle) {

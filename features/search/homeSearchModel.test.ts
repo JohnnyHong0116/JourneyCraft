@@ -2,7 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { EMOTIONS } from '../../src/constants/emotions.ts';
 import { mockTrips, plannedDays, plannedTripCards, searchCategories } from '../../src/data/appData.ts';
-import { filterHomeTrips, getHomeSearchTrips } from './homeSearchModel.ts';
+import {
+  filterHomeTrips,
+  getHomeSearchTrips,
+  getHomeTimelineReturnParams,
+  getSearchCategoriesForMode,
+  resolveHomeTimelineMode,
+} from './homeSearchModel.ts';
 
 test('defines the five canonical card emotion categories once and in design order', () => {
   assert.deepEqual(
@@ -16,6 +22,18 @@ test('defines the five canonical card emotion categories once and in design orde
 test('scopes Home search records to the active timeline mode', () => {
   assert.deepEqual(getHomeSearchTrips('visited').map((trip) => trip.id), mockTrips.map((trip) => trip.id));
   assert.deepEqual(getHomeSearchTrips('planned').map((trip) => trip.id), plannedTripCards.map((trip) => trip.id));
+});
+
+test('search cancel round-trips the originating Home timeline mode', () => {
+  assert.deepEqual(getHomeTimelineReturnParams('planned'), { timelineMode: 'planned' });
+  assert.deepEqual(getHomeTimelineReturnParams('visited'), { timelineMode: 'visited' });
+  assert.equal(resolveHomeTimelineMode(getHomeTimelineReturnParams('planned').timelineMode), 'planned');
+  assert.equal(resolveHomeTimelineMode(getHomeTimelineReturnParams('visited').timelineMode), 'visited');
+  assert.equal(resolveHomeTimelineMode(undefined), 'visited');
+});
+
+test('planned search exposes only trip-planning relevant categories', () => {
+  assert.deepEqual(getSearchCategoriesForMode('planned'), ['text', 'date', 'location', 'saved', 'people']);
 });
 
 test('retains explicit stable ids for planned itinerary days', () => {
@@ -68,5 +86,31 @@ test('emotion and date filters do not return unrelated cards', () => {
   assert.deepEqual(
     filterHomeTrips(plannedTripCards, { category: 'emotion', emotionId: 'depressed' }),
     [],
+  );
+});
+
+test('planned search uses structured checklist and itinerary data plus date range intersections', () => {
+  assert.deepEqual(
+    filterHomeTrips(plannedTripCards, { category: 'text', query: '火锅预订' }).map((trip) => trip.id),
+    ['planned-1'],
+  );
+  assert.deepEqual(
+    filterHomeTrips(plannedTripCards, { category: 'text', query: 'Tsukiji breakfast' }).map((trip) => trip.id),
+    ['planned-2'],
+  );
+  assert.deepEqual(
+    filterHomeTrips(plannedTripCards, { category: 'location', query: 'Tokyo' }).map((trip) => trip.id),
+    ['planned-2'],
+  );
+  assert.deepEqual(
+    filterHomeTrips(plannedTripCards, { category: 'location', query: '火锅预订' }),
+    [],
+  );
+  assert.deepEqual(
+    filterHomeTrips(plannedTripCards, {
+      category: 'date',
+      dateRange: { start: '2026-07-26', end: '2026-08-14' },
+    }).map((trip) => trip.id),
+    ['planned-1', 'planned-3', 'planned-4', 'planned-2'],
   );
 });

@@ -14,6 +14,7 @@ export interface Trip {
   isLocked?: boolean;
   isPinned?: boolean;        // 是否置顶
   companions?: string[];     // 有元素则显示 people 图标
+  peopleIds?: string[];      // Structured references used by people search/filtering
 }
 
 export interface TripSection {

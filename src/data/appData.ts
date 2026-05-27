@@ -1,4 +1,6 @@
 import type { Trip, TripMood } from '../types/trip';
+import type { Person } from '../types/person';
+import type { PlannedTrip } from '../types/plannedTrip';
 
 export interface PlannedDay {
   id: string;
@@ -59,6 +61,21 @@ const MONTH_NAMES = [
   'December',
 ] as const;
 
+export const people: Person[] = [
+  { id: 'amily-zheng', displayName: 'Amily Zheng', avatarUri: 'https://picsum.photos/id/64/100/100' },
+  { id: 'johnny-huang', displayName: 'Johnny Huang' },
+  { id: 'zheng-chenchen', displayName: '郑晨辰', avatarUri: 'https://picsum.photos/id/91/100/100' },
+  { id: 'sarah-miller', displayName: 'Sarah Miller' },
+  { id: 'mike-carter', displayName: 'Mike Carter' },
+  { id: 'lisa-chen', displayName: 'Lisa Chen' },
+  { id: 'alex-rivera', displayName: 'Alex Rivera' },
+  { id: 'family', displayName: 'Family' },
+  { id: 'emma-wilson', displayName: 'Emma Wilson' },
+  { id: 'ski-club', displayName: 'Ski Club' },
+  { id: 'work-team', displayName: 'Work Team' },
+  { id: 'best-friends', displayName: 'Best Friends' },
+];
+
 export const mockTrips: Trip[] = [
   {
     id: '1',
@@ -74,6 +91,7 @@ export const mockTrips: Trip[] = [
     isLocked: false,
     isPinned: true,
     companions: ['Sarah'],
+    peopleIds: ['sarah-miller'],
   },
   {
     id: '2',
@@ -89,6 +107,7 @@ export const mockTrips: Trip[] = [
     isLocked: true,
     isPinned: false,
     companions: [],
+    peopleIds: [],
   },
   {
     id: '3',
@@ -103,6 +122,7 @@ export const mockTrips: Trip[] = [
     isSaved: true,
     isLocked: false,
     companions: ['Mike', 'Lisa'],
+    peopleIds: ['mike-carter', 'lisa-chen'],
   },
   {
     id: '4',
@@ -117,6 +137,7 @@ export const mockTrips: Trip[] = [
     isSaved: true,
     isLocked: false,
     companions: ['Alex'],
+    peopleIds: ['alex-rivera'],
   },
   {
     id: '5',
@@ -131,6 +152,7 @@ export const mockTrips: Trip[] = [
     isSaved: false,
     isLocked: false,
     companions: [],
+    peopleIds: [],
   },
   {
     id: '6',
@@ -145,6 +167,7 @@ export const mockTrips: Trip[] = [
     isSaved: true,
     isLocked: false,
     companions: ['Family'],
+    peopleIds: ['family'],
   },
   {
     id: '7',
@@ -159,6 +182,7 @@ export const mockTrips: Trip[] = [
     isSaved: true,
     isLocked: false,
     companions: ['Emma'],
+    peopleIds: ['emma-wilson'],
   },
   {
     id: '8',
@@ -173,6 +197,7 @@ export const mockTrips: Trip[] = [
     isSaved: false,
     isLocked: true,
     companions: ['Ski Club'],
+    peopleIds: ['ski-club'],
   },
   {
     id: '9',
@@ -187,6 +212,7 @@ export const mockTrips: Trip[] = [
     isSaved: true,
     isLocked: true,
     companions: ['Work Team'],
+    peopleIds: ['work-team'],
   },
   {
     id: '10',
@@ -201,6 +227,7 @@ export const mockTrips: Trip[] = [
     isSaved: true,
     isLocked: false,
     companions: ['Best Friends'],
+    peopleIds: ['best-friends'],
   },
   {
     id: '11',
@@ -215,6 +242,7 @@ export const mockTrips: Trip[] = [
     isSaved: false,
     isLocked: false,
     companions: [],
+    peopleIds: [],
   },
 ];
 
@@ -225,13 +253,16 @@ export const plannedDays: PlannedDay[] = [
   { id: 'planned-day-4', day: 4, label: 'Day 4 July 27', location: 'Kuanzhai Alley', complete: false },
 ];
 
-export const plannedTripCards: Trip[] = [
+export const plannedTripCards: PlannedTrip[] = [
   {
     id: 'planned-1',
-    title: 'Chengdu Summer Escape',
-    location: 'Chengdu, China',
-    createdAt: '2026-07-24T09:00:00Z',
-    displayDate: '2026-07-24T09:00:00Z',
+    title: '成都西安到处吃',
+    location: '成都 + 西安',
+    route: '成都 - 西安',
+    createdAt: '2026-07-24',
+    displayDate: '2026-07-24',
+    startDate: '2026-07-24',
+    endDate: '2026-07-27',
     photos: [],
     audioCount: 0,
     videoCount: 0,
@@ -240,13 +271,84 @@ export const plannedTripCards: Trip[] = [
     isLocked: false,
     isPinned: true,
     companions: ['Amily', 'Johnny'],
+    peopleIds: ['amily-zheng', 'johnny-huang'],
+    checklistItems: [
+      { id: 'chengdu-passport', label: 'Passport', status: 'completed', userEntered: false },
+      { id: 'chengdu-hotel', label: 'Hotel confirmation', status: 'completed', userEntered: false },
+      { id: 'chengdu-flight', label: 'Flight confirmation', status: 'pending', userEntered: false },
+      { id: 'chengdu-hotpot', label: '火锅预订', status: 'pending', userEntered: true },
+      { id: 'chengdu-pack', label: 'Pack luggage', status: 'notStarted', userEntered: false },
+    ],
+    itineraryEntries: [
+      { id: 'chengdu-day-1', date: '2026-07-24', dayNumber: 1, title: '抵达成都', type: 'flight', time: '10:30', location: '天府机场' },
+      { id: 'chengdu-day-2', date: '2026-07-25', dayNumber: 2, title: '春熙路晚餐', type: 'restaurant', time: '18:30', location: '春熙路' },
+      { id: 'chengdu-day-3', date: '2026-07-26', dayNumber: 3, title: '大熊猫基地', type: 'activity', time: '09:00', location: '成都大熊猫繁育研究基地' },
+      { id: 'chengdu-day-4', date: '2026-07-27', dayNumber: 4, title: '前往西安', type: 'flight', time: '11:10', location: '成都东站' },
+    ],
+  },
+  {
+    id: 'planned-3',
+    title: 'Chengdu Tea House Weekend',
+    location: 'Chengdu, China',
+    route: 'Chengdu East - Taikoo Li',
+    createdAt: '2026-07-25',
+    displayDate: '2026-07-25',
+    startDate: '2026-07-25',
+    endDate: '2026-07-26',
+    photos: [],
+    audioCount: 0,
+    videoCount: 0,
+    mood: 'happy',
+    isSaved: false,
+    isLocked: false,
+    companions: ['Sarah'],
+    peopleIds: ['sarah-miller'],
+    checklistItems: [
+      { id: 'teahouse-hotel', label: 'Hotel confirmation', status: 'completed', userEntered: false },
+      { id: 'teahouse-table', label: 'Reserve tea table', status: 'pending', userEntered: true },
+      { id: 'teahouse-pack', label: 'Pack camera', status: 'notStarted', userEntered: true },
+    ],
+    itineraryEntries: [
+      { id: 'teahouse-day-1', date: '2026-07-25', dayNumber: 1, title: 'Check in near Taikoo Li', type: 'hotel', time: '15:00', location: 'Taikoo Li' },
+      { id: 'teahouse-day-2', date: '2026-07-26', dayNumber: 2, title: 'Morning tea tasting', type: 'activity', time: '10:00', location: 'People Park' },
+    ],
+  },
+  {
+    id: 'planned-4',
+    title: 'Xi\'an Museum Pass',
+    location: 'Xi\'an, China',
+    route: 'Chengdu - Xi\'an',
+    createdAt: '2026-07-26',
+    displayDate: '2026-07-26',
+    startDate: '2026-07-26',
+    endDate: '2026-07-28',
+    photos: [],
+    audioCount: 0,
+    videoCount: 0,
+    mood: 'neutral',
+    isSaved: true,
+    isLocked: true,
+    companions: ['Johnny'],
+    peopleIds: ['johnny-huang'],
+    checklistItems: [
+      { id: 'museum-rail', label: 'Train tickets', status: 'completed', userEntered: false },
+      { id: 'museum-pass', label: 'Museum tickets', status: 'pending', userEntered: true },
+      { id: 'museum-hotel', label: 'Hotel confirmation', status: 'notStarted', userEntered: false },
+    ],
+    itineraryEntries: [
+      { id: 'museum-day-1', date: '2026-07-26', dayNumber: 1, title: 'Arrive in Xi\'an', type: 'flight', time: '19:15', location: 'Xi\'an North Station' },
+      { id: 'museum-day-2', date: '2026-07-27', dayNumber: 2, title: 'Shaanxi History Museum', type: 'activity', time: '09:30', location: 'Yanta District' },
+    ],
   },
   {
     id: 'planned-2',
-    title: 'Panda Base Visit',
-    location: 'Chenghua District',
-    createdAt: '2026-07-25T09:00:00Z',
-    displayDate: '2026-07-25T09:00:00Z',
+    title: 'Tokyo Food Trip',
+    location: 'Tokyo, Japan',
+    route: 'Osaka - Tokyo',
+    createdAt: '2026-08-14',
+    displayDate: '2026-08-14',
+    startDate: '2026-08-14',
+    endDate: '2026-08-17',
     photos: [],
     audioCount: 0,
     videoCount: 0,
@@ -254,6 +356,65 @@ export const plannedTripCards: Trip[] = [
     isSaved: false,
     isLocked: false,
     companions: ['Amily', 'Johnny'],
+    peopleIds: ['amily-zheng', 'johnny-huang'],
+    checklistItems: [
+      { id: 'tokyo-hotel', label: 'Hotel confirmation', status: 'completed', userEntered: false },
+      { id: 'tokyo-rail', label: 'Reserve rail pass', status: 'pending', userEntered: true },
+      { id: 'tokyo-map', label: 'Download transit map', status: 'notStarted', userEntered: false },
+    ],
+    itineraryEntries: [
+      { id: 'tokyo-day-1', date: '2026-08-14', dayNumber: 1, title: 'Check in at Shinjuku', type: 'hotel', time: '16:00', location: 'Shinjuku' },
+      { id: 'tokyo-day-2', date: '2026-08-15', dayNumber: 2, title: 'Tsukiji breakfast', type: 'restaurant', time: '08:00', location: 'Tsukiji' },
+    ],
+  },
+  {
+    id: 'planned-5',
+    title: 'Shanghai Design Expo',
+    location: 'Shanghai, China',
+    route: 'Hangzhou - Shanghai',
+    createdAt: '2026-09-04',
+    displayDate: '2026-09-04',
+    startDate: '2026-09-04',
+    endDate: '2026-09-06',
+    photos: [],
+    audioCount: 0,
+    videoCount: 0,
+    isSaved: true,
+    isLocked: false,
+    companions: ['Amily'],
+    peopleIds: ['amily-zheng'],
+    checklistItems: [
+      { id: 'expo-ticket', label: 'Expo ticket', status: 'completed', userEntered: true },
+      { id: 'expo-hotel', label: 'Hotel confirmation', status: 'pending', userEntered: false },
+      { id: 'expo-notes', label: 'Prepare exhibit notes', status: 'notStarted', userEntered: true },
+    ],
+    itineraryEntries: [
+      { id: 'expo-day-1', date: '2026-09-04', dayNumber: 1, title: 'Expo registration', type: 'activity', time: '09:30', location: 'West Bund' },
+    ],
+  },
+  {
+    id: 'planned-6',
+    title: 'Hangzhou Lakeside Break',
+    location: 'Hangzhou, China',
+    route: 'Shanghai - Hangzhou',
+    createdAt: '2026-10-02',
+    displayDate: '2026-10-02',
+    startDate: '2026-10-02',
+    endDate: '2026-10-04',
+    photos: [],
+    audioCount: 0,
+    videoCount: 0,
+    isSaved: false,
+    isLocked: false,
+    companions: [],
+    peopleIds: [],
+    checklistItems: [
+      { id: 'lake-rail', label: 'Rail tickets', status: 'completed', userEntered: false },
+      { id: 'lake-hotel', label: 'Lakeside hotel', status: 'pending', userEntered: true },
+    ],
+    itineraryEntries: [
+      { id: 'lake-day-1', date: '2026-10-02', dayNumber: 1, title: 'West Lake walk', type: 'activity', time: '17:00', location: 'West Lake' },
+    ],
   },
 ];
 

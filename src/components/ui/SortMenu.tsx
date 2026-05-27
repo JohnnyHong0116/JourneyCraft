@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { AppPalette } from '@/components/layout/AppScreen';
 import { useAppState } from '@/state/AppStateContext';
 import { Spacing, Typography } from '@/theme/designSystem';
+import { useTranslation } from '@/i18n/useTranslation';
 import { MaterialPopover, OverlayActionRow } from './OverlaySurface';
 
 interface SortMenuProps {
@@ -27,6 +28,7 @@ export const SortMenu: React.FC<SortMenuProps> = ({
   const { mode } = useAppState();
   const palette = AppPalette[mode];
   const styles = createStyles(palette);
+  const { t } = useTranslation();
 
   const handleSortByChange = (nextSort: 'edited' | 'created') => {
     onSortByChange(nextSort);
@@ -40,27 +42,27 @@ export const SortMenu: React.FC<SortMenuProps> = ({
 
   return (
     <MaterialPopover visible={visible} onDismiss={onDismiss} anchor={anchor} estimatedHeight={292}>
-      <Text style={styles.heading}>Sort trips</Text>
-      <Text style={styles.groupLabel}>Date</Text>
+      <Text style={styles.heading}>{t('sort.heading')}</Text>
+      <Text style={styles.groupLabel}>{t('sort.date')}</Text>
       <OverlayActionRow
-        label="Date edited"
+        label={t('sort.edited')}
         selected={sortBy === 'edited'}
         onPress={() => handleSortByChange('edited')}
       />
       <OverlayActionRow
-        label="Date created"
+        label={t('sort.created')}
         selected={sortBy === 'created'}
         onPress={() => handleSortByChange('created')}
       />
       <View style={styles.groupDivider} />
-      <Text style={styles.groupLabel}>Order</Text>
+      <Text style={styles.groupLabel}>{t('sort.order')}</Text>
       <OverlayActionRow
-        label="Newest first"
+        label={t('sort.newest')}
         selected={order === 'desc'}
         onPress={() => handleOrderChange('desc')}
       />
       <OverlayActionRow
-        label="Oldest first"
+        label={t('sort.oldest')}
         selected={order === 'asc'}
         onPress={() => handleOrderChange('asc')}
       />

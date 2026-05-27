@@ -9,6 +9,7 @@ import { useAppState } from '@/state/AppStateContext';
 import { BorderRadius, Shadows, Spacing, Typography } from '@/theme/designSystem';
 import { Trip } from '@/types/trip';
 import { getTripCoverUri } from './tripCardModel';
+import { useTranslation } from '@/i18n/useTranslation';
 
 interface TripCardProps {
   trip: Trip;
@@ -27,6 +28,7 @@ export const TripCard: React.FC<TripCardProps> = ({
 }) => {
   const { mode } = useAppState();
   const palette = AppPalette[mode];
+  const { formatDate, t } = useTranslation();
   const styles = createStyles(palette, mode);
   const [cardMenuVisible, setCardMenuVisible] = useState(false);
   const moreButtonRef = useRef<any>(null);
@@ -41,7 +43,7 @@ export const TripCard: React.FC<TripCardProps> = ({
   const hasCompanions = Boolean(trip.companions?.length);
   const showMood = Boolean(trip.mood);
   const coverUri = getTripCoverUri(trip.photos);
-  const displayDate = new Date(trip.displayDate).toLocaleDateString('en-US', {
+  const displayDate = formatDate(trip.displayDate, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -102,7 +104,7 @@ export const TripCard: React.FC<TripCardProps> = ({
             <Pressable
               ref={moreButtonRef}
               accessibilityRole="button"
-              accessibilityLabel={`More options for ${trip.title}`}
+                accessibilityLabel={`${t('common.more')} ${trip.title}`}
               hitSlop={8}
               onPress={(event) => {
                 event.stopPropagation();

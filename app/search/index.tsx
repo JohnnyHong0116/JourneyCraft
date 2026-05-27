@@ -4,18 +4,42 @@ import { SemanticIcon } from '@/components/Icon';
 import { router, useLocalSearchParams } from 'expo-router';
 import { AppPalette, AppScreen, ContentContainer } from '@/components/layout/AppScreen';
 import { searchCategories } from '@/data/mockApp';
+import { useTranslation } from '@/i18n/useTranslation';
 import { useAppState } from '@/state/AppStateContext';
 import { Spacing, Typography } from '@/theme/designSystem';
-import type { HomeTimelineMode } from '../../features/search/homeSearchModel';
+import type { TranslationKey } from '@/i18n/translations';
+import {
+  getHomeTimelineReturnParams,
+  getSearchCategoriesForMode,
+  resolveHomeTimelineMode,
+  type HomeSearchCategory,
+  type HomeTimelineMode,
+} from '../../features/search/homeSearchModel';
+
+const CATEGORY_LABEL_KEYS: Record<HomeSearchCategory, TranslationKey> = {
+  photos: 'search.filter.photos',
+  audio: 'search.filter.audio',
+  text: 'search.filter.text',
+  date: 'search.filter.date',
+  location: 'search.filter.location',
+  saved: 'search.filter.saved',
+  people: 'search.filter.people',
+  emotion: 'search.filter.emotion',
+};
 
 export default function SearchScreen() {
   const [query, setQuery] = useState('');
   const params = useLocalSearchParams<{ timelineMode?: HomeTimelineMode }>();
-  const timelineMode: HomeTimelineMode = params.timelineMode === 'planned' ? 'planned' : 'visited';
+  const timelineMode = resolveHomeTimelineMode(params.timelineMode);
   const { mode } = useAppState();
+  const { t } = useTranslation();
   const palette = AppPalette[mode];
   const styles = createStyles(palette);
-  const timelineLabel = timelineMode === 'planned' ? 'Planned' : 'Visited';
+  const timelineLabel = t(timelineMode === 'planned' ? 'common.planned' : 'common.visited');
+  const allowedCategories = getSearchCategoriesForMode(timelineMode);
+  const visibleCategories = searchCategories.filter((category) => (
+    allowedCategories.includes(category.id as HomeSearchCategory)
+  ));
 
   const startTextSearch = () => {
     router.push({
@@ -34,7 +58,7 @@ export default function SearchScreen() {
               value={query}
               onChangeText={setQuery}
               autoFocus
-              placeholder={`Search ${timelineLabel.toLowerCase()} cards`}
+              placeholder={t(timelineMode === 'planned' ? 'search.placeholder.planned' : 'search.placeholder.visited')}
               placeholderTextColor={palette.secondaryText}
               style={styles.input}
               returnKeyType="search"
@@ -46,12 +70,15 @@ export default function SearchScreen() {
               </Pressable>
             ) : null}
           </View>
-          <Pressable onPress={() => router.back()}>
-            <Text style={styles.cancel}>Cancel</Text>
+          <Pressable onPress={() => router.replace({
+            pathname: '/(tabs)/home',
+            params: getHomeTimelineReturnParams(timelineMode),
+          })}>
+            <Text style={styles.cancel}>{t('search.cancel')}</Text>
           </Pressable>
         </View>
-        <Text style={styles.heading}>Search {timelineLabel}</Text>
-        {searchCategories.map((category) => (
+        <Text style={styles.heading}>{t('search.heading', { timeline: timelineLabel })}</Text>
+        {visibleCategories.map((category) => (
           <Pressable
             key={category.id}
             onPress={() => router.push({
@@ -61,7 +88,7 @@ export default function SearchScreen() {
             style={styles.row}
           >
             <SemanticIcon name={category.icon} size={23} color={palette.text} />
-            <Text style={styles.rowLabel}>{category.label}</Text>
+            <Text style={styles.rowLabel}>{t(CATEGORY_LABEL_KEYS[category.id as HomeSearchCategory])}</Text>
             <SemanticIcon name="chevron-forward" size={17} color={palette.secondaryText} />
           </Pressable>
         ))}

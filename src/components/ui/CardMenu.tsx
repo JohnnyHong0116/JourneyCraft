@@ -6,6 +6,7 @@ import { useAppState } from '@/state/AppStateContext';
 import { Spacing } from '@/theme/designSystem';
 import { DeleteConfirmationModal } from './DeleteConfirmationModal';
 import { MaterialPopover, OverlayActionRow } from './OverlaySurface';
+import { useTranslation } from '@/i18n/useTranslation';
 
 interface CardMenuProps {
   visible: boolean;
@@ -35,6 +36,7 @@ export const CardMenu: React.FC<CardMenuProps> = ({
   const { mode } = useAppState();
   const palette = AppPalette[mode];
   const styles = createStyles(palette);
+  const { t } = useTranslation();
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
   const handleAction = (action: () => void) => {
@@ -66,26 +68,26 @@ export const CardMenu: React.FC<CardMenuProps> = ({
         estimatedHeight={238}
       >
         <OverlayActionRow
-          label={isPinned ? 'Unpin' : 'Pin'}
+          label={isPinned ? t('menu.unpin') : t('menu.pin')}
           selected={isPinned}
           leading={<Icon name={isPinned ? 'unpin' : 'pin'} size={19} color={palette.text} />}
           onPress={() => handleAction(onPin)}
         />
         <OverlayActionRow
-          label={isSaved ? 'Unsave' : 'Save'}
+          label={isSaved ? t('menu.unsave') : t('menu.save')}
           selected={isSaved}
           leading={<Icon name="cardsave" size={19} color={palette.text} />}
           onPress={() => handleAction(onSave)}
         />
         <OverlayActionRow
-          label={isLocked ? 'Unlock' : 'Lock'}
+          label={isLocked ? t('menu.unlock') : t('menu.lock')}
           selected={isLocked}
           leading={<Icon name="cardlock" size={19} color={palette.text} />}
           onPress={() => handleAction(onLock)}
         />
         <View style={styles.divider} />
         <OverlayActionRow
-          label="Delete"
+          label={t('menu.delete')}
           danger
           leading={<Icon name="trash" size={19} color="#ed5b55" />}
           onPress={handleDelete}

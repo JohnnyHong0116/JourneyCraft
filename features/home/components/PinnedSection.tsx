@@ -12,20 +12,24 @@ import { AppPalette } from '@/components/layout/AppScreen';
 import { useAppState } from '@/state/AppStateContext';
 import { Trip } from '@/types/trip';
 import { TripCard } from '../../cards/components/TripCard';
+import { useTranslation } from '@/i18n/useTranslation';
 
 interface PinnedSectionProps {
   pinnedTrips: Trip[];
   onPinToggle: (tripId: string) => void;
   onDelete: (tripId: string) => void;
+  renderTrip?: (trip: Trip) => React.ReactNode;
 }
 
 export const PinnedSection: React.FC<PinnedSectionProps> = ({
   pinnedTrips,
   onPinToggle,
   onDelete,
+  renderTrip,
 }) => {
   const { mode } = useAppState();
   const palette = AppPalette[mode];
+  const { t } = useTranslation();
   const styles = createStyles(palette);
   const [isExpanded, setIsExpanded] = useState(true);
   const [animation] = useState(new Animated.Value(1));
@@ -51,7 +55,7 @@ export const PinnedSection: React.FC<PinnedSectionProps> = ({
         onPress={toggleExpanded}
         activeOpacity={0.7}
       >
-        <Text style={styles.title}>Pinned</Text>
+        <Text style={styles.title}>{t('home.pinned')}</Text>
         <Animated.View
           style={[
             styles.chevron,
@@ -84,12 +88,15 @@ export const PinnedSection: React.FC<PinnedSectionProps> = ({
         ]}
       >
         {pinnedTrips.map((trip) => (
-          <TripCard
-            key={trip.id}
-            trip={trip}
-            onPinToggle={onPinToggle}
-            onDelete={onDelete}
-          />
+          <React.Fragment key={trip.id}>
+            {renderTrip ? renderTrip(trip) : (
+              <TripCard
+                trip={trip}
+                onPinToggle={onPinToggle}
+                onDelete={onDelete}
+              />
+            )}
+          </React.Fragment>
         ))}
       </Animated.View>
     </View>

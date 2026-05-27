@@ -41,9 +41,9 @@ test('does not make dates after today selectable in the current month', () => {
 
 test('uses the majority card emotion and breaks ties by the earliest card emotion', () => {
   const trips: Trip[] = [
-    { ...mockTrips[0], id: 'later-happy', displayDate: '2025-01-03T15:00:00.000Z', mood: 'happy' },
-    { ...mockTrips[0], id: 'early-sad', displayDate: '2025-01-03T13:00:00.000Z', mood: 'sad' },
-    { ...mockTrips[0], id: 'third-happy', displayDate: '2025-01-03T16:00:00.000Z', mood: 'happy' },
+    { ...mockTrips[0], id: 'later-happy', displayDate: '2025-01-03T15:00:00', mood: 'happy' },
+    { ...mockTrips[0], id: 'early-sad', displayDate: '2025-01-03T13:00:00', mood: 'sad' },
+    { ...mockTrips[0], id: 'third-happy', displayDate: '2025-01-03T16:00:00', mood: 'happy' },
   ];
 
   assert.equal(getMajorityEmotionForDate(trips, '2025-01-03'), 'happy');

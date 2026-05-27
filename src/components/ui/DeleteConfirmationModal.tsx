@@ -4,6 +4,7 @@ import { AppPalette } from '@/components/layout/AppScreen';
 import { useAppState } from '@/state/AppStateContext';
 import { BorderRadius, Spacing, Typography } from '@/theme/designSystem';
 import { ActionSheetModal } from './OverlaySurface';
+import { useTranslation } from '@/i18n/useTranslation';
 
 interface DeleteConfirmationModalProps {
   visible: boolean;
@@ -19,16 +20,17 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
   const { mode } = useAppState();
   const palette = AppPalette[mode];
   const styles = createStyles(palette);
+  const { t } = useTranslation();
 
   return (
     <ActionSheetModal visible={visible} onDismiss={onDismiss} dismissOnBackdrop={false}>
-      <Text style={styles.title}>Delete this memory?</Text>
-      <Text style={styles.description}>This trip entry and its saved moments will be removed.</Text>
-      <Pressable accessibilityRole="button" accessibilityLabel="Delete Memory" style={styles.deleteButton} onPress={onConfirm}>
-        <Text style={styles.deleteText}>Delete Memory</Text>
+      <Text style={styles.title}>{t('menu.deleteMemoryTitle')}</Text>
+      <Text style={styles.description}>{t('menu.deleteMemoryDescription')}</Text>
+      <Pressable accessibilityRole="button" accessibilityLabel={t('menu.deleteMemory')} style={styles.deleteButton} onPress={onConfirm}>
+        <Text style={styles.deleteText}>{t('menu.deleteMemory')}</Text>
       </Pressable>
-      <Pressable accessibilityRole="button" accessibilityLabel="Cancel" style={styles.cancelButton} onPress={onDismiss}>
-        <Text style={styles.cancelText}>Cancel</Text>
+      <Pressable accessibilityRole="button" accessibilityLabel={t('common.cancel')} style={styles.cancelButton} onPress={onDismiss}>
+        <Text style={styles.cancelText}>{t('common.cancel')}</Text>
       </Pressable>
     </ActionSheetModal>
   );

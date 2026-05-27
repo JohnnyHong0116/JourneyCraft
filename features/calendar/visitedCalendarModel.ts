@@ -1,4 +1,5 @@
 import type { Trip, TripMood } from '../../src/types/trip.ts';
+import { formatAppDate, translate, type AppLanguage } from '../../src/i18n/translations.ts';
 
 export type DateKey = string;
 export type MoodOverrides = Record<DateKey, TripMood>;
@@ -203,17 +204,17 @@ export function getMoodEditorDate(anchors: readonly DateKey[]): DateKey | undefi
   return range && range.start === range.end ? range.start : undefined;
 }
 
-export function formatMonthTitle(month: Date): string {
-  return month.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+export function formatMonthTitle(month: Date, language: AppLanguage = 'en'): string {
+  return formatAppDate(month, language, { month: 'long', year: 'numeric' });
 }
 
-export function formatSelectedRangeLabel(anchors: readonly DateKey[]): string {
+export function formatSelectedRangeLabel(anchors: readonly DateKey[], language: AppLanguage = 'en'): string {
   const range = getSelectedRange(anchors);
-  if (!range) return 'Select a date';
+  if (!range) return translate(language, 'common.selectDate');
   const start = dateFromKey(range.start);
   const end = dateFromKey(range.end);
   if (range.start === range.end) {
-    return start.toLocaleDateString('en-US', {
+    return formatAppDate(start, language, {
       weekday: 'long',
       month: 'long',
       day: 'numeric',
@@ -221,13 +222,15 @@ export function formatSelectedRangeLabel(anchors: readonly DateKey[]): string {
     });
   }
   if (start.getFullYear() === end.getFullYear() && start.getMonth() === end.getMonth()) {
-    return `${start.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })} - ${end.getDate()}, ${end.getFullYear()}`;
+    return language === 'zh'
+      ? `${formatAppDate(start, language, { month: 'long', day: 'numeric' })} - ${formatAppDate(end, language, { month: 'long', day: 'numeric', year: 'numeric' })}`
+      : `${formatAppDate(start, language, { month: 'long', day: 'numeric' })} - ${end.getDate()}, ${end.getFullYear()}`;
   }
-  return `${start.toLocaleDateString('en-US', {
+  return `${formatAppDate(start, language, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
-  })} - ${end.toLocaleDateString('en-US', {
+  })} - ${formatAppDate(end, language, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',

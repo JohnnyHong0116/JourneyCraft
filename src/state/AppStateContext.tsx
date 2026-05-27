@@ -10,6 +10,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { captureRef } from 'react-native-view-shot';
 import { DEFAULT_PROFILE, mergeProfile, UserProfile, usernameFromCredential } from './profileModel';
+import type { AppLanguage } from '@/i18n/translations';
 import {
   getThemeTransitionPlan,
   resolveThemeMode,
@@ -25,6 +26,7 @@ interface StoredSession {
   profile: UserProfile;
   authenticated: boolean;
   themePreference: ThemePreference;
+  language: AppLanguage;
 }
 
 interface AppStateValue {
@@ -32,11 +34,13 @@ interface AppStateValue {
   authenticated: boolean;
   hydrated: boolean;
   themePreference: ThemePreference;
+  language: AppLanguage;
   mode: ResolvedThemeMode;
   signIn: (username: string) => Promise<void>;
   signUp: (profile: Partial<UserProfile>) => Promise<void>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
   setThemePreference: (preference: ThemePreference) => Promise<void>;
+  setLanguage: (language: AppLanguage) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -44,6 +48,7 @@ const initialState: StoredSession = {
   profile: DEFAULT_PROFILE,
   authenticated: false,
   themePreference: 'system',
+  language: 'en',
 };
 
 const AppStateContext = createContext<AppStateValue | null>(null);
@@ -73,6 +78,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
             profile: mergeProfile(DEFAULT_PROFILE, saved.profile ?? {}),
             authenticated: saved.authenticated ?? false,
             themePreference: saved.themePreference ?? 'system',
+            language: saved.language === 'zh' ? 'zh' : 'en',
           });
         }
       })
@@ -190,6 +196,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     await persist({
       authenticated: true,
       themePreference: session.themePreference,
+      language: session.language,
       profile: mergeProfile(session.profile, {
         username: usernameFromCredential(username, session.profile.username),
       }),
@@ -200,6 +207,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     await persist({
       authenticated: true,
       themePreference: session.themePreference,
+      language: session.language,
       profile: mergeProfile(session.profile, updates),
     });
   }, [persist, session]);
@@ -215,6 +223,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     await persist({ ...session, themePreference });
   }, [persist, session]);
 
+  const setLanguage = useCallback(async (language: AppLanguage) => {
+    await persist({ ...session, language });
+  }, [persist, session]);
+
   const logout = useCallback(async () => {
     await persist({ ...session, authenticated: false });
   }, [persist, session]);
@@ -224,13 +236,15 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     authenticated: session.authenticated,
     hydrated,
     themePreference: session.themePreference,
+    language: session.language,
     mode,
     signIn,
     signUp,
     updateProfile,
     setThemePreference,
+    setLanguage,
     logout,
-  }), [hydrated, logout, mode, session, setThemePreference, signIn, signUp, updateProfile]);
+  }), [hydrated, logout, mode, session, setLanguage, setThemePreference, signIn, signUp, updateProfile]);
 
   return (
     <AppStateContext.Provider value={value}>

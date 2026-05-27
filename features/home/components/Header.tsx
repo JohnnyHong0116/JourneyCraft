@@ -4,6 +4,7 @@ import { Icon, SemanticIcon } from '@/components/Icon';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/theme/designSystem';
 import { AppPalette } from '@/components/layout/AppScreen';
 import { useAppState } from '@/state/AppStateContext';
+import { useTranslation } from '@/i18n/useTranslation';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -25,6 +26,7 @@ export const Header: React.FC<HeaderProps> = ({
   sortButtonRef,
 }) => {
   const { mode } = useAppState();
+  const { t } = useTranslation();
   const palette = AppPalette[mode];
   const styles = createStyles(palette);
   return (
@@ -32,28 +34,29 @@ export const Header: React.FC<HeaderProps> = ({
       <View style={styles.topSection}>
         <Text style={styles.appTitle}>JourneyCraft</Text>
         <View style={styles.headerIcons}>
-          <TouchableOpacity style={styles.iconButton} onPress={onSearch} activeOpacity={0.7}>
+          <TouchableOpacity accessibilityLabel={t('home.search')} style={styles.iconButton} onPress={onSearch} activeOpacity={0.7}>
             <SemanticIcon name="search-outline" size={21} color={palette.text} />
           </TouchableOpacity>
           <TouchableOpacity 
             ref={sortButtonRef}
+            accessibilityLabel={t('home.sort')}
             style={styles.iconButton} 
             onPress={onSort} 
             activeOpacity={0.7}
           >
             <Icon name="sort" size={21} color={palette.text} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton} onPress={onViewChange} activeOpacity={0.7}>
+          <TouchableOpacity accessibilityLabel={t('home.calendarView')} style={styles.iconButton} onPress={onViewChange} activeOpacity={0.7}>
             <SemanticIcon name="calendar-outline" size={21} color={palette.text} />
           </TouchableOpacity>
         </View>
       </View>
       <View style={styles.segmentedControl}>
         <TouchableOpacity style={[styles.segment, selectedTab === 'visited' && styles.activeSegment]} onPress={() => onTabChange('visited')} activeOpacity={0.8}>
-          <Text style={[styles.segmentText, selectedTab === 'visited' && styles.activeSegmentText]}>Visited</Text>
+          <Text style={[styles.segmentText, selectedTab === 'visited' && styles.activeSegmentText]}>{t('common.visited')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.segment, selectedTab === 'planned' && styles.activeSegment]} onPress={() => onTabChange('planned')} activeOpacity={0.8}>
-          <Text style={[styles.segmentText, selectedTab === 'planned' && styles.activeSegmentText]}>Planned</Text>
+          <Text style={[styles.segmentText, selectedTab === 'planned' && styles.activeSegmentText]}>{t('common.planned')}</Text>
         </TouchableOpacity>
       </View>
     </View>

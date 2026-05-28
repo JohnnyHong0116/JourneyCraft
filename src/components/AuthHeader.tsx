@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Colors, Spacing, Typography } from '../theme/designSystem';
+import { BrandLogo } from '../brand/BrandLogo';
 
 interface AuthHeaderProps {
 	title?: string;
@@ -13,7 +14,7 @@ const AuthHeader: React.FC<AuthHeaderProps> = ({
 }) => {
 	return (
 		<View style={styles.container}>
-			<Text style={styles.logo}>JourneyCraft</Text>
+			<BrandLogo width={236} style={styles.logo} />
 			<Text style={styles.title}>{title}</Text>
 			<Text style={styles.subtitle}>{subtitle}</Text>
 		</View>
@@ -27,9 +28,7 @@ const styles = StyleSheet.create({
 		marginBottom: Spacing.xl,
 	},
 	logo: {
-		fontSize: Typography.fontSize.xl,
-		fontWeight: 'bold',
-		color: Colors.black,
+		height: 82,
 		marginBottom: Spacing.md,
 	},
 	title: {

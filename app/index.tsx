@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
-import { AppPalette, AppScreen } from '@/components/layout/AppScreen';
+import { AppScreen } from '@/components/layout/AppScreen';
+import { BrandLogo } from '@/brand/BrandLogo';
 
 export default function Index() {
   useEffect(() => {
@@ -12,7 +13,7 @@ export default function Index() {
   return (
     <AppScreen>
       <View style={styles.brandWrap}>
-        <Text style={styles.brand}>JourneyCraft</Text>
+        <BrandLogo width={260} />
       </View>
     </AppScreen>
   );
@@ -20,5 +21,4 @@ export default function Index() {
 
 const styles = StyleSheet.create({
   brandWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  brand: { fontSize: 25, fontWeight: '700', color: AppPalette.light.text },
 });

@@ -36,7 +36,7 @@ export default function BottomNavBar() {
 
   // 直接从 tokens 读取单个颜色字符串（避免类型不匹配）
   const palette = colors[mode];
-  const navBg = palette.navbar;
+  const glassBg = mode === 'dark' ? 'rgba(18,18,18,0.62)' : 'rgba(255,255,255,0.72)';
   const iconActive = palette.navbarSelected;
   const iconInactive = palette.navbarUnselected;
   const fabBg = palette.addButton;
@@ -51,8 +51,8 @@ export default function BottomNavBar() {
   const FAB_BOTTOM_ABS = FAB_BOTTOM + insets.bottom; // 合并手势区后，FAB 需要上移 insets.bottom
 
   // 顶部羽化高度（像素）
-  const FEATHER_PX = 16;
-  const BLUR_TOTAL_H = BAR_HEIGHT + insets.bottom + 12;
+  const FEATHER_PX = 38;
+  const BLUR_TOTAL_H = BAR_HEIGHT + insets.bottom + 34;
   const FEATHER_OFFSET_PERCENT = `${(FEATHER_PX / BLUR_TOTAL_H) * 100}%`;
 
   return (
@@ -62,49 +62,53 @@ export default function BottomNavBar() {
     >
       {/* 0) 透明模糊：覆盖底部区域，但在 NavBar 与 FAB 之下（不着色） + 顶部羽化 */}
       <View style={[styles.blurArea, { height: BLUR_TOTAL_H }]}>
-        <MaskedView
-          style={StyleSheet.absoluteFill}
-          maskElement={
-            <Svg width={width} height={BLUR_TOTAL_H} viewBox={`0 0 ${width} ${BLUR_TOTAL_H}`} preserveAspectRatio="none">
-              <Defs>
-                {/* 顶部向下的透明→不透明渐变，形成羽化 */}
-                <LinearGradient id="fadeMask" x1="0" y1="0" x2="0" y2="1">
-                  <Stop offset="0%" stopColor="#000" stopOpacity="0" />
-                  <Stop offset={FEATHER_OFFSET_PERCENT} stopColor="#000" stopOpacity="1" />
-                  <Stop offset="100%" stopColor="#000" stopOpacity="1" />
-                </LinearGradient>
-              </Defs>
-              {/* 用 alpha 渐变做 Mask：透明=隐藏，非透明=显示 */}
-              <Rect x="0" y="0" width="100%" height="100%" fill="url(#fadeMask)" />
-            </Svg>
-          }
-        >
-          <BlurView
-            tint={mode === 'dark' ? 'dark' : Platform.OS === 'ios' ? 'extraLight' : 'light'}
-            intensity={80}
+        {Platform.OS === 'web' ? (
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: glassBg }]} />
+        ) : (
+          <MaskedView
             style={StyleSheet.absoluteFill}
-          />
-          {/* 统一加 10% 白色蒙版，不受明暗模式影响 */}
-          <View
-            pointerEvents="none"
-            style={[StyleSheet.absoluteFill, { backgroundColor: mode === 'dark' ? 'rgba(0,0,0,0.12)' : Platform.OS === 'ios' ? 'rgba(255,255,255,0.1)' : 'rgba(230, 230, 230, 0.3)' }]}
-          />
-        </MaskedView>
+            maskElement={
+              <Svg width={width} height={BLUR_TOTAL_H} viewBox={`0 0 ${width} ${BLUR_TOTAL_H}`} preserveAspectRatio="none">
+                <Defs>
+                  {/* 顶部向下的透明→不透明渐变，形成羽化 */}
+                  <LinearGradient id="fadeMask" x1="0" y1="0" x2="0" y2="1">
+                    <Stop offset="0%" stopColor="#000" stopOpacity="0" />
+                    <Stop offset={FEATHER_OFFSET_PERCENT} stopColor="#000" stopOpacity="1" />
+                    <Stop offset="100%" stopColor="#000" stopOpacity="1" />
+                  </LinearGradient>
+                </Defs>
+                {/* 用 alpha 渐变做 Mask：透明=隐藏，非透明=显示 */}
+                <Rect x="0" y="0" width="100%" height="100%" fill="url(#fadeMask)" />
+              </Svg>
+            }
+          >
+            <BlurView
+              tint={mode === 'dark' ? 'dark' : Platform.OS === 'ios' ? 'extraLight' : 'light'}
+              intensity={Platform.OS === 'android' ? 72 : 90}
+              style={StyleSheet.absoluteFill}
+            />
+            {/* Subtle matte only; the mask above creates the progressive fade. */}
+            <View
+              pointerEvents="none"
+              style={[StyleSheet.absoluteFill, { backgroundColor: mode === 'dark' ? 'rgba(0,0,0,0.10)' : Platform.OS === 'ios' ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.34)' }]}
+            />
+          </MaskedView>
+        )}
       </View>
 
       {/* 1) 底栏形状与阴影（包含手势区） */}
       <View style={[styles.barWrap, { width, height: BAR_HEIGHT + insets.bottom + 16 }]}>
         {/* 顶部"凹槽"形状区域（保持原尺寸，不拉伸） */}
-        <MaskedView
-          style={[{ position: 'absolute', left: 0, right: 0, top: 0, height: BAR_HEIGHT + 16, zIndex: 1 }]}
-          maskElement={
-            <Svg width={width} height={BAR_HEIGHT + 16} viewBox="0 0 390 132" preserveAspectRatio="none">
-              <Path d={NOTCH_PATH} fill="#000" />
-            </Svg>
-          }
+        <Svg
+          pointerEvents="none"
+          width={width}
+          height={BAR_HEIGHT + 16}
+          viewBox="0 0 390 132"
+          preserveAspectRatio="none"
+          style={[{ position: 'absolute', left: 0, right: 0, top: 0, zIndex: 1 }]}
         >
-          <View style={[StyleSheet.absoluteFill, { backgroundColor: navBg, opacity: 1 }]} />
-        </MaskedView>
+          <Path d={NOTCH_PATH} fill={glassBg} />
+        </Svg>
 
         {/* 手势区填充：与 navbar 同色，避免色差/黑条 */}
         <View
@@ -112,7 +116,7 @@ export default function BottomNavBar() {
             position: 'absolute',
             left: 0, right: 0, bottom: 0,
             height: insets.bottom,
-            backgroundColor: navBg,
+            backgroundColor: glassBg,
             zIndex: 1,
           }}
         />

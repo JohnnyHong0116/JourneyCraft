@@ -21,7 +21,7 @@ export default function LocationTab() {
       <ContentContainer style={styles.content}>
         <View style={styles.header}>
           <Text style={styles.title}>Map</Text>
-          <Pressable style={styles.search} onPress={() => router.push('/search')}>
+          <Pressable style={styles.search} onPress={() => router.push({ pathname: '/search', params: { origin: 'map' } })}>
             <SemanticIcon name="search" size={19} color={palette.secondaryText} />
             <Text style={styles.searchText}>Search places and entries</Text>
           </Pressable>

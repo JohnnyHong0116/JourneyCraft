@@ -1,4 +1,4 @@
-import type { PlannedTrip } from '../../src/types/plannedTrip.ts';
+import type { ItineraryEntry, PlannedTrip } from '../../src/types/plannedTrip.ts';
 
 export type PlannedDateMarker = 'none' | 'middle' | 'endpoint';
 
@@ -48,6 +48,51 @@ export function getChecklistProgress(plan: PlannedTrip): ChecklistProgress {
     }),
     { completed: 0, pending: 0, notStarted: 0, total: 0 },
   );
+}
+
+export function getChecklistProgressPercent(plan: PlannedTrip): number {
+  const progress = getChecklistProgress(plan);
+  return progress.total === 0 ? 0 : Math.round((progress.completed / progress.total) * 100);
+}
+
+export function getNextItineraryEntry(plan: PlannedTrip) {
+  return [...plan.itineraryEntries].sort((left, right) => (
+    `${left.date}-${left.time ?? ''}`.localeCompare(`${right.date}-${right.time ?? ''}`)
+  ))[0];
+}
+
+export function getPlannedTripById(plans: readonly PlannedTrip[], id?: string): PlannedTrip | undefined {
+  return plans.find((plan) => plan.id === id);
+}
+
+export function createPlannedItineraryEntry(
+  plan: PlannedTrip,
+  id: string,
+  draft: { title: string; date: string; time?: string; location?: string },
+): ItineraryEntry | undefined {
+  const title = draft.title.trim();
+  if (!title) return undefined;
+  const date = draft.date || plan.startDate;
+  const dayNumber = Math.max(1, Math.floor((keyToDate(date).getTime() - keyToDate(plan.startDate).getTime()) / 86_400_000) + 1);
+  const time = draft.time?.trim();
+  const location = draft.location?.trim();
+  return {
+    id,
+    title,
+    type: 'activity',
+    date,
+    dayNumber,
+    ...(time ? { time } : {}),
+    ...(location ? { location } : {}),
+  };
+}
+
+export function addPlannedCompanion(companions: readonly string[] | undefined, draft: string): string[] {
+  const name = draft.trim();
+  if (!name || (companions ?? []).some((person) => person.toLowerCase() === name.toLowerCase())) {
+    return [...(companions ?? [])];
+  }
+  return [...(companions ?? []), name];
 }
 
 export function getDaysUntilDeparture(startDate: string, today: Date): number {

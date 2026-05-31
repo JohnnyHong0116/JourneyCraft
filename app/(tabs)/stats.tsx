@@ -338,14 +338,14 @@ function MonthlyStats({ stats }: { stats: StatisticsSummary }) {
         <TravelDayRing percentage={stats.travelDayPercentage ?? 0} />
       </SurfaceCard>
       <Pressable accessibilityRole="button" onPress={() => router.push('/(tabs)/location')}>
-        <SurfaceCard style={styles.monthlyInfoCard}>
-          <StatIconBadge icon="location" />
+        <SurfaceCard style={[styles.monthlyInfoCard, styles.countriesCitiesCard]}>
+          <StatIconBadge icon="location" compact />
           <View style={styles.monthlyInfoCopy}>
-            <Text style={styles.monthlyInfoTitle}>{t('stats.countriesCities')}</Text>
-            <Text style={styles.monthlyInfoSubtitle}>{t('stats.traveledToCountries', { count: stats.countryCount })}</Text>
-            <Text style={styles.monthlyInfoSubtitle}>{t('stats.traveledToCities', { count: stats.cityCount })}</Text>
+            <Text style={[styles.monthlyInfoTitle, styles.countriesCitiesTitle]}>{t('stats.countriesCities')}</Text>
+            <Text style={[styles.monthlyInfoSubtitle, styles.countriesCitiesSubtitle]}>{t('stats.traveledToCountries', { count: stats.countryCount })}</Text>
+            <Text style={[styles.monthlyInfoSubtitle, styles.countriesCitiesSubtitle]}>{t('stats.traveledToCities', { count: stats.cityCount })}</Text>
           </View>
-          <SemanticIcon name="chevron-forward" size={30} color={palette.text} />
+          <SemanticIcon name="chevron-forward" size={24} color={palette.secondaryText} />
         </SurfaceCard>
       </Pressable>
       <MoodCard title={t('stats.moodBar')} distribution={stats.moodDistribution} />
@@ -353,13 +353,13 @@ function MonthlyStats({ stats }: { stats: StatisticsSummary }) {
   );
 }
 
-function StatIconBadge({ icon }: { icon: 'airplane' | 'location' }) {
+function StatIconBadge({ icon, compact = false }: { icon: 'airplane' | 'location'; compact?: boolean }) {
   const { mode } = useAppState();
   const palette = AppPalette[mode];
   const styles = createStyles(palette);
   return (
-    <View style={styles.statIconBadge}>
-      <SemanticIcon name={icon} size={34} color="#FFFFFF" />
+    <View style={[styles.statIconBadge, compact && styles.statIconBadgeCompact]}>
+      <SemanticIcon name={icon} size={compact ? 27 : 34} color="#FFFFFF" />
     </View>
   );
 }
@@ -544,9 +544,8 @@ function MoodFlowCard({ points }: { points: ReturnType<typeof getMonthlyMoodFlow
       <Text style={styles.cardTitle}>{t('stats.moodFlow')}</Text>
       <View style={styles.moodLegend}>
         {EMOTIONS.map((emotion) => (
-          <View key={emotion.id} style={styles.moodLegendItem}>
-            <Icon name={emotion.icon} size={18} />
-            <Text style={styles.moodLegendText} numberOfLines={1}>{emotion.label}</Text>
+          <View key={emotion.id} accessible accessibilityLabel={emotion.label} style={styles.moodLegendItem}>
+            <Icon name={emotion.icon} size={21} />
           </View>
         ))}
       </View>
@@ -677,22 +676,24 @@ function ExpenseDrawer({
   }), [height, onDismiss, onSnapChange, snap, snapPoints]);
 
   return (
-    <Animated.View style={[styles.drawer, { height }]} {...panResponder.panHandlers}>
+    <Animated.View style={[styles.drawer, { height }]}>
       <BlurView
         tint={mode === 'dark' ? 'dark' : 'extraLight'}
         intensity={Platform.OS === 'android' ? 60 : 88}
         style={StyleSheet.absoluteFill}
       />
       <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.drawerTint]} />
-      <View style={styles.handle} />
-      <View style={styles.drawerHeader}>
-        <View>
-          <Text style={styles.drawerTitle}>{t('stats.selectTrips')}</Text>
-          <Text style={styles.meta}>{periodLabel} | {t('stats.tripsCount', { count: stats.expenseRecords.length })}</Text>
+      <View style={styles.drawerDragArea} {...panResponder.panHandlers}>
+        <View style={styles.handle} />
+        <View style={styles.drawerHeader}>
+          <View>
+            <Text style={styles.drawerTitle}>{t('stats.selectTrips')}</Text>
+            <Text style={styles.meta}>{periodLabel} | {t('stats.tripsCount', { count: stats.expenseRecords.length })}</Text>
+          </View>
+          <Pressable accessibilityRole="button" accessibilityLabel={t('stats.addExpense')} onPress={() => router.push('/expenses/new')} style={styles.addButton}>
+            <SemanticIcon name="add" size={23} color={palette.text} />
+          </Pressable>
         </View>
-        <Pressable accessibilityRole="button" accessibilityLabel={t('stats.addExpense')} onPress={() => router.push('/expenses/new')} style={styles.addButton}>
-          <SemanticIcon name="add" size={23} color={palette.text} />
-        </Pressable>
       </View>
       <FlatList
         data={stats.expenseRecords}
@@ -777,9 +778,13 @@ const createStyles = (palette: typeof AppPalette.light | typeof AppPalette.dark)
     alignItems: 'center',
     justifyContent: 'center',
   },
+  statIconBadgeCompact: { width: 58, height: 58, borderRadius: 29 },
   monthlyInfoCopy: { flex: 1, gap: 7 },
   monthlyInfoTitle: { color: palette.text, fontSize: 24, fontWeight: '800', letterSpacing: -0.4 },
   monthlyInfoSubtitle: { color: palette.text, fontSize: 17, lineHeight: 23, fontWeight: '500' },
+  countriesCitiesCard: { minHeight: 96, gap: Spacing.md, paddingVertical: Spacing.md },
+  countriesCitiesTitle: { fontSize: 20, letterSpacing: 0 },
+  countriesCitiesSubtitle: { fontSize: 15, lineHeight: 19, color: palette.secondaryText },
   metric: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, flex: 1 },
   metricCopy: { flex: 1 },
   metricValue: { fontSize: Typography.fontSize.md, fontWeight: '700', color: palette.text },
@@ -810,9 +815,8 @@ const createStyles = (palette: typeof AppPalette.light | typeof AppPalette.dark)
   monthLabel: { fontSize: 10, color: palette.secondaryText, textAlign: 'center' },
   metricsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.md },
   metricTile: { width: '47.5%', minHeight: 105, justifyContent: 'center', padding: Spacing.md },
-  moodLegend: { flexDirection: 'row', flexWrap: 'wrap', gap: 9, alignItems: 'center' },
-  moodLegendItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  moodLegendText: { color: palette.text, fontSize: 13, fontWeight: '700', maxWidth: 82 },
+  moodLegend: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  moodLegendItem: { width: 32, height: 26, alignItems: 'center', justifyContent: 'center' },
   moodFlowBars: { height: 184, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', paddingTop: Spacing.sm },
   moodFlowColumn: { alignItems: 'center', gap: 8, width: 20 },
   moodFlowTrack: { height: 146, width: 16, borderRadius: 10, overflow: 'hidden', backgroundColor: palette.cardMuted, flexDirection: 'column-reverse' },
@@ -831,7 +835,8 @@ const createStyles = (palette: typeof AppPalette.light | typeof AppPalette.dark)
     paddingBottom: NAV_GAP,
     ...Shadows.medium,
   },
-  drawerTint: { backgroundColor: Platform.OS === 'ios' ? 'rgba(255,255,255,0.84)' : 'rgba(255,255,255,0.88)' },
+  drawerTint: { backgroundColor: withAlpha(palette.card, Platform.OS === 'ios' ? 0.86 : 0.92) },
+  drawerDragArea: { width: '100%' },
   handle: { alignSelf: 'center', width: 56, height: 4, borderRadius: 3, backgroundColor: withAlpha(palette.text, 0.32), marginBottom: Spacing.md },
   drawerHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.md },
   drawerTitle: { color: palette.text, fontSize: Typography.fontSize.lg, fontWeight: '700' },

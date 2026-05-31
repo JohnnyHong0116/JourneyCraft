@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Icon, SemanticIcon } from '@/components/Icon';
 import { router, useLocalSearchParams } from 'expo-router';
 import { AppPalette, AppScreen, ContentContainer, SurfaceCard } from '@/components/layout/AppScreen';
@@ -13,9 +13,10 @@ import type { Trip, TripMood } from '@/types/trip';
 import { PeopleSelector } from '../../features/search/components/PeopleSelector';
 import {
   filterHomeTrips,
-  getHomeTimelineReturnParams,
+  getSearchReturnHref,
   getHomeSearchTrips,
   getSearchCategoriesForMode,
+  resolveSearchOrigin,
   resolveHomeTimelineMode,
   type HomeSearchCategory,
   type HomeTimelineMode,
@@ -45,8 +46,9 @@ export default function SearchResultScreen() {
   const { t } = useTranslation();
   const palette = AppPalette[mode];
   const styles = createStyles(palette);
-  const params = useLocalSearchParams<{ category?: string; timelineMode?: HomeTimelineMode; query?: string }>();
+  const params = useLocalSearchParams<{ category?: string; timelineMode?: HomeTimelineMode; origin?: string; query?: string }>();
   const timelineMode = resolveHomeTimelineMode(params.timelineMode);
+  const origin = resolveSearchOrigin(params.origin);
   const requestedCategory = resolveCategory(params.category);
   const category = getSearchCategoriesForMode(timelineMode).includes(requestedCategory)
     ? requestedCategory
@@ -73,10 +75,10 @@ export default function SearchResultScreen() {
   };
 
   return (
-    <AppScreen scroll bottomInset={Spacing.xxl}>
-      <ContentContainer style={styles.content}>
+    <AppScreen keyboardSafe>
+      <ContentContainer style={styles.chrome}>
         <View style={styles.searchRow}>
-          <Pressable onPress={() => router.back()}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Back to search filters" onPress={() => router.back()} style={styles.backButton}>
             <SemanticIcon name="chevron-back" size={25} color={palette.text} />
           </Pressable>
           <View style={styles.search}>
@@ -108,14 +110,13 @@ export default function SearchResultScreen() {
               </Pressable>
             ) : null}
           </View>
-          <Pressable onPress={() => router.replace({
-            pathname: '/(tabs)/home',
-            params: getHomeTimelineReturnParams(timelineMode),
-          })}>
+          <Pressable accessibilityRole="button" onPress={() => router.dismissTo(getSearchReturnHref(origin, timelineMode) as any)}>
             <Text style={styles.cancel}>{t('search.cancel')}</Text>
           </Pressable>
         </View>
-
+      </ContentContainer>
+      <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        <ContentContainer style={styles.content}>
         <Text style={styles.heading}>{t('search.inTimeline', { filter: t(detail.label), timeline: timelineLabel })}</Text>
 
         {category === 'emotion' ? (
@@ -170,7 +171,8 @@ export default function SearchResultScreen() {
             <Text style={styles.emptyCopy}>{t('search.noMatches', { timeline: timelineLabel.toLowerCase() })}</Text>
           </SurfaceCard>
         )}
-      </ContentContainer>
+        </ContentContainer>
+      </ScrollView>
     </AppScreen>
   );
 }
@@ -254,14 +256,17 @@ function SearchTripResult({
 }
 
 const createStyles = (palette: typeof AppPalette.light | typeof AppPalette.dark) => StyleSheet.create({
-  content: { paddingTop: Spacing.sm, gap: Spacing.lg },
+  chrome: { paddingTop: Spacing.sm, paddingBottom: Spacing.md, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: palette.divider },
+  scrollContent: { paddingTop: Spacing.lg, paddingBottom: Spacing.xxl },
+  content: { gap: Spacing.lg },
   searchRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
-  search: { flex: 1, minHeight: 40, flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 10, backgroundColor: palette.cardMuted, paddingHorizontal: Spacing.sm },
+  backButton: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center', backgroundColor: palette.cardMuted },
+  search: { flex: 1, minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 26, backgroundColor: palette.card, borderWidth: StyleSheet.hairlineWidth, borderColor: palette.divider, paddingHorizontal: Spacing.md },
   query: { flex: 1, fontSize: Typography.fontSize.md, color: palette.text },
   input: { flex: 1, paddingVertical: 0, fontSize: Typography.fontSize.sm, color: palette.text },
   peopleToken: { height: 30, paddingHorizontal: Spacing.sm, flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 7, backgroundColor: '#39413d' },
   peopleTokenText: { color: '#ffffff', fontSize: Typography.fontSize.sm, fontWeight: '600' },
-  cancel: { fontSize: Typography.fontSize.sm, color: '#3366ff' },
+  cancel: { fontSize: Typography.fontSize.sm, color: palette.accentStrong, fontWeight: '700' },
   heading: { fontSize: Typography.fontSize.xl, fontWeight: '700', color: palette.text },
   emotionPicker: {
     minHeight: 62,

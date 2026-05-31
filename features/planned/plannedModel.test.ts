@@ -4,11 +4,16 @@ import { plannedTripCards } from '../../src/data/appData.ts';
 import type { PlannedTrip } from '../../src/types/plannedTrip.ts';
 import {
   PLANNED_DRAWER_STACK_OVERLAP,
+  addPlannedCompanion,
+  createPlannedItineraryEntry,
   getChecklistProgress,
+  getChecklistProgressPercent,
   getDaysUntilDeparture,
+  getNextItineraryEntry,
   getPlannedCalendarRange,
   getPlannedDateMarker,
   getPlannedDrawerStackLayer,
+  getPlannedTripById,
   getPlannedTripsForDate,
   getPlannedTripsForDateRange,
   getUpcomingPlannedTrips,
@@ -84,6 +89,37 @@ test('checklist progress uses meaningful completed, pending, and remaining count
     total: 4,
   });
   assert.equal(getDaysUntilDeparture(plans[1].startDate, new Date(2026, 4, 27)), 58);
+});
+
+test('planned-card summaries resolve the correct plan, completion percentage, and next itinerary stop', () => {
+  const plan = plannedTripCards[0]!;
+
+  assert.equal(getPlannedTripById(plannedTripCards, plan.id)?.title, plan.title);
+  assert.equal(getPlannedTripById(plannedTripCards, 'missing-plan'), undefined);
+  assert.equal(getChecklistProgressPercent(plan), 40);
+  assert.deepEqual(getNextItineraryEntry(plan), plan.itineraryEntries[0]);
+});
+
+test('new itinerary stops and travelers are normalized for inline plan editing', () => {
+  const plan = plannedTripCards[0]!;
+
+  assert.deepEqual(createPlannedItineraryEntry(plan, 'new-stop', {
+    title: '  Museum visit ',
+    date: '2026-07-26',
+    time: ' 14:30 ',
+    location: '  Wuhou District ',
+  }), {
+    id: 'new-stop',
+    title: 'Museum visit',
+    type: 'activity',
+    date: '2026-07-26',
+    dayNumber: 3,
+    time: '14:30',
+    location: 'Wuhou District',
+  });
+  assert.equal(createPlannedItineraryEntry(plan, 'blank-stop', { title: '   ', date: plan.startDate }), undefined);
+  assert.deepEqual(addPlannedCompanion(['Amily'], ' Johnny '), ['Amily', 'Johnny']);
+  assert.deepEqual(addPlannedCompanion(['Amily'], 'amily'), ['Amily']);
 });
 
 test('planned calendar covers future planned months and identifies range marker roles', () => {

@@ -6,7 +6,9 @@ import {
   filterHomeTrips,
   getHomeSearchTrips,
   getHomeTimelineReturnParams,
+  getSearchReturnHref,
   getSearchCategoriesForMode,
+  resolveSearchOrigin,
   resolveHomeTimelineMode,
 } from './homeSearchModel.ts';
 
@@ -30,6 +32,16 @@ test('search cancel round-trips the originating Home timeline mode', () => {
   assert.equal(resolveHomeTimelineMode(getHomeTimelineReturnParams('planned').timelineMode), 'planned');
   assert.equal(resolveHomeTimelineMode(getHomeTimelineReturnParams('visited').timelineMode), 'visited');
   assert.equal(resolveHomeTimelineMode(undefined), 'visited');
+});
+
+test('search returns to its originating tab instead of always returning home', () => {
+  assert.equal(resolveSearchOrigin('map'), 'map');
+  assert.equal(resolveSearchOrigin(undefined), 'home');
+  assert.deepEqual(getSearchReturnHref('map', 'visited'), { pathname: '/(tabs)/location' });
+  assert.deepEqual(getSearchReturnHref('home', 'planned'), {
+    pathname: '/(tabs)/home',
+    params: { timelineMode: 'planned' },
+  });
 });
 
 test('planned search exposes only trip-planning relevant categories', () => {

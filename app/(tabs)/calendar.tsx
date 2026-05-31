@@ -78,7 +78,7 @@ export default function CalendarTab() {
       <ContentContainer style={styles.content}>
         <View style={styles.top}>
           <Text style={styles.title}>JourneyCraft</Text>
-          <Pressable style={styles.circle} onPress={() => router.replace('/(tabs)/home')}>
+          <Pressable style={styles.circle} onPress={() => router.back()}>
             <SemanticIcon name="list-outline" size={22} color={palette.text} />
           </Pressable>
         </View>

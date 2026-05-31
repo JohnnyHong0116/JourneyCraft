@@ -86,7 +86,7 @@ export default function HomeTab() {
   }, []);
 
   const handleSearch = () => {
-    router.push({ pathname: '/search', params: { timelineMode: selectedTab } });
+    router.push({ pathname: '/search', params: { timelineMode: selectedTab, origin: 'home' } });
   };
 
   const handleSort = () => {

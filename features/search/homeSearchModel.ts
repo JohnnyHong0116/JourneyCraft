@@ -6,6 +6,7 @@ import { dateRangeIntersects } from '../planned/plannedModel.ts';
 import { tripMatchesPeople } from './peopleSearchModel.ts';
 
 export type HomeTimelineMode = 'visited' | 'planned';
+export type SearchOrigin = 'home' | 'map';
 export type HomeSearchCategory =
   | 'photos'
   | 'audio'
@@ -37,6 +38,19 @@ export function resolveHomeTimelineMode(value?: string | string[]): HomeTimeline
 
 export function getHomeTimelineReturnParams(mode: HomeTimelineMode): { timelineMode: HomeTimelineMode } {
   return { timelineMode: mode };
+}
+
+export function resolveSearchOrigin(value?: string | string[]): SearchOrigin {
+  return value === 'map' ? 'map' : 'home';
+}
+
+export function getSearchReturnHref(
+  origin: SearchOrigin,
+  mode: HomeTimelineMode,
+): { pathname: '/(tabs)/location' } | { pathname: '/(tabs)/home'; params: { timelineMode: HomeTimelineMode } } {
+  return origin === 'map'
+    ? { pathname: '/(tabs)/location' }
+    : { pathname: '/(tabs)/home', params: getHomeTimelineReturnParams(mode) };
 }
 
 export function getHomeSearchTrips(mode: HomeTimelineMode): Trip[] {

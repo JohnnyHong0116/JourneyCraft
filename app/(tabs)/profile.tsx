@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,6 @@ import {
   TouchableOpacity,
   Platform,
   Pressable,
-  Vibration,
   Alert,
   Linking,
 } from 'react-native';
@@ -31,8 +30,9 @@ import { BlurView } from 'expo-blur';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as ImageManipulator from 'expo-image-manipulator';
+import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Colors, Spacing, BorderRadius } from '@/theme/designSystem';
+import { Colors, Spacing, BorderRadius, Typography } from '@/theme/designSystem';
 import { Icon } from '@/components/Icon';
 import { router } from 'expo-router';
 import { galleryImages, getProfileMetrics, mockTrips, profileMemoryCategories } from '@/data/appData';
@@ -40,6 +40,12 @@ import { useAppState } from '@/state/AppStateContext';
 import { AppPalette } from '@/components/layout/AppScreen';
 import { ActionSheetModal, OverlayActionRow } from '@/components/ui/OverlaySurface';
 import { useTranslation } from '@/i18n/useTranslation';
+import {
+  getClosedCoverUri,
+  getProfileCoverHeight,
+  getRevealProgress,
+  shouldTriggerRevealHaptic,
+} from '../../features/profile/profileCoverModel';
 
 const { width } = Dimensions.get('window');
 
@@ -51,8 +57,8 @@ const AVATAR_OVERLAP = 32;
 const HIGHLIGHT_SIZE = 64;
 
 // how far the user must scroll up into content before collapsing the full image
-const COLLAPSE_AT = 64;  // try 64–96 for your taste
-const THRESHOLD = 120;   // unchanged: pull-down distance to reveal
+const COLLAPSE_AT = 96;
+const THRESHOLD = 120;
 
 // your real cover image URI
 const COVER_URI = 'https://picsum.photos/1200/1800'; // vertical example
@@ -81,8 +87,9 @@ const CustomCropInterface = ({
   const [cropArea, setCropArea] = useState({ x: 0, y: 0, width: 200, height: 150 });
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const cropAreaRef = useRef(cropArea);
+  const isDragging = useRef(false);
+  const dragStart = useRef({ x: 0, y: 0 });
 
   // Enforce banner aspect ratio
   const screenW = Dimensions.get('window').width;
@@ -126,12 +133,14 @@ const CustomCropInterface = ({
       const centerX = (width - cropWidth) / 2;
       const centerY = (height - cropHeight) / 2;
       
-      setCropArea({
+      const nextCropArea = {
         x: Math.max(0, centerX),
         y: Math.max(0, centerY),
         width: Math.min(cropWidth, width),
         height: Math.min(cropHeight, height)
-      });
+      };
+      cropAreaRef.current = nextCropArea;
+      setCropArea(nextCropArea);
     });
   }, [imageUri, BANNER_AR]);
 
@@ -142,36 +151,38 @@ const CustomCropInterface = ({
 
   const handleTouchStart = (event: any) => {
     const { locationX, locationY } = event.nativeEvent;
-    setDragStart({ x: locationX, y: locationY });
-    setIsDragging(true);
+    dragStart.current = { x: locationX, y: locationY };
+    isDragging.current = true;
   };
 
   const handleTouchMove = (event: any) => {
-    if (!isDragging) return;
+    if (!isDragging.current || !containerSize.width || !containerSize.height) return;
     
     const { locationX, locationY } = event.nativeEvent;
-    const deltaX = locationX - dragStart.x;
-    const deltaY = locationY - dragStart.y;
+    const deltaX = locationX - dragStart.current.x;
+    const deltaY = locationY - dragStart.current.y;
     
     // Convert screen coordinates to image coordinates
-    const scaleX = imageSize.width / containerSize.width;
-    const scaleY = imageSize.height / containerSize.height;
+    const containScale = Math.min(containerSize.width / imageSize.width, containerSize.height / imageSize.height);
     
     // For now, just move the crop area (maintain aspect ratio)
-    const newX = Math.max(0, Math.min(imageSize.width - cropArea.width, cropArea.x + deltaX * scaleX));
-    const newY = Math.max(0, Math.min(imageSize.height - cropArea.height, cropArea.y + deltaY * scaleY));
+    const currentCropArea = cropAreaRef.current;
+    const newX = Math.max(0, Math.min(imageSize.width - currentCropArea.width, currentCropArea.x + deltaX / containScale));
+    const newY = Math.max(0, Math.min(imageSize.height - currentCropArea.height, currentCropArea.y + deltaY / containScale));
     
-    setCropArea(prev => ({
-      ...prev,
+    const nextCropArea = {
+      ...currentCropArea,
       x: newX,
       y: newY
-    }));
+    };
+    cropAreaRef.current = nextCropArea;
+    setCropArea(nextCropArea);
     
-    setDragStart({ x: locationX, y: locationY });
+    dragStart.current = { x: locationX, y: locationY };
   };
 
   const handleTouchEnd = () => {
-    setIsDragging(false);
+    isDragging.current = false;
   };
 
   const handleCrop = () => {
@@ -179,18 +190,31 @@ const CustomCropInterface = ({
   };
 
   // Convert image coordinates to screen coordinates for display
+  const containScale = imageSize.width && imageSize.height
+    ? Math.min(containerSize.width / imageSize.width, containerSize.height / imageSize.height)
+    : 0;
+  const imageLeft = (containerSize.width - imageSize.width * containScale) / 2;
+  const imageTop = (containerSize.height - imageSize.height * containScale) / 2;
   const screenCropArea = {
-    x: (cropArea.x / imageSize.width) * containerSize.width,
-    y: (cropArea.y / imageSize.height) * containerSize.height,
-    width: (cropArea.width / imageSize.width) * containerSize.width,
-    height: (cropArea.height / imageSize.height) * containerSize.height,
+    x: imageLeft + cropArea.x * containScale,
+    y: imageTop + cropArea.y * containScale,
+    width: cropArea.width * containScale,
+    height: cropArea.height * containScale,
   };
 
   return (
     <View style={styles.cropOverlay}>
+      <View style={styles.cropHeader}>
+        <Pressable accessibilityRole="button" onPress={onCancel} style={styles.cropHeaderButton}>
+          <Text style={styles.cropHeaderButtonText}>Cancel</Text>
+        </Pressable>
+        <Text style={styles.cropTitle}>Position Cover</Text>
+        <Pressable accessibilityRole="button" onPress={handleCrop} style={styles.cropHeaderButton}>
+          <Text style={styles.cropHeaderDone}>Done</Text>
+        </Pressable>
+      </View>
       <View style={styles.cropContainer}>
-        <Text style={styles.cropTitle}>Select Cover Area</Text>
-        <Text style={styles.cropSubtitle}>Drag to move the selection. The crop will match your banner perfectly.</Text>
+        <Text style={styles.cropSubtitle}>Drag the frame to choose the visible cover area.</Text>
         
         <View 
           style={styles.imageContainer}
@@ -214,16 +238,11 @@ const CustomCropInterface = ({
                 height: screenCropArea.height,
               }
             ]}
-          />
-        </View>
-
-        <View style={styles.cropButtons}>
-          <TouchableOpacity style={styles.cropButton} onPress={onCancel}>
-            <Text style={styles.cropButtonText}>Cancel</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.cropButton, styles.cropButtonPrimary]} onPress={handleCrop}>
-            <Text style={[styles.cropButtonText, styles.cropButtonTextPrimary]}>Select</Text>
-          </TouchableOpacity>
+          >
+            <View style={[styles.cropGridLine, styles.cropGridLineVertical]} />
+            <View style={[styles.cropGridLine, styles.cropGridLineVertical, { left: '66.66%' }]} />
+            <View style={[styles.cropGridLine, styles.cropGridLineHorizontal]} />
+          </View>
         </View>
       </View>
     </View>
@@ -282,54 +301,38 @@ export default function ProfileTab() {
   const [libPerm, requestLibPerm] = ImagePicker.useMediaLibraryPermissions();
   const [camPerm, requestCamPerm] = ImagePicker.useCameraPermissions();
 
-  // get image aspect ratio so we can compute a true "full" height (no cropping)
-  const [imgH, setImgH] = useState<number | null>(null);
-  const [imgW, setImgW] = useState<number | null>(null);
-  useEffect(() => {
-    Image.getSize(
-      currentCoverUri,
-      (w, h) => { setImgW(w); setImgH(h); },
-      () => { setImgW(width); setImgH(Math.round(width * 1.33)); }
-    );
-  }, [currentCoverUri]);
-
   // base header includes safe-top so the cover sits under status bar
   const HEADER_BASE = useMemo(() => BANNER_CLOSED + insets.top, [insets.top]);
-
-  // full height = width * (imgH/imgW) + top inset (shows entire photo when revealed)
-  const FULL_HEIGHT = useMemo(() => {
-    if (!imgH || !imgW) return Math.max(HEADER_BASE, Math.round(width * 0.75) + insets.top);
-    return Math.max(HEADER_BASE, Math.round(width * (imgH / imgW)) + insets.top);
-  }, [imgH, imgW, insets.top, HEADER_BASE]);
+  const EXPANDED_HEIGHT = useMemo(() => Math.max(HEADER_BASE + THRESHOLD, Math.round(width * 1.12) + insets.top), [HEADER_BASE, insets.top]);
 
   // --- reanimated state ---
   const y = useSharedValue(0);            // scroll offset
-  const revealed = useSharedValue(0);     // 0 (closed) -> 1 (full open)
+  const revealed = useSharedValue(0);
+  const revealLocked = useSharedValue(false);
+  const thresholdTriggered = useSharedValue(false);
 
   // show/hide the scrim overlay only when revealed
   const [scrimActive, setScrimActive] = useState(false);
   useAnimatedReaction(
     () => revealed.value,
     (v) => {
-      const isActive = v > 0;
-      console.log('🎭 Scrim active:', isActive, 'revealed value:', v);
+      const isActive = v > 0.02;
       runOnJS(setScrimActive)(isActive);
     }
   );
 
   // Collapse helper
   const collapseCover = () => {
-    console.log('🎯 Tap detected! Collapsing cover...');
-    Vibration.vibrate(30); // Light haptic feedback for collapse
-    // animate cover back to closed height
-    revealed.value = withSpring(0, {
-      damping: 20,
-      stiffness: 100,
-      mass: 0.8,
-    });
-
-    // use Reanimated's UI-thread scrollTo to go back to top cleanly
+    revealed.value = withTiming(0, { duration: 220 });
+    revealLocked.value = false;
+    thresholdTriggered.value = false;
     scrollTo(scrollRef, 0, 0, true);
+  };
+
+  const playRevealHaptic = () => {
+    void Haptics.impactAsync(Platform.OS === 'ios'
+      ? Haptics.ImpactFeedbackStyle.Soft
+      : Haptics.ImpactFeedbackStyle.Light);
   };
 
   // util: ensure app folder exists, copy to a stable path, and persist
@@ -441,7 +444,9 @@ export default function ProfileTab() {
   const waitForSheetDismiss = () => new Promise((resolve) => setTimeout(resolve, Platform.OS === 'ios' ? 350 : 100));
 
   const settleProfilePosition = () => {
-    revealed.value = withSpring(0, { damping: 20, stiffness: 100, mass: 0.8 });
+    revealed.value = withTiming(0, { duration: 180 });
+    revealLocked.value = false;
+    thresholdTriggered.value = false;
     scrollTo(scrollRef, 0, 0, true);
   };
 
@@ -534,66 +539,59 @@ export default function ProfileTab() {
       const cy = e.contentOffset.y;
       y.value = cy;
 
-      // keep full reveal until you really scroll into content
-      if (revealed.value > 0 && cy >= COLLAPSE_AT) {
-        revealed.value = withSpring(0, {
-          damping: 20,
-          stiffness: 100,
-          mass: 0.8,
-        });
+      if (revealLocked.value) {
+        revealed.value = getRevealProgress(cy, COLLAPSE_AT);
+        if (revealed.value === 0) {
+          revealLocked.value = false;
+          thresholdTriggered.value = false;
+        }
+      } else if (shouldTriggerRevealHaptic(cy, THRESHOLD, thresholdTriggered.value)) {
+        thresholdTriggered.value = true;
+        runOnJS(playRevealHaptic)();
+      } else if (cy > -THRESHOLD + 16) {
+        thresholdTriggered.value = false;
       }
     },
     onEndDrag: (e: any) => {
-      // snap OPEN when pulled far enough
-      if (e.contentOffset.y < -THRESHOLD && revealed.value === 0) {
-        // Add haptic feedback when expanding
-        runOnJS(Vibration.vibrate)(50);
+      if (!revealLocked.value && thresholdTriggered.value && e.contentOffset.y <= -THRESHOLD) {
+        revealLocked.value = true;
         revealed.value = withSpring(1, {
-          damping: 15,
-          stiffness: 80,
-          mass: 1.2,
+          damping: 22,
+          stiffness: 180,
+          mass: 0.82,
         });
+        scrollTo(scrollRef, 0, 0, true);
+      } else if (!revealLocked.value) {
+        thresholdTriggered.value = false;
       }
     },
-    // no collapse on momentum alone — rely on actual offset into content
-    onMomentumEnd: () => {},
   });
 
-  // animated height: base + max(-y,0) + revealedDelta
   const coverStyle = useAnimatedStyle(() => {
-    const pull = Math.max(-y.value, 0);
-    const revealedDelta = revealed.value * (FULL_HEIGHT - HEADER_BASE);
-    return { height: HEADER_BASE + pull + revealedDelta };
+    return {
+      height: getProfileCoverHeight({
+        scrollY: revealLocked.value ? Math.max(y.value, 0) : Math.max(y.value, -THRESHOLD),
+        baseHeight: HEADER_BASE,
+        expandedHeight: EXPANDED_HEIGHT,
+        revealProgress: revealed.value,
+      }),
+    };
   });
 
   // fade out header content when cover is revealed
   const headerContentStyle = useAnimatedStyle(() => {
     // Calculate opacity based on pull distance, not just revealed state
     const pull = Math.max(-y.value, 0);
-    const maxPull = THRESHOLD; // Use threshold as the point where content should be fully faded
-    const fadeProgress = Math.min(pull / maxPull, 1); // 0 to 1 as you pull
-    
-    // Instead of dissolving, darken the content when expanded
-    // Keep content visible but with reduced opacity when background is expanded
-    const opacity = revealed.value === 1 ? 0.3 : (1 - fadeProgress * 0.7); // Darken to 30% opacity when fully revealed
-    
-    // Debug logging
-    console.log('🎨 Fade progress:', fadeProgress.toFixed(2), 'Opacity:', opacity.toFixed(2), 'Revealed:', revealed.value.toFixed(2));
-    
-    return { opacity };
+    const progress = Math.max(Math.min(pull / THRESHOLD, 1), revealed.value);
+    return { opacity: 1 - progress * 0.7 };
   });
 
   // dissolve buttons when cover is revealed (make them transparent)
   const buttonsStyle = useAnimatedStyle(() => {
     // Calculate opacity based on pull distance, not just revealed state
     const pull = Math.max(-y.value, 0);
-    const maxPull = THRESHOLD; // Use threshold as the point where content should be fully faded
-    const fadeProgress = Math.min(pull / maxPull, 1); // 0 to 1 as you pull
-    
-    // Buttons dissolve completely when expanded
-    const opacity = revealed.value === 1 ? 0 : (1 - fadeProgress); // Completely transparent when fully revealed
-    
-    return { opacity };
+    const progress = Math.max(Math.min(pull / THRESHOLD, 1), revealed.value);
+    return { opacity: 1 - progress };
   });
 
   // Change cover button style - appears when fully revealed
@@ -611,9 +609,7 @@ export default function ProfileTab() {
     return `${currentCoverUri}-${JSON.stringify(cropInfo)}`;
   }, [currentCoverUri, cropInfo]);
 
-  // Render logic: closed = cropped, revealed = full
-  const headerUri = scrimActive ? currentCoverUri : (croppedCoverUri ?? currentCoverUri);
-  const headerResizeMode = scrimActive ? 'contain' : 'cover';
+  const headerUri = getClosedCoverUri(croppedCoverUri, currentCoverUri);
 
   // Scrim overlay style - covers full screen when revealed, but excludes button area
   const scrimStyle = useAnimatedStyle(() => {
@@ -660,7 +656,7 @@ export default function ProfileTab() {
 
             <ImageBackground
               source={{ uri: headerUri }}
-              resizeMode={headerResizeMode}
+              resizeMode="cover"
               style={styles.coverImage}
               key={imageKey}                              // Force re-render when crop changes
             >
@@ -675,9 +671,8 @@ export default function ProfileTab() {
                 <TouchableOpacity 
                   style={styles.changeCoverButton} 
                   onPress={onPressChangeCover}
-                  onPressIn={() => console.log('🔘 Change Cover button pressed!')}
                 >
-                  <Icon name="photo-selected" size={20} color="#FFFFFF" />
+                  <Icon name="cardimage" size={20} color="#FFFFFF" />
                   <Text style={styles.changeCoverText}>{t('profile.changeCover')}</Text>
                 </TouchableOpacity>
               </Animated.View>
@@ -822,7 +817,7 @@ export default function ProfileTab() {
             <View style={styles.coverOverlay} />
             <View style={styles.changeCoverContainer}>
               <View style={styles.changeCoverButton}>
-                <Icon name="photo-selected" size={20} color="#FFFFFF" />
+                <Icon name="cardimage" size={20} color="#FFFFFF" />
                 <Text style={styles.changeCoverText}>{t('profile.changeCover')}</Text>
               </View>
             </View>
@@ -1063,37 +1058,54 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: '#050505',
     zIndex: 1000,
   },
+  cropHeader: {
+    minHeight: 92,
+    paddingTop: 44,
+    paddingHorizontal: Spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  cropHeaderButton: {
+    minWidth: 58,
+    minHeight: 40,
+    justifyContent: 'center',
+  },
+  cropHeaderButtonText: {
+    color: '#ffffff',
+    fontSize: Typography.fontSize.md,
+    fontWeight: '600',
+  },
+  cropHeaderDone: {
+    color: '#b7d58d',
+    fontSize: Typography.fontSize.md,
+    fontWeight: '700',
+    textAlign: 'right',
+  },
   cropContainer: {
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.lg,
-    padding: 20,
-    margin: 20,
-    maxWidth: width - 40,
-    maxHeight: '80%',
+    flex: 1,
+    justifyContent: 'center',
+    gap: Spacing.lg,
   },
   cropTitle: {
-    fontSize: 20,
+    fontSize: Typography.fontSize.md,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: '#ffffff',
     textAlign: 'center',
-    marginBottom: 8,
   },
   cropSubtitle: {
-    fontSize: 14,
-    color: Colors.textSecondary,
+    fontSize: Typography.fontSize.sm,
+    color: 'rgba(255,255,255,0.72)',
     textAlign: 'center',
-    marginBottom: 20,
+    paddingHorizontal: Spacing.xl,
   },
   imageContainer: {
     position: 'relative',
-    width: width - 80,
-    height: 300,
-    marginBottom: 20,
+    width,
+    height: Math.min(430, Math.round(width * 1.12)),
   },
   cropImage: {
     width: '100%',
@@ -1102,8 +1114,8 @@ const styles = StyleSheet.create({
   cropSelection: {
     position: 'absolute',
     borderWidth: 2,
-    borderColor: '#b7d58c',
-    backgroundColor: 'rgba(183, 213, 140, 0.2)',
+    borderColor: '#ffffff',
+    backgroundColor: 'rgba(183, 213, 140, 0.08)',
   },
   cropGrid: {
     position: 'absolute',
@@ -1126,33 +1138,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 1,
     top: '50%',
-  },
-  cropButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  cropButton: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.borderBrandTertiary,
-    alignItems: 'center',
-  },
-  cropButtonPrimary: {
-    backgroundColor: '#b7d58c',
-    borderColor: '#b7d58c',
-  },
-  cropButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.textPrimary,
-  },
-  cropButtonTextPrimary: {
-    color: '#FFFFFF',
-    fontWeight: '700',
   },
   divider: {
     height: 1,

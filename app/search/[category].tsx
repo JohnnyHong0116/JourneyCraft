@@ -33,7 +33,7 @@ const CATEGORY_DETAILS: Record<HomeSearchCategory, { label: TranslationKey; icon
   date: { label: 'search.filter.date', icon: 'calendar-outline', placeholder: 'search.input.date' },
   location: { label: 'search.filter.location', icon: 'location-outline', placeholder: 'search.input.location' },
   saved: { label: 'search.filter.saved', icon: 'heart-outline', placeholder: 'search.input.saved' },
-  people: { label: 'search.filter.people', icon: 'person-outline', placeholder: 'search.input.people' },
+  people: { label: 'search.filter.people', icon: 'cardperson', placeholder: 'search.input.people' },
   emotion: { label: 'search.filter.emotion', icon: 'happy', placeholder: 'search.input.emotion' },
 };
 
@@ -89,7 +89,7 @@ export default function SearchResultScreen() {
               <>
                 {category === 'people' ? (
                   <View style={styles.peopleToken}>
-                    <SemanticIcon name="people-outline" size={17} color="#ffffff" />
+                    <SemanticIcon name="cardperson" size={17} color="#ffffff" />
                     <Text style={styles.peopleTokenText}>{t('search.filter.people')}</Text>
                   </View>
                 ) : null}
@@ -233,7 +233,7 @@ function SearchTripResult({
             ) : null}
             {category === 'people' && matchedPeople.length > 0 ? (
               <View style={styles.match}>
-                <SemanticIcon name="people-outline" size={16} color={palette.accentStrong} />
+                <SemanticIcon name="cardperson" size={16} color={palette.accentStrong} />
                 <Text numberOfLines={1} style={styles.matchText}>
                   {t('search.withPeople', { people: matchedPeople.map((person) => formatPersonDisplayName(person.displayName)).join(', ') })}
                 </Text>

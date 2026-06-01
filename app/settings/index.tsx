@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { ScrollView, StyleSheet, Text } from 'react-native';
 import { router } from 'expo-router';
 import { AppPalette, AppScreen, ContentContainer, ScreenHeader } from '@/components/layout/AppScreen';
 import { settingsSections } from '@/data/mockApp';
@@ -16,9 +16,12 @@ export default function SettingsScreen() {
     router.replace('/auth/sign-in');
   };
   return (
-    <AppScreen scroll bottomInset={Spacing.xxl}>
-      <ContentContainer style={styles.content}>
+    <AppScreen bottomInset={0}>
+      <ContentContainer style={styles.header}>
         <ScreenHeader title="Settings" />
+      </ContentContainer>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+        <ContentContainer style={styles.content}>
         {settingsSections[0].items.map((item) => (
           <SettingsRow key={item.label} label={item.label} icon={item.icon} detail={'value' in item ? item.value : undefined} onPress={() => router.push(item.route as any)} />
         ))}
@@ -34,12 +37,15 @@ export default function SettingsScreen() {
         <Text style={[styles.section, { color: palette.text }]}>Log Out</Text>
         <SettingsRow label="Log Out" icon="log-out-outline" onPress={handleLogout} />
         <Text style={[styles.footer, { color: palette.secondaryText }]}>JourneyCraft v1{'\n'}All Rights Reserved 2025</Text>
-      </ContentContainer>
+        </ContentContainer>
+      </ScrollView>
     </AppScreen>
   );
 }
 
 const styles = StyleSheet.create({
+  header: { paddingTop: Spacing.sm },
+  scroll: { paddingBottom: Spacing.xxl },
   content: { paddingTop: Spacing.sm, gap: Spacing.md },
   section: { fontWeight: '700', fontSize: Typography.fontSize.md, marginTop: Spacing.lg },
   footer: { textAlign: 'center', lineHeight: 26, marginVertical: Spacing.xl },

@@ -1,4 +1,5 @@
 import type { ItineraryEntry, PlannedTrip } from '../../src/types/plannedTrip.ts';
+import { addCompanion } from '../people/peopleModel.ts';
 
 export type PlannedDateMarker = 'none' | 'middle' | 'endpoint';
 
@@ -88,11 +89,7 @@ export function createPlannedItineraryEntry(
 }
 
 export function addPlannedCompanion(companions: readonly string[] | undefined, draft: string): string[] {
-  const name = draft.trim();
-  if (!name || (companions ?? []).some((person) => person.toLowerCase() === name.toLowerCase())) {
-    return [...(companions ?? [])];
-  }
-  return [...(companions ?? []), name];
+  return addCompanion(companions, draft);
 }
 
 export function getDaysUntilDeparture(startDate: string, today: Date): number {

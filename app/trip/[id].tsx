@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import Animated, {
   Extrapolation,
   FadeIn,
@@ -20,6 +20,8 @@ import { mockTrips, statisticsExpenses } from '@/data/mockApp';
 import { useAppState } from '@/state/AppStateContext';
 import { BorderRadius, Shadows, Spacing, Typography } from '@/theme/designSystem';
 import { TRIP_UTILITY_TOOLBAR_HEIGHT, TripUtilityToolbar } from '@features/trip/TripUtilityToolbar';
+import { getPeopleIconName } from '../../features/people/peopleModel';
+import { loadCompanionOverrides } from '../../features/people/peopleStorage';
 import {
   formatTripTimestamp,
   getCompanionCluster,
@@ -47,6 +49,14 @@ export default function TripDetailScreen() {
   const [moreVisible, setMoreVisible] = useState(false);
   const scrollY = useSharedValue(0);
   const trip = getTripById(mockTrips, id);
+  const [companionNames, setCompanionNames] = useState<string[]>(() => trip?.companions ?? []);
+
+  useFocusEffect(useCallback(() => {
+    if (!id) return;
+    void loadCompanionOverrides().then((overrides) => {
+      if (Object.prototype.hasOwnProperty.call(overrides, id)) setCompanionNames(overrides[id] ?? []);
+    });
+  }, [id]));
 
   const scrollHandler = useAnimatedScrollHandler((event) => {
     scrollY.value = event.contentOffset.y;
@@ -73,8 +83,8 @@ export default function TripDetailScreen() {
     );
   }
 
-  const features = getTripFeatures(trip);
-  const companions = getCompanionCluster(trip.companions);
+  const features = getTripFeatures({ ...trip, companions: companionNames });
+  const companions = getCompanionCluster(companionNames);
   const expenseSummary = getTripExpenseSummary(statisticsExpenses, trip.id);
   const bottomReservedSpace = TRIP_UTILITY_TOOLBAR_HEIGHT + insets.bottom + 124;
   const mood = trip.mood ? getEmotionConfig(trip.mood) : undefined;
@@ -178,7 +188,7 @@ export default function TripDetailScreen() {
                     pressed && styles.pressed,
                   ]}
                 >
-                  <Icon name={featureIcons[feature.id]} size={21} color={expanded ? palette.accentStrong : palette.text} />
+                  <Icon name={feature.id === 'people' ? getPeopleIconName(companionNames) : featureIcons[feature.id]} size={21} color={expanded ? palette.accentStrong : palette.text} />
                   {expanded ? (
                     <Animated.Text entering={FadeIn.duration(150)} exiting={FadeOut.duration(100)} style={styles.featureValue}>
                       {feature.value}
@@ -257,7 +267,7 @@ function CompanionClusterButton({
         <View key={`${initial}-${index}`} style={[styles.initialAvatar, index > 0 && styles.overlapAvatar]}>
           <Text style={styles.initialText}>{initial}</Text>
         </View>
-      )) : <Icon name="profile-unselected" size={23} color={palette.text} />}
+      )) : <Icon name="cardperson" size={20} color={palette.text} />}
       {overflow ? (
         <View style={styles.peopleCount}><Text style={styles.peopleCountText}>+{overflow}</Text></View>
       ) : null}

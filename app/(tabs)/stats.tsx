@@ -111,12 +111,14 @@ export default function StatsTab() {
   return (
     <AppScreen bottomInset={0}>
       <View style={styles.root}>
+        <ContentContainer style={styles.fixedHeader}>
+          <Text style={styles.screenTitle}>{t('stats.title')}</Text>
+        </ContentContainer>
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[styles.scrollContent, drawerOpen && { paddingBottom: getStatisticsDrawerSnapPoints(height, period).collapsed + Spacing.xl }]}
         >
           <ContentContainer style={styles.content}>
-            <Text style={styles.screenTitle}>{t('stats.title')}</Text>
             <SegmentedControl
               value={period}
               onChange={handlePeriodChange}
@@ -754,6 +756,7 @@ const stylesVars = {
 
 const createStyles = (palette: typeof AppPalette.light | typeof AppPalette.dark) => StyleSheet.create({
   root: { flex: 1 },
+  fixedHeader: { minHeight: 48, alignItems: 'center', justifyContent: 'center' },
   scrollContent: { paddingBottom: NAV_GAP },
   content: { paddingTop: Spacing.md, gap: Spacing.lg },
   screenTitle: { fontSize: Typography.fontSize.xl, textAlign: 'center', fontWeight: '700', color: palette.text },

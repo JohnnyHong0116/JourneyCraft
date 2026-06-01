@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { Spacing } from '@/theme/designSystem';
 import { AppPalette } from '@/components/layout/AppScreen';
 import { useAppState } from '@/state/AppStateContext';
@@ -32,6 +32,8 @@ import { getUpcomingPlannedTrips } from '../../features/planned/plannedModel';
 import { useTranslation } from '@/i18n/useTranslation';
 import SortMenu from '../../src/components/ui/SortMenu';
 import { resolveHomeTimelineMode, type HomeTimelineMode } from '../../features/search/homeSearchModel';
+import { applyCompanionOverrides } from '../../features/people/peopleModel';
+import { loadCompanionOverrides } from '../../features/people/peopleStorage';
 
 export default function HomeTab() {
   const params = useLocalSearchParams<{ timelineMode?: HomeTimelineMode }>();
@@ -67,6 +69,16 @@ export default function HomeTab() {
   useEffect(() => {
     setSelectedTab(resolveHomeTimelineMode(params.timelineMode));
   }, [params.timelineMode]);
+
+  useFocusEffect(useCallback(() => {
+    let active = true;
+    void loadCompanionOverrides().then((overrides) => {
+      if (!active) return;
+      setTrips((current) => applyCompanionOverrides(current, overrides));
+      setPlans((current) => applyCompanionOverrides(current, overrides));
+    });
+    return () => { active = false; };
+  }, []));
 
   const handleTabChange = (tab: HomeTimelineMode) => {
     setSelectedTab(tab);
@@ -119,6 +131,16 @@ export default function HomeTab() {
     setTrips(prevTrips => prevTrips.filter(trip => trip.id !== tripId));
   };
 
+  const toggleTripState = (tripId: string, field: 'isSaved' | 'isLocked') => {
+    setTrips((current) => current.map((trip) => (
+      trip.id === tripId ? { ...trip, [field]: !trip[field] } : trip
+    )));
+  };
+
+  const handleMoodChange = (tripId: string, mood: Trip['mood']) => {
+    setTrips((current) => current.map((trip) => trip.id === tripId ? { ...trip, mood } : trip));
+  };
+
   const handleDeletePlan = (tripId: string) => {
     setPlans((current) => current.filter((trip) => trip.id !== tripId));
   };
@@ -137,6 +159,9 @@ export default function HomeTab() {
     <TripCard
       trip={item}
       onPinToggle={handlePinToggle}
+      onSaveToggle={(id) => toggleTripState(id, 'isSaved')}
+      onLockToggle={(id) => toggleTripState(id, 'isLocked')}
+      onMoodChange={handleMoodChange}
       onDelete={handleDeleteTrip}
     />
   ), [handlePinToggle, handleDeleteTrip]);
@@ -228,6 +253,16 @@ export default function HomeTab() {
                 pinnedTrips={pinnedTrips}
                 onPinToggle={handlePinToggle}
                 onDelete={handleDeleteTrip}
+                renderTrip={(trip) => (
+                  <TripCard
+                    trip={trip}
+                    onPinToggle={handlePinToggle}
+                    onSaveToggle={(id) => toggleTripState(id, 'isSaved')}
+                    onLockToggle={(id) => toggleTripState(id, 'isLocked')}
+                    onMoodChange={handleMoodChange}
+                    onDelete={handleDeleteTrip}
+                  />
+                )}
               />
             }
             refreshControl={

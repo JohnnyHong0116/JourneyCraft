@@ -542,7 +542,7 @@ export const searchCategories = [
   { id: 'date', label: 'Date', icon: 'calendar-outline' as const },
   { id: 'location', label: 'Location', icon: 'location-outline' as const },
   { id: 'saved', label: 'Saved', icon: 'heart-outline' as const },
-  { id: 'people', label: 'People', icon: 'person-outline' as const },
+  { id: 'people', label: 'People', icon: 'cardperson' as const },
   { id: 'emotion', label: 'Emotion', icon: 'happy-outline' as const },
 ];
 

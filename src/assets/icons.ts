@@ -160,6 +160,10 @@ export const IconSvg = {
     selected: require('./icons/cardpeople.svg').default,
     unselected: require('./icons/cardpeople.svg').default,
   } as TwoStateSvg,
+  cardperson: {
+    selected: require('./icons/cardperson.svg').default,
+    unselected: require('./icons/cardperson.svg').default,
+  } as TwoStateSvg,
   cardsave: {
     selected: require('./icons/cardsave.svg').default,
     unselected: require('./icons/cardsave.svg').default,

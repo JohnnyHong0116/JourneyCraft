@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { Icon, SemanticIcon } from '@/components/Icon';
@@ -10,6 +10,9 @@ import { useAppState } from '@/state/AppStateContext';
 import { BorderRadius, Shadows, Spacing, Typography } from '@/theme/designSystem';
 import type { ChecklistItem, ChecklistStatus, ItineraryEntry, ItineraryEntryType } from '@/types/plannedTrip';
 import { TRIP_UTILITY_TOOLBAR_HEIGHT, TripUtilityToolbar } from '@features/trip/TripUtilityToolbar';
+import { getPeopleIconName, removeCompanion } from '../../features/people/peopleModel';
+import { loadCompanionOverrides, saveCompanions } from '../../features/people/peopleStorage';
+import { SwipeToDeleteRow } from '../../features/people/SwipeToDeleteRow';
 import {
   addPlannedCompanion,
   createPlannedItineraryEntry,
@@ -55,6 +58,13 @@ export default function PlannedTripDetailScreen() {
     itineraryEntries,
     companions,
   } : undefined, [companions, itineraryEntries, items, sourcePlan]);
+
+  useEffect(() => {
+    if (!id) return;
+    void loadCompanionOverrides().then((overrides) => {
+      if (Object.prototype.hasOwnProperty.call(overrides, id)) setCompanions(overrides[id] ?? []);
+    });
+  }, [id]);
 
   if (!plan) {
     return (
@@ -118,8 +128,15 @@ export default function PlannedTripDetailScreen() {
     const nextCompanions = addPlannedCompanion(companions, travelerDraft);
     if (nextCompanions.length === companions.length) return;
     setCompanions(nextCompanions);
+    void saveCompanions(plan.id, nextCompanions);
     setTravelerDraft('');
     setAddingTraveler(false);
+  };
+
+  const removeTraveler = (name: string) => {
+    const nextCompanions = removeCompanion(companions, name);
+    setCompanions(nextCompanions);
+    void saveCompanions(plan.id, nextCompanions);
   };
 
   const activateAdd = () => {
@@ -144,7 +161,7 @@ export default function PlannedTripDetailScreen() {
           actions={[
             { key: 'checklist', icon: 'check', accessibilityLabel: t('planned.openChecklist'), active: section === 'checklist', onPress: () => setSection('checklist') },
             { key: 'itinerary', icon: 'date-unselected', accessibilityLabel: t('planned.openItinerary'), active: section === 'itinerary', onPress: () => setSection('itinerary') },
-            { key: 'people', icon: 'cardpeople', accessibilityLabel: t('planned.openPeople'), active: section === 'people', onPress: () => setSection('people') },
+            { key: 'people', icon: getPeopleIconName(plan.companions), accessibilityLabel: t('planned.openPeople'), active: section === 'people', onPress: () => setSection('people') },
             { key: 'add', icon: 'add', accessibilityLabel: section === 'itinerary' ? t('planned.addStop') : section === 'people' ? t('planned.addTraveler') : t('planned.addTask'), onPress: activateAdd },
           ]}
         />
@@ -265,11 +282,9 @@ export default function PlannedTripDetailScreen() {
         {section === 'people' ? (
           <SurfaceCard style={styles.panel}>
             <Text style={styles.panelTitle}>{t('planned.travelers')}</Text>
+            <Text style={styles.peopleHelper}>Swipe a traveler left to remove them.</Text>
             {(plan.companions ?? []).length ? (plan.companions ?? []).map((person) => (
-              <View key={person} style={styles.personRow}>
-                <View style={styles.avatar}><Text style={styles.avatarText}>{person.slice(0, 1).toUpperCase()}</Text></View>
-                <Text style={styles.personName}>{person}</Text>
-              </View>
+              <SwipeToDeleteRow key={person} name={person} onDelete={() => removeTraveler(person)} palette={palette} />
             )) : <Text style={styles.emptyText}>{t('planned.nothingAdded')}</Text>}
             {addingTraveler ? (
               <View style={styles.taskComposer}>
@@ -421,10 +436,7 @@ const createStyles = (
   itineraryCopy: { flex: 1, minWidth: 0, gap: 2 },
   itineraryDay: { color: palette.accentStrong, fontSize: Typography.fontSize.xs, fontWeight: '700' },
   itineraryTitle: { color: palette.text, fontSize: Typography.fontSize.sm, fontWeight: '700' },
-  personRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
-  avatar: { width: 38, height: 38, borderRadius: 19, backgroundColor: palette.accent, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { color: '#253021', fontWeight: '700' },
-  personName: { color: palette.text, fontSize: Typography.fontSize.sm, fontWeight: '600' },
+  peopleHelper: { color: palette.secondaryText, fontSize: Typography.fontSize.xs },
   emptyText: { color: palette.secondaryText, fontSize: Typography.fontSize.sm },
   missingTitle: { color: palette.text, fontSize: Typography.fontSize.lg, fontWeight: '700' },
   missingCopy: { color: palette.secondaryText, fontSize: Typography.fontSize.sm, paddingTop: Spacing.sm },

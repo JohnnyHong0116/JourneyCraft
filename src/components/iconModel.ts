@@ -7,6 +7,7 @@ export type AppIconName =
   | 'cardlock'
   | 'cardmic'
   | 'cardpeople'
+  | 'cardperson'
   | 'cardvideo'
   | 'check'
   | 'chevron'
@@ -55,7 +56,9 @@ const semanticIconMap: Record<string, AppIconName> = {
   'list-outline': 'menu',
   'map-outline': 'map-unselected',
   'paper-plane-outline': 'send',
+  cardpeople: 'cardpeople',
   'people-outline': 'cardpeople',
+  cardperson: 'cardperson',
   'person-outline': 'profile-unselected',
   'search-outline': 'search-unselected',
   search: 'search-unselected',

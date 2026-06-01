@@ -7,6 +7,8 @@ test('maps common signed-in actions onto JourneyCraft assets', () => {
   assert.equal(resolveAppIconName('images-outline'), 'cardimage');
   assert.equal(resolveAppIconName('mic-outline'), 'microphone');
   assert.equal(resolveAppIconName('people-outline'), 'cardpeople');
+  assert.equal(resolveAppIconName('cardpeople'), 'cardpeople');
+  assert.equal(resolveAppIconName('cardperson'), 'cardperson');
   assert.equal(resolveAppIconName('checkmark'), 'check');
 });
 

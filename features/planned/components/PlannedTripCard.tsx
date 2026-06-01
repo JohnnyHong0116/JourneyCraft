@@ -8,6 +8,7 @@ import { useTranslation } from '@/i18n/useTranslation';
 import { useAppState } from '@/state/AppStateContext';
 import { BorderRadius, Shadows, Spacing, Typography } from '@/theme/designSystem';
 import type { PlannedTrip } from '@/types/plannedTrip';
+import { getPeopleIconName } from '../../people/peopleModel';
 import {
   getChecklistProgress,
   getChecklistProgressPercent,
@@ -120,15 +121,16 @@ export function PlannedTripCard({
           />
           <UtilityButton
             label={t('planned.openPeople')}
-            icon="people-outline"
+            icon={getPeopleIconName(trip.companions)}
             active={activeUtility === 'people'}
             onPress={() => toggleUtility('people')}
             palette={palette}
           />
           <UtilityButton
             label={trip.isSaved ? t('menu.unsave') : t('menu.save')}
-            icon={trip.isSaved ? 'bookmark' : 'bookmark-outline'}
+            icon={trip.isSaved ? 'heart' : 'heart-outline'}
             active={trip.isSaved}
+            activeColor="#de5b68"
             onPress={() => onSaveToggle?.(trip.id)}
             palette={palette}
           />
@@ -168,18 +170,20 @@ function UtilityButton({
   label,
   icon,
   active,
+  activeColor,
   onPress,
   palette,
 }: {
   label: string;
   icon: React.ComponentProps<typeof SemanticIcon>['name'];
   active?: boolean;
+  activeColor?: string;
   onPress: () => void;
   palette: typeof AppPalette.light | typeof AppPalette.dark;
 }) {
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={styles.utilityButton}>
-      <SemanticIcon name={icon} size={19} color={active ? palette.accentStrong : palette.secondaryText} />
+      <SemanticIcon name={icon} size={19} color={active ? activeColor ?? palette.accentStrong : palette.secondaryText} />
     </Pressable>
   );
 }

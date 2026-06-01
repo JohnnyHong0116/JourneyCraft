@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Icon } from '@/components/Icon';
+import { Icon, SemanticIcon } from '@/components/Icon';
 import { AppPalette } from '@/components/layout/AppScreen';
 import { useAppState } from '@/state/AppStateContext';
 import { Spacing } from '@/theme/designSystem';
@@ -76,7 +76,7 @@ export const CardMenu: React.FC<CardMenuProps> = ({
         <OverlayActionRow
           label={isSaved ? t('menu.unsave') : t('menu.save')}
           selected={isSaved}
-          leading={<Icon name="cardsave" size={19} color={palette.text} />}
+          leading={<SemanticIcon name={isSaved ? 'heart' : 'heart-outline'} size={19} color={isSaved ? '#de5b68' : palette.text} />}
           onPress={() => handleAction(onSave)}
         />
         <OverlayActionRow

@@ -519,6 +519,22 @@ export const galleryImages = [
   'https://picsum.photos/id/1067/500/500',
 ];
 
+export interface ProfileMemoryCategory {
+  id: string;
+  emoji: string;
+  name: string;
+  coverImageUri?: string;
+  relatedCardIds: string[];
+}
+
+export const profileMemoryCategories: ProfileMemoryCategory[] = [
+  { id: 'sweet', emoji: '🥰', name: 'Sweet', coverImageUri: 'https://picsum.photos/id/64/200/200', relatedCardIds: ['1', '6'] },
+  { id: 'cafe', emoji: '☕️', name: 'Cafe', coverImageUri: 'https://picsum.photos/id/1060/200/200', relatedCardIds: ['1'] },
+  { id: 'nature', emoji: '🌿', name: 'Nature', coverImageUri: 'https://picsum.photos/id/1018/200/200', relatedCardIds: ['4', '7', '10'] },
+  { id: 'food', emoji: '🍜', name: 'Food', coverImageUri: 'https://picsum.photos/id/1015/200/200', relatedCardIds: ['3', '6'] },
+  { id: 'weekend', emoji: '🧺', name: 'Picnic', coverImageUri: 'https://picsum.photos/id/1035/200/200', relatedCardIds: ['7'] },
+];
+
 export const searchCategories = [
   { id: 'photos', label: 'Photos', icon: 'images-outline' as const },
   { id: 'audio', label: 'Recorded Audio', icon: 'mic-outline' as const },

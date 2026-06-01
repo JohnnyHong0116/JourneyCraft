@@ -7,6 +7,8 @@ export interface UserProfile {
   location: string;
   bio: string;
   avatarUri?: string;
+  coverPhotoUri?: string;
+  passwordHash?: string;
 }
 
 export const DEFAULT_PROFILE: UserProfile = {

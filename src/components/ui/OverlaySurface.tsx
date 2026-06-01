@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Modal,
   Pressable,
@@ -114,6 +114,7 @@ export function ActionSheetModal({
   const { mode } = useAppState();
   const material = getOverlayMaterial(mode);
   const insets = useSafeAreaInsets();
+  const startY = useRef(0);
 
   return (
     <Modal visible={visible} transparent animationType="none" statusBarTranslucent onRequestClose={onDismiss}>
@@ -130,7 +131,18 @@ export function ActionSheetModal({
           style={StyleSheet.absoluteFill}
           onPress={dismissOnBackdrop ? onDismiss : undefined}
         />
-        <Animated.View entering={FadeInUp.duration(200)} style={styles.sheetFrame}>
+        <Animated.View
+          entering={FadeInUp.duration(200)}
+          style={styles.sheetFrame}
+          onTouchStart={(event) => {
+            startY.current = event.nativeEvent.pageY;
+          }}
+          onStartShouldSetResponder={() => false}
+          onMoveShouldSetResponder={() => true}
+          onResponderRelease={(event) => {
+            if (event.nativeEvent.pageY - startY.current > 70) onDismiss();
+          }}
+        >
           <BlurView
             tint={material.tint}
             intensity={88}

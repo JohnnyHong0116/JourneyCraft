@@ -329,11 +329,11 @@ function MonthlyStats({ stats }: { stats: StatisticsSummary }) {
   const styles = createStyles(palette);
   return (
     <>
-      <SurfaceCard style={styles.monthlyInfoCard}>
-        <StatIconBadge icon="airplane" />
+      <SurfaceCard style={[styles.monthlyInfoCard, styles.countriesCitiesCard]}>
+        <StatIconBadge icon="airplane" compact />
         <View style={styles.monthlyInfoCopy}>
-          <Text style={styles.monthlyInfoTitle}>{t('stats.travelDays')}</Text>
-          <Text style={styles.monthlyInfoSubtitle}>{t('stats.travelDaysThisMonth', { count: stats.travelDays })}</Text>
+          <Text style={[styles.monthlyInfoTitle, styles.countriesCitiesTitle]}>{t('stats.travelDays')}</Text>
+          <Text style={[styles.monthlyInfoSubtitle, styles.countriesCitiesSubtitle]}>{t('stats.travelDaysThisMonth', { count: stats.travelDays })}</Text>
         </View>
         <TravelDayRing percentage={stats.travelDayPercentage ?? 0} />
       </SurfaceCard>
@@ -404,8 +404,8 @@ function TravelDayRing({ percentage }: { percentage: number }) {
   const { mode } = useAppState();
   const palette = AppPalette[mode];
   const styles = createStyles(palette);
-  const size = 64;
-  const stroke = 7;
+  const size = 58;
+  const stroke = 6;
   const radius = (size - stroke) / 2;
   const circumference = Math.PI * 2 * radius;
   const dashOffset = circumference * (1 - percentage / 100);
@@ -476,41 +476,55 @@ function LineChartCard({ points }: { points: ReturnType<typeof getMonthlyExpense
   const { mode } = useAppState();
   const palette = AppPalette[mode];
   const styles = createStyles(palette);
-  const width = 310;
-  const height = 188;
-  const paddingX = 18;
+  const width = 330;
+  const height = 210;
+  const paddingLeft = 38;
+  const paddingRight = 14;
   const paddingTop = 18;
-  const paddingBottom = 34;
-  const max = Math.max(...points.map((point) => point.value), 1);
+  const paddingBottom = 36;
+  const rawMax = Math.max(...points.map((point) => point.value), 1);
+  const tickStep = Math.max(10, Math.ceil(rawMax / 4 / 10) * 10);
+  const max = tickStep * 4;
+  const plotWidth = width - paddingLeft - paddingRight;
+  const plotHeight = height - paddingTop - paddingBottom;
+  const ticks = [4, 3, 2, 1, 0].map((level) => level * tickStep);
   const chartPoints = points.map((point, index) => {
-    const x = paddingX + (index / 11) * (width - paddingX * 2);
-    const y = height - paddingBottom - (point.value / max) * (height - paddingTop - paddingBottom);
+    const x = paddingLeft + (index / 11) * plotWidth;
+    const y = paddingTop + (1 - point.value / max) * plotHeight;
     return { x, y, value: point.value, label: point.label };
   });
   const polyline = chartPoints.map((point) => `${point.x},${point.y}`).join(' ');
-  const glowPolygon = `${paddingX},${height - paddingBottom} ${polyline} ${width - paddingX},${height - paddingBottom}`;
+  const baselineY = height - paddingBottom;
+  const glowPolygon = `${paddingLeft},${baselineY} ${polyline} ${width - paddingRight},${baselineY}`;
 
   return (
     <SurfaceCard style={styles.chart}>
       <Text style={styles.meta}>Unit: ¥</Text>
       <View style={styles.chartGlow}>
         <Svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`}>
-          {[0, 1, 2, 3, 4].map((line) => {
-            const y = paddingTop + line * ((height - paddingTop - paddingBottom) / 4);
-            return <Line key={`grid-h-${line}`} x1={paddingX} x2={width - paddingX} y1={y} y2={y} stroke={withAlpha(palette.secondaryText, 0.20)} strokeWidth={1} strokeDasharray="4 4" />;
+          {ticks.map((tick) => {
+            const y = paddingTop + (1 - tick / max) * plotHeight;
+            return (
+              <React.Fragment key={`tick-${tick}`}>
+                <Line x1={paddingLeft} x2={width - paddingRight} y1={y} y2={y} stroke={withAlpha(palette.secondaryText, 0.18)} strokeWidth={1} strokeDasharray="4 4" />
+                <SvgTextNode x={paddingLeft - 8} y={y + 3} textAnchor="end" fill={palette.secondaryText} fontSize="10" fontWeight="500">
+                  {tick}
+                </SvgTextNode>
+              </React.Fragment>
+            );
           })}
           {points.map((point, index) => {
-            const x = paddingX + (index / 11) * (width - paddingX * 2);
-            return <Line key={`grid-v-${point.key}`} x1={x} x2={x} y1={paddingTop} y2={height - paddingBottom} stroke={withAlpha(palette.secondaryText, 0.14)} strokeWidth={1} strokeDasharray="4 4" />;
+            const x = paddingLeft + (index / 11) * plotWidth;
+            return <Line key={`grid-v-${point.key}`} x1={x} x2={x} y1={paddingTop} y2={baselineY} stroke={withAlpha(palette.secondaryText, 0.12)} strokeWidth={1} strokeDasharray="4 4" />;
           })}
-          <Polygon points={glowPolygon} fill={withAlpha(palette.accentStrong, 0.16)} />
-          <Polyline points={polyline} fill="none" stroke={withAlpha(palette.accentStrong, 0.22)} strokeWidth={16} strokeLinejoin="round" strokeLinecap="round" />
-          <Polyline points={polyline} fill="none" stroke={palette.text} strokeWidth={3} strokeLinejoin="round" strokeLinecap="round" />
+          <Polygon points={glowPolygon} fill={withAlpha(palette.accentStrong, 0.08)} />
+          <Polyline points={polyline} fill="none" stroke={withAlpha(palette.accentStrong, 0.14)} strokeWidth={8} strokeLinejoin="round" strokeLinecap="round" />
+          <Polyline points={polyline} fill="none" stroke={palette.text} strokeWidth={1.1} strokeLinejoin="round" strokeLinecap="round" />
           {chartPoints.map((point) => (
-            <Circle key={`${point.label}-${point.x}`} cx={point.x} cy={point.y} r={4} fill={palette.card} stroke={palette.text} strokeWidth={2} />
+            <Circle key={`${point.label}-${point.x}`} cx={point.x} cy={point.y} r={2.8} fill={palette.card} stroke={palette.text} strokeWidth={1.35} />
           ))}
           {points.map((point, index) => {
-            const x = paddingX + (index / 11) * (width - paddingX * 2);
+            const x = paddingLeft + (index / 11) * plotWidth;
             return <SvgText key={`month-${point.key}`} x={x} y={height - 8} label={point.label} color={palette.secondaryText} />;
           })}
         </Svg>
@@ -790,8 +804,8 @@ const createStyles = (palette: typeof AppPalette.light | typeof AppPalette.dark)
   metricValue: { fontSize: Typography.fontSize.md, fontWeight: '700', color: palette.text },
   metricValueLarge: { fontSize: 28 },
   metricLabel: { color: palette.text, fontSize: Typography.fontSize.sm, marginTop: 3 },
-  ring: { width: 64, height: 64, alignItems: 'center', justifyContent: 'center' },
-  ringValue: { position: 'absolute', fontSize: 13, fontWeight: '800', color: palette.text },
+  ring: { width: 58, height: 58, alignItems: 'center', justifyContent: 'center' },
+  ringValue: { position: 'absolute', fontSize: 12, fontWeight: '800', color: palette.text },
   moodCard: { gap: Spacing.md },
   moods: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
   moodItem: { alignItems: 'center', gap: Spacing.xs, minWidth: 43 },

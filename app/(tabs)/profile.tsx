@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useRef } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,8 @@ import {
   Platform,
   Pressable,
   Vibration,
+  Alert,
+  Linking,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
@@ -23,8 +25,9 @@ import Animated, {
   withSpring,
   runOnJS,
   scrollTo,
-  Easing,
 } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as ImageManipulator from 'expo-image-manipulator';
@@ -32,10 +35,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors, Spacing, BorderRadius } from '@/theme/designSystem';
 import { Icon } from '@/components/Icon';
 import { router } from 'expo-router';
-import { galleryImages, getProfileMetrics } from '@/data/appData';
+import { galleryImages, getProfileMetrics, mockTrips, profileMemoryCategories } from '@/data/appData';
 import { useAppState } from '@/state/AppStateContext';
 import { AppPalette } from '@/components/layout/AppScreen';
 import { ActionSheetModal, OverlayActionRow } from '@/components/ui/OverlaySurface';
+import { useTranslation } from '@/i18n/useTranslation';
 
 const { width } = Dimensions.get('window');
 
@@ -55,6 +59,14 @@ const COVER_URI = 'https://picsum.photos/1200/1800'; // vertical example
 const COVER_STORAGE_KEY = 'profile.cover.uri';
 const COVER_CROP_KEY = 'profile.cover.crop';
 const CROPPED_STORAGE_KEY = 'profile.cover.cropped';
+
+type ProfileHighlight = {
+  id: string;
+  name: string;
+  emoji: string;
+  imageUri?: string;
+  href: string;
+};
 
 // Custom Cropping Interface Component
 const CustomCropInterface = ({ 
@@ -219,7 +231,8 @@ const CustomCropInterface = ({
 };
 
 export default function ProfileTab() {
-  const { profile, mode } = useAppState();
+  const { profile, updateProfile, mode } = useAppState();
+  const { t } = useTranslation();
   const palette = AppPalette[mode];
   const profileMetrics = getProfileMetrics();
   const insets = useSafeAreaInsets();
@@ -230,7 +243,28 @@ export default function ProfileTab() {
   const [cropInfo, setCropInfo] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const [croppedCoverUri, setCroppedCoverUri] = useState<string | null>(null);
   const [coverActionsVisible, setCoverActionsVisible] = useState(false);
-  const currentCoverUri = customCoverUri || COVER_URI;
+  const currentCoverUri = customCoverUri || profile.coverPhotoUri || COVER_URI;
+  const memoryPhotos = useMemo(() => {
+    const categoryIds = new Set(profileMemoryCategories.flatMap((category) => category.relatedCardIds));
+    const ranked = mockTrips
+      .flatMap((trip) => trip.photos.map((uri, index) => ({
+        id: `${trip.id}-${index}`,
+        uri,
+        tripId: trip.id,
+        score: (trip.isSaved ? 4 : 0) + (categoryIds.has(trip.id) ? 3 : 0) + ((trip.peopleIds?.length ?? 0) > 0 ? 2 : 0) + (Date.parse(trip.displayDate) / 10000000000000),
+      })))
+      .sort((a, b) => b.score - a.score);
+    return ranked.length ? ranked : galleryImages.map((uri, index) => ({ id: `fallback-${index}`, uri, tripId: mockTrips[0]?.id ?? '1', score: 0 }));
+  }, []);
+  const highlights = useMemo<ProfileHighlight[]>(() => {
+    return profileMemoryCategories.map((category) => ({
+      id: category.id,
+      name: category.name,
+      emoji: category.emoji,
+      imageUri: category.coverImageUri,
+      href: `/profile/category/${category.id}`,
+    }));
+  }, []);
 
   // load saved cover on mount
   useEffect(() => {
@@ -308,9 +342,12 @@ export default function ProfileTab() {
       }
       const ext = fromUri.split('.').pop()?.toLowerCase() || 'jpg';
       const dest = `${dir}/cover.${ext}`;
-      // copy (not move) to retain source; use moveAsync if you prefer
+      if ((await FileSystem.getInfoAsync(dest)).exists) {
+        await FileSystem.deleteAsync(dest, { idempotent: true });
+      }
       await FileSystem.copyAsync({ from: fromUri, to: dest });
       await AsyncStorage.setItem(COVER_STORAGE_KEY, dest);
+      await updateProfile({ coverPhotoUri: dest });
       setCustomCoverUri(dest);
       
       // Save crop info if provided
@@ -351,6 +388,9 @@ export default function ProfileTab() {
         await FileSystem.makeDirectoryAsync(dir, { intermediates: true });
       }
       const dest = `${dir}/cover_cropped.jpg`;
+      if ((await FileSystem.getInfoAsync(dest)).exists) {
+        await FileSystem.deleteAsync(dest, { idempotent: true });
+      }
       await FileSystem.copyAsync({ from: result.uri, to: dest });
 
       await AsyncStorage.setItem(CROPPED_STORAGE_KEY, dest);
@@ -398,15 +438,35 @@ export default function ProfileTab() {
     setTempImageUri(null);
   };
 
+  const waitForSheetDismiss = () => new Promise((resolve) => setTimeout(resolve, Platform.OS === 'ios' ? 350 : 100));
+
+  const settleProfilePosition = () => {
+    revealed.value = withSpring(0, { damping: 20, stiffness: 100, mass: 0.8 });
+    scrollTo(scrollRef, 0, 0, true);
+  };
+
+  const closeCoverActions = () => {
+    setCoverActionsVisible(false);
+    settleProfilePosition();
+  };
+
+  const showPermissionMessage = (title: string, body: string, canAskAgain?: boolean) => {
+    Alert.alert(title, body, canAskAgain === false ? [
+      { text: t('profile.cancel'), style: 'cancel' },
+      { text: t('profile.openSettings'), onPress: () => Linking.openSettings() },
+    ] : undefined);
+  };
+
   // pick from library
   async function chooseFromLibrary() {
-    // ask permission if needed
-    if (!libPerm || libPerm.status !== 'granted') {
-      const res = await requestLibPerm();
-      if (res.status !== 'granted') return;
+    await waitForSheetDismiss();
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted && permission.accessPrivileges !== 'limited') {
+        showPermissionMessage(t('profile.photoPermissionTitle'), t('profile.photoPermissionBody'), permission.canAskAgain);
+        return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: 'images',
+      mediaTypes: ['images'],
       allowsEditing: false,     // No cropping - use full image
       quality: 0.9,
       exif: false,
@@ -420,9 +480,11 @@ export default function ProfileTab() {
 
   // take a photo
   async function takePhoto() {
-    if (!camPerm || camPerm.status !== 'granted') {
-      const res = await requestCamPerm();
-      if (res.status !== 'granted') return;
+    await waitForSheetDismiss();
+    const permission = camPerm?.granted ? camPerm : await requestCamPerm();
+    if (!permission.granted) {
+        showPermissionMessage(t('profile.cameraPermissionTitle'), t('profile.cameraPermissionBody'), permission.canAskAgain);
+        return;
     }
     const result = await ImagePicker.launchCameraAsync({
       allowsEditing: false, // No cropping - use full image
@@ -441,27 +503,29 @@ export default function ProfileTab() {
     await AsyncStorage.removeItem(COVER_STORAGE_KEY);
     await AsyncStorage.removeItem(COVER_CROP_KEY);
     await AsyncStorage.removeItem(CROPPED_STORAGE_KEY);
+    await updateProfile({ coverPhotoUri: undefined });
     setCustomCoverUri(null);
     setCropInfo(null);
     setCroppedCoverUri(null);
   }
 
   function onPressChangeCover() {
+    settleProfilePosition();
     setCoverActionsVisible(true);
   }
 
   async function handleChooseCoverFromLibrary() {
-    setCoverActionsVisible(false);
+    closeCoverActions();
     await chooseFromLibrary();
   }
 
   async function handleTakeCoverPhoto() {
-    setCoverActionsVisible(false);
+    closeCoverActions();
     await takePhoto();
   }
 
   async function handleResetCoverPhoto() {
-    setCoverActionsVisible(false);
+    closeCoverActions();
     await resetCover();
   }
 
@@ -560,7 +624,10 @@ export default function ProfileTab() {
   });
 
   return (
-    <View style={[styles.root, { backgroundColor: palette.backgroundTop }]}>
+    <LinearGradient
+      colors={[palette.backgroundTop, mode === 'dark' ? '#101f1b' : '#E3EDDC', palette.backgroundBottom]}
+      style={styles.root}
+    >
       {/* draw under status bar */}
       <StatusBar translucent backgroundColor="transparent" barStyle={mode === 'dark' ? 'light-content' : 'dark-content'} />
 
@@ -570,12 +637,14 @@ export default function ProfileTab() {
         <Animated.ScrollView
           ref={scrollRef}
           showsVerticalScrollIndicator={false}
+          scrollEnabled={!coverActionsVisible && !showCropInterface}
           // iOS pull-bounce; Android needs overScrollMode to allow negative y
           bounces
           overScrollMode="always"
           scrollEventThrottle={16}
           onScroll={scrollHandler}
           contentInsetAdjustmentBehavior="never"
+          pointerEvents={coverActionsVisible ? 'none' : 'auto'}
         >
           {/* ---- STRETCHY COVER (lives in scroll content so it scrolls away) ---- */}
           <Animated.View style={[styles.coverContainer, coverStyle]}>
@@ -609,7 +678,7 @@ export default function ProfileTab() {
                   onPressIn={() => console.log('🔘 Change Cover button pressed!')}
                 >
                   <Icon name="photo-selected" size={20} color="#FFFFFF" />
-                  <Text style={styles.changeCoverText}>Change Cover</Text>
+                  <Text style={styles.changeCoverText}>{t('profile.changeCover')}</Text>
                 </TouchableOpacity>
               </Animated.View>
             </ImageBackground>
@@ -619,7 +688,7 @@ export default function ProfileTab() {
           <Animated.View style={[styles.headerContainer, { backgroundColor: 'transparent' }, headerContentStyle]}>
             {/* avatar overlaps upward into the cover's lower edge */}
             <View style={styles.avatarContainer}>
-              <View style={styles.avatar} />
+              {profile.avatarUri ? <Image source={{ uri: profile.avatarUri }} style={styles.avatar} /> : <View style={styles.avatar} />}
             </View>
 
             {/* actions */}
@@ -648,46 +717,118 @@ export default function ProfileTab() {
             </View>
           </Animated.View>
 
-          {/* ---- highlights row (unchanged) ---- */}
+          {/* ---- entity highlights ---- */}
           <View style={styles.highlightsContainer}>
             <Animated.ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }}>
-              {galleryImages.slice(0, 5).map((image) => (
-                <View key={image} style={{ marginRight: 12 }}>
-                  <Image source={{ uri: image }} style={styles.highlightThumb} />
-                </View>
-              ))}
+              {highlights.length > 0 ? highlights.map((item) => (
+                <Pressable
+                  key={item.id}
+                  accessibilityRole="button"
+                  accessibilityLabel={item.name}
+                  onPress={() => router.push(item.href as any)}
+                  style={({ pressed }) => [styles.highlightItem, pressed && styles.pressedItem]}
+                >
+                  <View style={styles.highlightRing}>
+                    {item.imageUri ? (
+                      <Image source={{ uri: item.imageUri }} style={styles.highlightThumb} />
+                    ) : (
+                      <View style={[styles.highlightThumb, styles.highlightFallback]}>
+                        <Text style={styles.highlightEmoji}>{item.emoji}</Text>
+                      </View>
+                    )}
+                  </View>
+                  <Text style={[styles.highlightLabel, { color: palette.secondaryText }]} numberOfLines={1}>{item.name}</Text>
+                </Pressable>
+              )) : (
+                <Pressable style={styles.emptyHighlight} onPress={() => Alert.alert(t('profile.addCategory'), t('profile.createCategoryTodo'))}>
+                  <View style={styles.emptyHighlightCircle}><Text style={styles.emptyHighlightPlus}>+</Text></View>
+                  <Text style={[styles.emptyHighlightText, { color: palette.secondaryText }]}>{t('profile.createFirstCategory')}</Text>
+                </Pressable>
+              )}
             </Animated.ScrollView>
           </View>
 
           {/* Horizontal Divider */}
           <View style={[styles.divider, { backgroundColor: palette.divider }]} />
 
-          {/* ---- photo grid (unchanged) ---- */}
-          <View style={[styles.photoGrid, { backgroundColor: palette.backgroundTop }]}>
+          {/* ---- memory photo grid ---- */}
+          <View style={styles.photoGrid}>
             <View style={styles.gridRow}>
-              {galleryImages.slice(0, 3).map((image) => <Image key={image} source={{ uri: image }} style={styles.gridImage} />)}
+              {memoryPhotos.slice(0, 3).map((photo) => (
+                <Pressable key={photo.id} onPress={() => router.push(`/trip/${photo.tripId}` as any)} style={({ pressed }) => pressed && styles.pressedItem}>
+                  <Image source={{ uri: photo.uri }} style={styles.gridImage} />
+                </Pressable>
+              ))}
             </View>
 
             <View style={styles.gridRow}>
-              <Image source={{ uri: galleryImages[3] }} style={[styles.gridImage, styles.largeImage]} />
+              {memoryPhotos[3] ? (
+                <Pressable onPress={() => router.push(`/trip/${memoryPhotos[3].tripId}` as any)} style={({ pressed }) => pressed && styles.pressedItem}>
+                  <Image source={{ uri: memoryPhotos[3].uri }} style={[styles.gridImage, styles.largeImage]} />
+                </Pressable>
+              ) : null}
               <View style={styles.smallImagesContainer}>
-                <Image source={{ uri: galleryImages[4] }} style={styles.smallImage} />
-                <Image source={{ uri: galleryImages[5] }} style={styles.smallImage} />
+                {memoryPhotos.slice(4, 6).map((photo) => (
+                  <Pressable key={photo.id} onPress={() => router.push(`/trip/${photo.tripId}` as any)} style={({ pressed }) => pressed && styles.pressedItem}>
+                    <Image source={{ uri: photo.uri }} style={styles.smallImage} />
+                  </Pressable>
+                ))}
               </View>
             </View>
 
             <View style={styles.gridRow}>
-              {galleryImages.slice(6, 9).map((image) => <Image key={image} source={{ uri: image }} style={styles.gridImage} />)}
+              {memoryPhotos.slice(6, 9).map((photo) => (
+                <Pressable key={photo.id} onPress={() => router.push(`/trip/${photo.tripId}` as any)} style={({ pressed }) => pressed && styles.pressedItem}>
+                  <Image source={{ uri: photo.uri }} style={styles.gridImage} />
+                </Pressable>
+              ))}
             </View>
 
             <View style={styles.gridRow}>
-              {galleryImages.slice(0, 3).map((image) => <Image key={`repeat-${image}`} source={{ uri: image }} style={styles.gridImage} />)}
+              {memoryPhotos.slice(9, 12).map((photo) => (
+                <Pressable key={photo.id} onPress={() => router.push(`/trip/${photo.tripId}` as any)} style={({ pressed }) => pressed && styles.pressedItem}>
+                  <Image source={{ uri: photo.uri }} style={styles.gridImage} />
+                </Pressable>
+              ))}
             </View>
 
             <View style={{ height: 100 }} />
       </View>
         </Animated.ScrollView>
     </SafeAreaView>
+
+      {coverActionsVisible ? (
+        <Pressable
+          style={styles.coverBackdrop}
+          onPress={closeCoverActions}
+          onTouchMove={closeCoverActions}
+        >
+          {Platform.OS === 'ios' ? (
+            <BlurView intensity={42} tint={mode === 'dark' ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />
+          ) : (
+            <View style={[StyleSheet.absoluteFill, styles.coverBackdropFallback]} />
+          )}
+          <View style={styles.coverBackdropDim} />
+        </Pressable>
+      ) : null}
+
+      {coverActionsVisible ? (
+        <View pointerEvents="none" style={[styles.coverClearLayer, { height: HEADER_BASE }]}>
+          <ImageBackground
+            source={{ uri: croppedCoverUri ?? currentCoverUri }}
+            resizeMode="cover"
+            style={styles.coverImage}
+          >
+            <View style={styles.coverOverlay} />
+            <View style={styles.changeCoverContainer}>
+              <View style={styles.changeCoverButton}>
+                <Icon name="photo-selected" size={20} color="#FFFFFF" />
+                <Text style={styles.changeCoverText}>{t('profile.changeCover')}</Text>
+              </View>
+            </View>
+          </ImageBackground>
+        </View>
+      ) : null}
 
       {/* Custom Cropping Interface */}
       {showCropInterface && tempImageUri && (
@@ -698,38 +839,38 @@ export default function ProfileTab() {
         />
       )}
 
-      <ActionSheetModal visible={coverActionsVisible} onDismiss={() => setCoverActionsVisible(false)}>
-        <Text style={[styles.coverSheetTitle, { color: palette.text }]}>Change Cover Photo</Text>
+      <ActionSheetModal visible={coverActionsVisible} onDismiss={closeCoverActions}>
+        <Text style={[styles.coverSheetTitle, { color: palette.text }]}>{t('profile.changeCoverPhoto')}</Text>
         <Text style={[styles.coverSheetDescription, { color: palette.secondaryText }]}>
-          Choose how your travel profile header should look.
+          {t('profile.coverSheetDescription')}
         </Text>
         <OverlayActionRow
-          label="Choose from Library"
+          label={t('profile.chooseFromLibrary')}
           leading={<Icon name="cardimage" size={20} color={palette.text} />}
           onPress={handleChooseCoverFromLibrary}
         />
         <OverlayActionRow
-          label="Take Photo"
+          label={t('profile.takePhoto')}
           leading={<Icon name="camera" size={20} color={palette.text} />}
           onPress={handleTakeCoverPhoto}
         />
         <View style={[styles.coverSheetDivider, { backgroundColor: palette.divider }]} />
         <OverlayActionRow
-          label="Reset Cover Photo"
+          label={t('profile.resetCoverPhoto')}
           danger
           leading={<Icon name="trash" size={20} color="#ed5b55" />}
           onPress={handleResetCoverPhoto}
         />
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Cancel"
+          accessibilityLabel={t('profile.cancel')}
           style={styles.coverSheetCancel}
-          onPress={() => setCoverActionsVisible(false)}
+          onPress={closeCoverActions}
         >
-          <Text style={[styles.coverSheetCancelText, { color: palette.text }]}>Cancel</Text>
+          <Text style={[styles.coverSheetCancelText, { color: palette.text }]}>{t('profile.cancel')}</Text>
         </Pressable>
       </ActionSheetModal>
-    </View>
+    </LinearGradient>
   );
 }
 
@@ -752,6 +893,25 @@ const styles = StyleSheet.create({
   coverScrim: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 20,
+  },
+  coverBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 80,
+  },
+  coverBackdropFallback: {
+    backgroundColor: 'rgba(245,245,240,0.72)',
+  },
+  coverBackdropDim: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255,255,255,0.38)',
+  },
+  coverClearLayer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 90,
+    overflow: 'hidden',
   },
 
   // Change Cover Button styles
@@ -828,15 +988,48 @@ const styles = StyleSheet.create({
   statLabel: { fontSize: 11, fontWeight: '500', color: '#6B7280', textAlign: 'center' },
 
   highlightsContainer: { marginTop: 2, paddingHorizontal: SAFE_PADDING },
+  highlightItem: { width: 74, marginRight: 12, alignItems: 'center' },
+  highlightRing: {
+    width: HIGHLIGHT_SIZE + 8,
+    height: HIGHLIGHT_SIZE + 8,
+    borderRadius: (HIGHLIGHT_SIZE + 8) / 2,
+    borderWidth: 3,
+    borderColor: Colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.white,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+  },
   highlightThumb: {
     width: HIGHLIGHT_SIZE, height: HIGHLIGHT_SIZE, borderRadius: HIGHLIGHT_SIZE / 2,
     backgroundColor: Colors.white, borderWidth: 1, borderColor: Colors.borderBrandTertiary,
   },
+  highlightFallback: { alignItems: 'center', justifyContent: 'center', backgroundColor: '#EEF4E8' },
+  highlightEmoji: { fontSize: 28 },
+  highlightLabel: { marginTop: 6, fontSize: 11, fontWeight: '600', maxWidth: 70 },
+  emptyHighlight: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, paddingRight: 16 },
+  emptyHighlightCircle: {
+    width: HIGHLIGHT_SIZE,
+    height: HIGHLIGHT_SIZE,
+    borderRadius: HIGHLIGHT_SIZE / 2,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: '#b7d58c',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.58)',
+  },
+  emptyHighlightPlus: { fontSize: 30, lineHeight: 34, color: '#5faf70', fontWeight: '300' },
+  emptyHighlightText: { width: 150, fontSize: 13, lineHeight: 17, fontWeight: '600' },
+  pressedItem: { opacity: 0.72, transform: [{ scale: 0.98 }] },
 
   photoGrid: {
     paddingHorizontal: 7,
     paddingTop: Spacing.md,
-    backgroundColor: Colors.backgroundDefault,
   },
   gridRow: { flexDirection: 'row', marginBottom: 2 },
   gridImage: {
